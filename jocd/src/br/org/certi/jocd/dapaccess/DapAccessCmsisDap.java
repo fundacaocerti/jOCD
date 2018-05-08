@@ -21,17 +21,17 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import br.org.certi.jocd.dapaccess.usbinterface.UsbFactory;
-import br.org.certi.jocd.dapaccess.usbinterface.UsbInterface;
+import br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory;
+import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 
-import static br.org.certi.jocd.dapaccess.usbinterface.UsbFactory.connectionInterfaceEnum.androidUsbManager;
+import static br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory.connectionInterfaceEnum.androidUsbManager;
 
 public class DapAccessCmsisDap {
 
     // Logging
     private static final String TAG = "DapAccessCmsisDap";
 
-    private UsbInterface usbInterface = null;
+    private ConnectionInterface usbInterface = null;
     private boolean deferredTransfer = false;
     private int packetCount = 0;
     private String uniqueId;
@@ -54,7 +54,7 @@ public class DapAccessCmsisDap {
     /*
      * Get the connected USB devices
      */
-    private static List<UsbInterface> getDevices(Context context) {
+    private static List<ConnectionInterface> getDevices(Context context) {
         if (DapSettings.useWs) {
             // Not implemented!
             Log.e(TAG, "Not implemented! Trying to use WS interface.");
@@ -72,11 +72,11 @@ public class DapAccessCmsisDap {
         List<DapAccessCmsisDap> allDAPLinks = new ArrayList<DapAccessCmsisDap>();
 
         // Get all the connected interfaces.
-        List<UsbInterface> allDevices = getDevices(context);
+        List<ConnectionInterface> allDevices = getDevices(context);
 
         // For each interface connected try to create a DAP
         // link and add to our allDAPLinks.
-        for (UsbInterface iface: allDevices) {
+        for (ConnectionInterface iface: allDevices) {
             // Get only CMSIS-DAP devices.
             if (!iface.getProductName().contains("CMSIS-DAP")) {
                 continue;

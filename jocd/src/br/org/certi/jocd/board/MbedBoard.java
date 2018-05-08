@@ -204,7 +204,7 @@ public class MbedBoard extends Board {
             throw new UnspecifiedBoardIDException(allBoards);
         }
 
-        // Weh we get here, means that the have one (and only one)
+        // When we get here, means that the have one (and only one)
         // board on the allBoards list.
         MbedBoard board = allBoards.get(0);
         board.dapAccessLink.open();

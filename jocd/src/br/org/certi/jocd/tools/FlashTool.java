@@ -82,6 +82,7 @@ public class FlashTool {
             MbedBoard.UnspecifiedBoardIDException,
             InternalError {
 
+        // TODO - change this a to path with the correct file.
         String file = "microbit.hex";
         return flashBoard(
                 progressUpdate,
@@ -133,7 +134,6 @@ public class FlashTool {
                     "null after chooseBoard");
             throw new InternalError();
         }
-
 
         if (chipErase) {
             Log.d(TAG, "Mass erasing device...");

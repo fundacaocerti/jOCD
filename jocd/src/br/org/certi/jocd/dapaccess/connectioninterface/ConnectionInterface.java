@@ -13,16 +13,16 @@
  * See the license for the specific language governing permissions and
  * limitations under the license.
  */
-package br.org.certi.jocd.dapaccess.usbinterface;
+package br.org.certi.jocd.dapaccess.connectioninterface;
 
 import java.util.List;
 
-public interface UsbInterface {
+public interface ConnectionInterface {
 
     // Logging
-    static final String TAG = "UsbInterface";
+    static final String TAG = "ConnectionInterface";
 
-    public List<UsbInterface> getAllConnectedDevices();
+    public List<ConnectionInterface> getAllConnectedDevices();
 
     public int getVendorId();
     public int getProductId();
@@ -31,8 +31,10 @@ public interface UsbInterface {
     public String getManufacturerName();
     public String getSerialNumber();
     public void rxHandler();
-    public void read();
-    public void write();
+    public byte[] read();
+    public void write(byte[] data);
     public void open();
     public void close();
+    public void setPacketCount(int packetCount);
+    public void setPacketSize(int packetSize);
 }

@@ -13,7 +13,7 @@
  * See the license for the specific language governing permissions and
  * limitations under the license.
  */
-package br.org.certi.jocd.dapaccess.usbinterface;
+package br.org.certi.jocd.dapaccess.connectioninterface;
 
 import android.content.Context;
 import android.util.Log;
@@ -27,8 +27,8 @@ public class UsbFactory {
         androidUsbManager
     }
 
-    public static UsbInterface getUSBInterface(Context context,
-                                               connectionInterfaceEnum intfEnum) {
+    public static ConnectionInterface getUSBInterface(Context context,
+                                                      connectionInterfaceEnum intfEnum) {
         switch (intfEnum) {
             case androidUsbManager: return new AndroidUsbDevice(context);
             default:
