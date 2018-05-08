@@ -1,0 +1,467 @@
+/*
+ * Copyright 2018 Fundação CERTI
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the license for the specific language governing permissions and
+ * limitations under the license.
+ */
+package br.org.certi.jocd.dapaccess.connectioninterface;
+
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbEndpoint;
+import android.hardware.usb.UsbInterface;
+import android.hardware.usb.UsbManager;
+import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+
+public class AndroidUsbDevice implements ConnectionInterface {
+
+    // Logging
+    private static final String TAG = "AndroidUsbDevice";
+
+    protected int vendorId;
+    protected int  productId;
+    protected String deviceName;
+    protected String productName;
+    protected String manufacturerName;
+    protected String serialNumber;
+
+    // Android USB Manager.
+    private final UsbManager usbManager;
+    private final Context context;
+    private UsbDevice device;
+    private boolean open = false;
+    private UsbDeviceConnection connection;
+    private final String actionUsbPermission;
+    private final String appName;
+
+    private int packetCount = 1;
+    private int packetSize = 64;
+
+    private UsbInterface usbInterface;
+
+    // Interface number for HID.
+    private int interfaceNumber;
+    private UsbDeviceConnection deviceConnection;
+    private UsbEndpoint inputEndpoint;
+    private UsbEndpoint outputEndpoint;
+
+    // Locker object for read/write thread.
+    private Object locker = new Object();
+    private Thread rxThread = null;
+
+    // A queue to hold the received data while it isn't read.
+    private Queue<byte[]> rxQueue = new LinkedList<byte[]>();
+
+    public static final byte USB_CLASS_HID = (byte)0x03;
+    public static final byte USB_INPUT_ENDPOINT_ADDRESS = (byte)0x80;
+
+    /*
+     * Constructor
+     */
+    public AndroidUsbDevice(Context context) {
+        this.context = context;
+        this.usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
+        this.actionUsbPermission = context.getPackageName() + ".USB_PERMISSION";
+
+        ApplicationInfo applicationInfo = context.getApplicationInfo();
+        int stringId = applicationInfo.labelRes;
+        this.appName = stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() :
+                context.getString(stringId);
+    }
+
+    /*
+     * Returns all the connected CMSIS-DAP devices.
+     */
+    public List<ConnectionInterface> getAllConnectedDevices() {
+
+        HashMap<String, UsbDevice> usbDevList = usbManager.getDeviceList();
+
+        List<ConnectionInterface> deviceList = new ArrayList<ConnectionInterface>();
+
+        Log.d(TAG, "Listing connected devices...");
+        for(Map.Entry<String, UsbDevice> entry : usbDevList.entrySet()) {
+            UsbDevice device = entry.getValue();
+            Log.d(TAG, "key: " + entry.getKey());
+            Log.d(TAG, "value: " + device);
+
+            AndroidUsbDevice board = new AndroidUsbDevice(context);
+            board.device = device;
+            board.vendorId = device.getVendorId();
+            board.productId = device.getProductId();
+            board.deviceName = device.getDeviceName();
+            board.productName = device.getProductName();
+            board.manufacturerName = device.getManufacturerName();
+            board.serialNumber = device.getSerialNumber();
+
+            // Add this board to the list of devices.
+            deviceList.add(board);
+            Log.d(TAG, "Vendor ID: " + board.vendorId +
+                    "\nProduct ID: " + board.productId +
+                    "\nDevice Name: " + board.deviceName +
+                    "\nProduct Name: " + board.productName +
+                    "\nManufacturer Name: " + board.manufacturerName +
+                    "\nSerial Number: " + board.serialNumber);
+        }
+
+        return deviceList;
+    }
+
+    public void rxHandler() {
+        // TODO
+    }
+
+    /*
+     * Overload to read(timeout).
+     * Use 20ms as the default timeout.
+     */
+    public byte[] read() {
+        return this.read(20);
+    }
+
+    /*
+     * Read data on the IN endpoint associated to the HID interface.
+     */
+    public byte[] read(int timeout) {
+        if (device == null) {
+            Log.e(TAG, "Internal Error. Trying to read from null device");
+            return null;
+        }
+
+        long startTime = System.currentTimeMillis();
+
+        while (rxQueue.isEmpty()) {
+            if (System.currentTimeMillis() - startTime > timeout) {
+                // Timeout.
+                // Read operations should typically take ~1-2ms.
+                // If this exception occurs, then it could indicate
+                // a problem in one of the following areas:
+                // 1. Bad usb driver causing either a dropped read or write
+                // 2. CMSIS-DAP firmware problem cause a dropped read or write
+                // 3. CMSIS-DAP is performing a long operation or is being
+                //    halted in a debugger
+                // TODO Throw and exception.
+                Log.e(TAG, "Read timed out.");
+                return null;
+            }
+        }
+
+        return rxQueue.poll();
+    }
+
+    /*
+     * Overload to write(data, timeout).
+     * Use 20ms as the default timeout.
+     */
+    public void write(byte[] data) {
+        write(data, 20);
+    }
+
+    /*
+     * Write data on the OUT endpoint associated to the HID interface.
+     */
+    public void write(byte[] data, int timeout) {
+        if (device == null || usbInterface == null) {
+            Log.e(TAG, "Internal Error on write. The device/usbInterface is null");
+            return;
+        }
+
+        // If we have an output endpoint, get its packet size.
+        int reportSize = this.packetSize;
+        if (outputEndpoint != null) reportSize = outputEndpoint.getMaxPacketSize();
+
+        // Fill the packet the left space, appending 0 on the end of data.
+        byte[] packet = new byte[reportSize];
+
+        System.arraycopy(data, 0, packet, 0, data.length);
+        for (int i = data.length; i < reportSize; i++)
+        {
+            packet[i] = 0x00;
+        }
+
+        synchronized (locker) {
+
+            // If we don't have an output endpoint, than send it as a control transfer
+            // using endpoint 0.
+            if (outputEndpoint == null) {
+                // Host to device request of type Class of Recipient Interface.
+                // Request type bitmask:
+                //    Direction   | Type  | Recipient |
+                // Host to device | Class | Interface |
+                //       0        |  01   |   00001   |
+                // requestType = 0 01 00000 = 0010 0001 = 0x21
+                int requestType = 0x21;
+
+                // Set_REPORT (HID class-specific request for transferring data over EP0)
+                // Request:
+                // SET_CONFIGURATION = 0x09
+                int request = 0x09;
+
+                // Issuing an OUT report.
+                int value = 0x200;
+
+                // mBed Board interface number for HID.
+                int index = this.interfaceNumber;
+                deviceConnection.controlTransfer(requestType, request, value, index, packet,
+                        data.length, timeout);
+                return;
+            }
+
+            // If we got here, means that we have an output endpoint.
+            int written = deviceConnection.bulkTransfer(outputEndpoint, packet, packet.length,
+                    timeout);
+        }
+    }
+
+    /*
+     * Open the device.
+     */
+    public void open() {
+        // Do it once, and break to clean if anything goes wrong.
+        do {
+            if (connection != null) {
+                Log.e(TAG, "Trying to open device while is already opened.");
+                return;
+            }
+
+            if (device == null) {
+                Log.e(TAG, "Trying to open device a null device.");
+                return;
+            }
+
+            // Check if we have permission.
+            if (!usbManager.hasPermission(device)) {
+                Log.w(TAG, appName + " doesn't have permission to access device with Product ID: "
+                        + device.getProductId() + ", Vendor ID: " + device.getVendorId() + " and " +
+                        "serial number: " + device.getSerialNumber());
+                PendingIntent pi = PendingIntent.getBroadcast(context, 0,
+                        new Intent(actionUsbPermission), 0);
+                usbManager.requestPermission(device, pi);
+                return;
+            }
+
+            // Attempt to open the device.
+            this.deviceConnection = usbManager.openDevice(device);
+            if (this.deviceConnection == null) {
+                Log.e(TAG, "Unable to open device.");
+                return;
+            }
+
+            // Look for the HID interface.
+            if (!lookForHidInterface()) {
+                Log.e(TAG, "Couldn't find any HID device.");
+                break;
+            }
+
+            // Find endpoints.
+            if (!findEndpoints()) {
+                Log.e(TAG, "Couldn't find endpoints.");
+                break;
+            }
+
+            // Claim interface.
+            if (!this.deviceConnection.claimInterface(usbInterface, true))
+            {
+                Log.e(TAG, "Couldn't claim interface.");
+                break;
+            }
+
+            // Start rx thread.
+            this.open = true;
+            this.startRxThread();
+
+            // If everything ok, leave (don't let it get to clean section below).
+            return;
+
+        } while (false);
+
+
+        // We should never get here... unless something went wrong.
+        // Clean whatever we done here.
+        this.deviceConnection = null;
+        this.inputEndpoint = null;
+        this.outputEndpoint = null;
+        this.interfaceNumber = -1;
+        this.open = false;
+    }
+
+    /*
+     * Close the device.
+     */
+    public void close() {
+        if (connection == null) return;
+        if (rxThread != null) stopRxThread();
+        connection.releaseInterface(usbInterface);
+        open = false;
+        connection.close();
+    }
+
+    public int getVendorId() {
+        return this.vendorId;
+    }
+
+    public int getProductId() {
+        return this.productId;
+    }
+
+    public String getDeviceName() {
+        return this.deviceName;
+    }
+
+    public String getProductName() {
+        return this.productName;
+    }
+
+    public String getManufacturerName() {
+        return this.manufacturerName;
+    }
+
+    public String getSerialNumber() {
+        return this.serialNumber;
+    }
+
+    public int getPacketCount() {
+        return packetCount;
+    }
+
+    public void setPacketSize(int packetSize){
+        this.packetSize = packetSize;
+    }
+
+    public void setPacketCount(int packetCount) {
+        this.packetCount = packetCount;
+    }
+
+    private boolean lookForHidInterface() {
+        int interfaceCount = this.device.getInterfaceCount();
+        this.interfaceNumber = -1;
+        for (int i = 0; i < interfaceCount; i++) {
+            UsbInterface iface = this.device.getInterface(i);
+
+            // The interface that we are looking for, should match the class
+            // 0x03 (HID). If we find it, save this interface.
+            if (iface.getInterfaceClass() == USB_CLASS_HID) {
+                this.usbInterface = iface;
+                this.interfaceNumber = i;
+                break;
+            };
+        }
+
+        if (this.interfaceNumber < 0 || this.usbInterface == null) return false;
+        return true;
+    }
+
+    private boolean findEndpoints() {
+        int endpointCount = this.usbInterface.getEndpointCount();
+
+        // We should have 2 endpoints, but this is not required.
+        // If there is no EP for OUT then we can use CTRL EP.
+        // The IN EP is required.
+        if (endpointCount > 2) {
+            Log.e(TAG, "Found " + endpointCount + " endpoints on the HID interface while it " +
+                    "was expected to have up to 2.");
+            return false;
+        }
+
+        for (int i = 0; i < endpointCount; i++) {
+            UsbEndpoint endpoint = this.usbInterface.getEndpoint(i);
+            if ((endpoint.getAddress() & USB_INPUT_ENDPOINT_ADDRESS) > 0) {
+                inputEndpoint = endpoint;
+            }
+            else {
+                outputEndpoint = endpoint;
+            }
+        }
+
+        if (inputEndpoint == null) return false;
+        return true;
+    }
+
+    /*
+     * Thread to read data from USB and enqueue to be read later.
+     */
+    private Runnable rxTask = new Runnable() {
+
+        public void run() {
+
+            while (open) {
+                synchronized (locker) {
+                    if (device == null || usbInterface == null  || inputEndpoint == null) {
+                        Log.e(TAG, "Internal Error on rxTask. The device/usbInterface/" +
+                                "outputEndpoint is null.");
+                        return;
+                    }
+
+                    packetSize = inputEndpoint.getMaxPacketSize();
+                    byte[] packet = new byte[packetSize];
+                    int received = deviceConnection.bulkTransfer(inputEndpoint, packet, packetSize,
+                            50);
+
+                    // We might receive less bytes than packetSize, so we need to add only the
+                    // received data to a new array and pass it to our queue.
+                    if (received >= 0) {
+                        byte[] receivedData = new byte[received];
+                        System.arraycopy(packet, 0, receivedData, 0, received);
+                        rxQueue.add(receivedData);
+                    }
+                }
+
+                // Sleep for 10 ms to pause, so other thread can write data or anything.
+                // As both read and write data methods lock each other - they cannot be run in
+                // parallel.
+                try {
+                    Thread.sleep(10);
+                }
+                catch (InterruptedException e) {
+                    // This thread has been interrupted.
+                    return;
+                }
+            }
+        }
+    };
+
+    /*
+     * Starts the Rx Thread.
+     */
+    public void startRxThread() {
+        if (rxThread != null) {
+            Log.e(TAG, "RX thread has already been started.");
+            return;
+        }
+
+        rxThread = new Thread(rxTask);
+        rxThread.start();
+    }
+
+    /*
+     * Starts the Rx Thread.
+     */
+    public void stopRxThread() {
+        if (rxThread == null) {
+            Log.e(TAG,"RX thread isn't running.");
+            return;
+        }
+
+        rxThread.interrupt();
+        rxThread = null;
+    }
+}
