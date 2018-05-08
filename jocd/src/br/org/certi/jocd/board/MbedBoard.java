@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
+import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.target.TargetFactory;
 import br.org.certi.jocd.target.TargetFactory.targetEnum;
 
@@ -40,11 +41,12 @@ public class MbedBoard extends Board {
     /*
      * Constructor.
      */
-    public MbedBoard(DapAccessCmsisDap link, TargetFactory.targetEnum targetOverride, int frequency) throws UnsupportedBoardException {
+    public MbedBoard(DapAccessCmsisDap link, TargetFactory.targetEnum targetOverride, int frequency)
+            throws UnsupportedBoardException {
         super();
 
         this.uniqueId = link.getUniqueId();
-        boardId = this.uniqueId.substring(0,4);
+        boardId = this.uniqueId.substring(0, 4);
 
         TargetFactory.targetEnum target = null;
         BoardInfo boardInfo = BoardInfo.getBoardInfo(boardId);
@@ -55,8 +57,7 @@ public class MbedBoard extends Board {
             target = boardInfo.target;
             // Get the binary test.
             this.testBinary = boardInfo.binary;
-        }
-        else {
+        } else {
             this.name = "Unknown Board";
         }
 
@@ -78,7 +79,7 @@ public class MbedBoard extends Board {
     /*
      * Overload for getAllConnectedBoards using default values.
      */
-    public static List<MbedBoard> getAllConnectedBoards(Context context) {
+    public static List<MbedBoard> getAllConnectedBoards(Context context) throws DeviceError {
         return getAllConnectedBoards(context, false, true, null, 0);
     }
 
@@ -87,7 +88,7 @@ public class MbedBoard extends Board {
      */
     public static List<MbedBoard> getAllConnectedBoards(Context context, boolean close,
                                                         boolean blocking, targetEnum targetOverride,
-                                                        int frequency) {
+                                                        int frequency) throws DeviceError {
         List<MbedBoard> mbedList = new ArrayList<MbedBoard>();
 
         while (true) {
@@ -104,8 +105,8 @@ public class MbedBoard extends Board {
             }
 
             if (close == false) {
-                for (DapAccessCmsisDap dapAccess: connectedDaps) {
-                    dapAccess.open();
+                for (DapAccessCmsisDap dapAccess : connectedDaps) {
+                    dapAccess.open(context);
                 }
             }
 
@@ -136,7 +137,8 @@ public class MbedBoard extends Board {
     public static MbedBoard chooseBoard(Context context) throws
             NoBoardConnectedException,
             UniqueIDNotFoundException,
-            UnspecifiedBoardIDException {
+            UnspecifiedBoardIDException,
+            DeviceError {
         return chooseBoard(context, true, false, null, null, 0, true);
     }
 
@@ -144,24 +146,26 @@ public class MbedBoard extends Board {
      * Return an array of all mbed boards connected.
      */
     public static MbedBoard chooseBoard(Context context,
-            boolean blocking, boolean returnFirst, String boardId,
-            String targetOverride, int frequency, boolean initBoard) throws
+                                        boolean blocking, boolean returnFirst, String boardId,
+                                        String targetOverride, int frequency, boolean initBoard)
+            throws
             NoBoardConnectedException,
             UniqueIDNotFoundException,
-            UnspecifiedBoardIDException {
+            UnspecifiedBoardIDException,
+            DeviceError {
 
         // Get all connected boards.
         List<MbedBoard> allBoards = MbedBoard.getAllConnectedBoards(context);
 
         // If the board id (serial number) is specified, ignore all other boards.
-        if (!TextUtils.isEmpty(boardId))  {
+        if (!TextUtils.isEmpty(boardId)) {
 
             // Create a new list that will replace the list of all boards.
             // This list will contain only the requested board.
             List<MbedBoard> selectedBoard = new ArrayList<MbedBoard>();
 
             // For each board in the list, look for the specified ID.
-            for (MbedBoard board: allBoards) {
+            for (MbedBoard board : allBoards) {
 
                 // Check if this board id match with the specified.
                 if (board.uniqueId.equals(boardId)) {
@@ -207,14 +211,13 @@ public class MbedBoard extends Board {
         // When we get here, means that the have one (and only one)
         // board on the allBoards list.
         MbedBoard board = allBoards.get(0);
-        board.dapAccessLink.open();
+        board.dapAccessLink.open(context);
 
         // Init the board (if we should...).
         if (initBoard) {
             try {
                 board.init();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 board.dapAccessLink.close();
                 // TODO handle this exception corretly
                 throw e;
@@ -224,8 +227,7 @@ public class MbedBoard extends Board {
         return board;
     }
 
-    public static class NoBoardConnectedException extends Exception
-    {
+    public static class NoBoardConnectedException extends Exception {
         List<MbedBoard> boards;
 
         /*
@@ -236,8 +238,7 @@ public class MbedBoard extends Board {
         }
     }
 
-    public static class UniqueIDNotFoundException extends Exception
-    {
+    public static class UniqueIDNotFoundException extends Exception {
         List<MbedBoard> boards;
 
         /*
@@ -248,8 +249,7 @@ public class MbedBoard extends Board {
         }
     }
 
-    public static class UnspecifiedBoardIDException extends Exception
-    {
+    public static class UnspecifiedBoardIDException extends Exception {
         List<MbedBoard> boards;
 
         /*
@@ -260,8 +260,7 @@ public class MbedBoard extends Board {
         }
     }
 
-    public static class UnsupportedBoardException extends Exception
-    {
+    public static class UnsupportedBoardException extends Exception {
         String boardId;
 
         /*
