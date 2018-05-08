@@ -19,6 +19,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.tools.AsyncResponse;
 import br.org.certi.jocd.tools.FlashTool;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
@@ -51,7 +52,11 @@ public class AsyncFlashToolListDevices extends AsyncTask<String, String, String>
 
         publishProgress("Starting listing devices...");
 
-        resp = tool.listConnectedBoards();
+        try {
+            resp = tool.listConnectedBoards();
+        } catch (DeviceError exception) {
+            Log.e(TAG, exception.getMessage());
+        }
 
         publishProgress("Finished listing devices.");
 

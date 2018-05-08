@@ -18,11 +18,13 @@ package br.org.certi.jocd.dapaccess;
 import android.content.Context;
 import android.util.Log;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
-import br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
+import br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory;
+import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 
 import static br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory.connectionInterfaceEnum.androidUsbManager;
 
@@ -31,17 +33,22 @@ public class DapAccessCmsisDap {
     // Logging
     private static final String TAG = "DapAccessCmsisDap";
 
-    private ConnectionInterface usbInterface = null;
+    private ConnectionInterface connectionInterface = null;
     private boolean deferredTransfer = false;
     private int packetCount = 0;
     private String uniqueId;
-    private int frequency =  1000000; // 1MHz default clock
+    private int frequency = 1000000; // 1MHz default clock
     private int dapPort = 0;
     // TODO _transfer_list
     // TODO _crnt_cmd
     private int packetSize = 0;
     // TODO commandsToRead
     // TODO commandResponseBuf
+    private CmsisDapProtocol protocol;
+    private ArrayDeque transferList;
+    private Command crntCmd;
+    private ArrayDeque commandsToRead;
+    private List<Byte> commandsResponseBuf;
 
     /*
      * Constructor.
@@ -76,7 +83,7 @@ public class DapAccessCmsisDap {
 
         // For each interface connected try to create a DAP
         // link and add to our allDAPLinks.
-        for (ConnectionInterface iface: allDevices) {
+        for (ConnectionInterface iface : allDevices) {
             // Get only CMSIS-DAP devices.
             if (!iface.getProductName().contains("CMSIS-DAP")) {
                 continue;
@@ -86,8 +93,7 @@ public class DapAccessCmsisDap {
                 String uniqueId = iface.getSerialNumber();
                 DapAccessCmsisDap dapLink = new DapAccessCmsisDap(uniqueId);
                 allDAPLinks.add(dapLink);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, "Exception caught while trying to iterate over " +
                         "all connections interfaces.");
                 return null;
@@ -96,15 +102,69 @@ public class DapAccessCmsisDap {
         return allDAPLinks;
     }
 
-    public void open() {
-        // TODO
+    public void open(Context context) throws DeviceError {
+        if (connectionInterface == null) {
+            List<ConnectionInterface> allDevices = this.getDevices(context);
+            for (ConnectionInterface device : allDevices) {
+                try {
+                    String uniqueId = getUniqueId(device);
+                    if (this.uniqueId.equals(uniqueId)) {
+                        // This assert could indicate that two boards had the same ID
+                        assert this.connectionInterface == null;
+                        this.connectionInterface = device;
+                    }
+                } catch (Exception exception) {
+                    Log.e(TAG, "Failed to get unique id for open", exception);
+                }
+            }
+            if (connectionInterface == null) {
+                throw new DeviceError("Unable to open device");
+            }
+        }
+
+        this.connectionInterface.open();
+        this.protocol = new CmsisDapProtocol(connectionInterface);
+
+        if (DapSettings.limitPackets) {
+            this.packetCount = 1;
+            Log.d(TAG, "Limiting packet count to" + this.packetCount);
+        } else {
+            this.packetCount = ((Byte) this.protocol.dapInfo(CmsisDapCore.IdInfo.PACKET_COUNT))
+                    .intValue();
+        }
+
+        this.connectionInterface.setPacketCount(this.packetCount);
+        this.packetSize = (Integer) this.protocol.dapInfo(CmsisDapCore.IdInfo.PACKET_SIZE);
+        this.connectionInterface.setPacketSize(this.packetSize);
+
+        this.initDeferredBuffers();
+    }
+
+    private String getUniqueId(ConnectionInterface device) {
+        return device.getSerialNumber();
+    }
+
+    /*
+    * Initialize or reinitialize all the deferred transfer buffers
+    * Calling this method will drop all pending transactions so use with care.
+    */
+    private void initDeferredBuffers() {
+        // List of transfers that have been started, but not completed
+        // (started by write_reg, read_reg, reg_write_repeat and reg_read_repeat)
+        this.transferList = new ArrayDeque();
+        // The current packet - this can contain multiple  different transfers
+        this.crntCmd = new Command(this.packetSize);
+        // Packets that have been sent but not read
+        this.commandsToRead = new ArrayDeque();
+        // Buffer for data returned for completed commands. This data will be added to transfers
+        this.commandsResponseBuf = new ArrayList<Byte>();
     }
 
     public void close() {
-        if (usbInterface == null) return;
+        if (connectionInterface == null) return;
 
         flush();
-        usbInterface.close();
+        connectionInterface.close();
     }
 
     private void flush() {
