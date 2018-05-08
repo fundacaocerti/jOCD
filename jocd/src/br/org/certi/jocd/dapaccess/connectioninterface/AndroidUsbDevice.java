@@ -90,7 +90,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
     }
 
     /*
-     * Returns all the connected CMSIS-DAP devices.
+     * Returns all connected devices.
      */
     public List<ConnectionInterface> getAllConnectedDevices() {
 
@@ -236,18 +236,19 @@ public class AndroidUsbDevice implements ConnectionInterface {
      * Open the device.
      */
     public void open() {
+        // Do not allow to open if it is already opened.
+        if (open || connection != null) {
+            Log.w(TAG, "Trying to open USB device while is already opened.");
+            return;
+        }
+
+        if (device == null) {
+            Log.e(TAG, "Trying to open device a null device.");
+            return;
+        }
+
         // Do it once, and break to clean if anything goes wrong.
         do {
-            if (connection != null) {
-                Log.e(TAG, "Trying to open device while is already opened.");
-                return;
-            }
-
-            if (device == null) {
-                Log.e(TAG, "Trying to open device a null device.");
-                return;
-            }
-
             // Check if we have permission.
             if (!usbManager.hasPermission(device)) {
                 Log.w(TAG, appName + " doesn't have permission to access device with Product ID: "
