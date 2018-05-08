@@ -24,11 +24,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
 import br.org.certi.jocd.board.MbedBoard;
+import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.flash.FlashBuilder;
 import br.org.certi.jocd.flash.PageInfo;
 import br.org.certi.jocd.target.TargetFactory.targetEnum;
@@ -59,7 +61,7 @@ public class FlashTool {
         this.context = context;
     }
 
-    public String listConnectedBoards() {
+    public String listConnectedBoards() throws DeviceError {
         List<MbedBoard> boards = MbedBoard.getAllConnectedBoards(context);
 
         String resp = "";
@@ -80,7 +82,8 @@ public class FlashTool {
             MbedBoard.NoBoardConnectedException,
             MbedBoard.UniqueIDNotFoundException,
             MbedBoard.UnspecifiedBoardIDException,
-            InternalError {
+            InternalError,
+            DeviceError {
 
         // TODO - change this a to path with the correct file.
         String file = "microbit.hex";
@@ -118,7 +121,8 @@ public class FlashTool {
             MbedBoard.NoBoardConnectedException,
             MbedBoard.UniqueIDNotFoundException,
             MbedBoard.UnspecifiedBoardIDException,
-            InternalError {
+            InternalError,
+            DeviceError {
 
         // Select default values.
         if (count == null) count = 1;
