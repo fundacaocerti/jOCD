@@ -25,12 +25,13 @@ import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.util.Log;
+
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AndroidUsbDevice implements ConnectionInterface {
 
@@ -48,8 +49,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
   private final UsbManager usbManager;
   private final Context context;
   private UsbDevice device;
-  private boolean open = false;
-  private UsbDeviceConnection connection;
+  private AtomicBoolean atomicOpen = new AtomicBoolean(false);
   private final String actionUsbPermission;
   private final String appName;
 
@@ -69,7 +69,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
   private Thread rxThread = null;
 
   // A queue to hold the received data while it isn't read.
-  private Queue<byte[]> rxQueue = new LinkedList<byte[]>();
+  private ArrayDeque<byte[]> rxQueue = new ArrayDeque<byte[]>();
 
   public static final byte USB_CLASS_HID = (byte) 0x03;
   public static final byte USB_INPUT_ENDPOINT_ADDRESS = (byte) 0x80;
@@ -235,19 +235,24 @@ public class AndroidUsbDevice implements ConnectionInterface {
    * Open the device.
    */
   public void open() {
-    // Do not allow to open if it is already opened.
-    if (open || connection != null) {
+    // From now, no one else can open this device until we do not set it to false again.
+    if (!atomicOpen.compareAndSet(false, true)) {
       Log.w(TAG, "Trying to open USB device while is already opened.");
-      return;
-    }
-
-    if (device == null) {
-      Log.e(TAG, "Trying to open device a null device.");
       return;
     }
 
     // Do it once, and break to clean if anything goes wrong.
     do {
+      if (this.deviceConnection!= null) {
+        Log.w(TAG, "Trying to open USB device while deviceConnection isn't null.");
+        break;
+      }
+
+      if (this.device == null) {
+        Log.e(TAG, "Trying to open device a null device.");
+        break;
+      }
+
       // Check if we have permission.
       if (!usbManager.hasPermission(device)) {
         Log.w(TAG, appName + " doesn't have permission to access device with Product ID: "
@@ -285,7 +290,6 @@ public class AndroidUsbDevice implements ConnectionInterface {
       }
 
       // Start rx thread.
-      this.open = true;
       this.startRxThread();
 
       // If everything ok, leave (don't let it get to clean section below).
@@ -295,26 +299,36 @@ public class AndroidUsbDevice implements ConnectionInterface {
 
     // We should never get here... unless something went wrong.
     // Clean whatever we done here.
-    this.deviceConnection = null;
-    this.inputEndpoint = null;
-    this.outputEndpoint = null;
-    this.interfaceNumber = -1;
-    this.open = false;
+    close();
   }
 
   /*
    * Close the device.
    */
   public void close() {
-    if (connection == null) {
-      return;
-    }
+    // Stop the rx thread (if exists).
     if (rxThread != null) {
       stopRxThread();
     }
-    connection.releaseInterface(usbInterface);
-    open = false;
-    connection.close();
+
+    // Release and close devise connection.
+    if (this.deviceConnection != null) {
+      this.deviceConnection.releaseInterface(usbInterface);
+      this.deviceConnection.close();
+      this.deviceConnection = null;
+    }
+
+    // Clean endpoints and interface number.
+    this.inputEndpoint = null;
+    this.outputEndpoint = null;
+    this.interfaceNumber = -1;
+
+    // Allow this device to be opened again.
+    this.atomicOpen.set(false);
+  }
+
+  private void releaseResources() {
+
   }
 
   public int getVendorId() {
@@ -409,7 +423,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
 
     public void run() {
 
-      while (open) {
+      while (atomicOpen.get()) {
         synchronized (locker) {
           if (device == null || usbInterface == null || inputEndpoint == null) {
             Log.e(TAG, "Internal Error on rxTask. The device/usbInterface/" +
@@ -467,6 +481,13 @@ public class AndroidUsbDevice implements ConnectionInterface {
     }
 
     rxThread.interrupt();
-    rxThread = null;
+    try {
+      rxThread.join(100);
+      rxThread = null;
+    }
+    catch (InterruptedException e) {
+      // Main thread interrupted.
+      // Just leave.
+    }
   }
 }
