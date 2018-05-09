@@ -187,6 +187,11 @@ public class DapAccessCmsisDap {
     this.protocol.transferConfigure();
   }
 
+  public void disconnect() throws DeviceError, CommandError {
+    this.flush();
+    this.protocol.disconnect();
+  }
+
   private void flush() {
     // TODO
   }
