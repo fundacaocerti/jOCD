@@ -17,8 +17,10 @@ package br.org.certi.jocd.tools;
 
 public interface AsyncResponse {
 
-    // Logging
-    static final String TAG = "AsyncResponse";
-    void processAsyncTaskFinish(String result);
-    void processAsyncTaskUpdate(String status);
+  // Logging
+  static final String TAG = "AsyncResponse";
+
+  void processAsyncTaskFinish(String result);
+
+  void processAsyncTaskUpdate(String status);
 }

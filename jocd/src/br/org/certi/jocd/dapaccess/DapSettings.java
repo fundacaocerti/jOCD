@@ -17,14 +17,14 @@ package br.org.certi.jocd.dapaccess;
 
 public class DapSettings {
 
-    // Logging
-    private static final String TAG = "DapSettings";
+  // Logging
+  private static final String TAG = "DapSettings";
 
-    // Define if we should use WebSocket.
-    // WS is not implemented yet.
-    public static boolean useWs = false;
-    public static String wsHost = "localhost";
-    public static int wsPort = 8081;
+  // Define if we should use WebSocket.
+  // WS is not implemented yet.
+  public static boolean useWs = false;
+  public static String wsHost = "localhost";
+  public static int wsPort = 8081;
 
-    public static boolean limitPackets = false;
+  public static boolean limitPackets = false;
 }

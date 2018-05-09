@@ -19,33 +19,33 @@ import java.util.List;
 
 public class MemoryMap {
 
-    // Logging
-    private static final String TAG = "MemoryMap";
+  // Logging
+  private static final String TAG = "MemoryMap";
 
-    public static enum RegionType {
-        Ram,
-        Rom,
-        Flash,
-        Device,
-        Alias
+  public static enum RegionType {
+    Ram,
+    Rom,
+    Flash,
+    Device,
+    Alias
+  }
+
+  final List<MemoryRegion> memoryRegions;
+
+  public MemoryMap(List<MemoryRegion> memoryRegions) {
+    this.memoryRegions = memoryRegions;
+  }
+
+  /*
+   * Look for which region this address belongs to.
+   */
+  public MemoryRegion getRegionForAddress(long address) {
+    for (MemoryRegion region : this.memoryRegions) {
+      if (region.containsAddress(address)) {
+        return region;
+      }
     }
-
-    final List<MemoryRegion> memoryRegions;
-
-    public MemoryMap(List<MemoryRegion> memoryRegions) {
-        this.memoryRegions = memoryRegions;
-    }
-
-    /*
-     * Look for which region this address belongs to.
-     */
-    public MemoryRegion getRegionForAddress(long address) {
-        for (MemoryRegion region : this.memoryRegions) {
-            if (region.containsAddress(address)) {
-                return region;
-            }
-        }
-        return null;
-    }
-    // TODO
+    return null;
+  }
+  // TODO
 }

@@ -17,9 +17,9 @@ package br.org.certi.jocd.flash;
 
 public class FlashInfo {
 
-    // Logging
-    private static final String TAG = "FlashInfo";
+  // Logging
+  private static final String TAG = "FlashInfo";
 
-    public long romStart;
-    public int eraseWeight;
+  public long romStart;
+  public int eraseWeight;
 }

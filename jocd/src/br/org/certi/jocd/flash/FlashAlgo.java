@@ -19,23 +19,22 @@ import java.util.List;
 
 public class FlashAlgo {
 
-    // Logging
-    private static final String TAG = "FlashAlgo";
+  // Logging
+  private static final String TAG = "FlashAlgo";
 
-    public int loadAddress;
-    public List<Integer> instructions;
-    public int pcInit;
-    public int pcEraseAll;
-    public int pcEraseSector;
-    public int pcProgramPage;
-    public int beginData;
-    public List<Integer> pageBuffers;
-    public int beginStack;
-    public int staticBase;
-    public int minProgramLength;
-    public boolean analyzerSupported;
-    public int analyzerAddress;
+  public int loadAddress;
+  public List<Integer> instructions;
+  public int pcInit;
+  public int pcEraseAll;
+  public int pcEraseSector;
+  public int pcProgramPage;
+  public int beginData;
+  public List<Integer> pageBuffers;
+  public int beginStack;
+  public int staticBase;
+  public int minProgramLength;
+  public boolean analyzerSupported;
+  public int analyzerAddress;
 
-
-    // TODO
+  // TODO
 }
