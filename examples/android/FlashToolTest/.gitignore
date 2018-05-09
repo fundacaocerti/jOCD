@@ -87,6 +87,7 @@ obj/
 .idea/misc.xml
 .idea/gradle.xml
 .idea/runConfigurations.xml
+.idea/codeStyles/Project.xml
 
 # OS-specific files
 .DS_Store
