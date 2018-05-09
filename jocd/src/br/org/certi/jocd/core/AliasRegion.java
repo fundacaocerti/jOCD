@@ -17,19 +17,19 @@ package br.org.certi.jocd.core;
 
 public class AliasRegion extends MemoryRegion {
 
-    // Logging
-    private static final String TAG = "AliasRegion";
+  // Logging
+  private static final String TAG = "AliasRegion";
 
-    /*
-     * Constructor.
-     */
-    public AliasRegion(long start, long end, long length, int blockSize,
-                       String name, boolean isBootMemory,
-                       boolean isPoweredOnBoot, boolean isCacheable,
-                       boolean invalidateCacheOnRun) {
-        super(MemoryMap.RegionType.Alias,start, end, length, blockSize, name, isBootMemory,
-                isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
-    }
+  /*
+   * Constructor.
+   */
+  public AliasRegion(long start, long end, long length, int blockSize,
+      String name, boolean isBootMemory,
+      boolean isPoweredOnBoot, boolean isCacheable,
+      boolean invalidateCacheOnRun) {
+    super(MemoryMap.RegionType.Alias, start, end, length, blockSize, name, isBootMemory,
+        isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
+  }
 
-    // TODO
+  // TODO
 }

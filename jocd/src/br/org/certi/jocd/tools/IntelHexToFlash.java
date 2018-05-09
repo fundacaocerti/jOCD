@@ -23,47 +23,47 @@ import cz.jaybee.intelhex.Region;
 
 public class IntelHexToFlash implements DataListener {
 
-    // Logging
-    private static final String TAG = "IntelHexToFlash";
+  // Logging
+  private static final String TAG = "IntelHexToFlash";
 
-    private final MemoryRegions regions = new MemoryRegions();
+  private final MemoryRegions regions = new MemoryRegions();
 
-    private final FlashBuilder flashBuilder;
+  private final FlashBuilder flashBuilder;
 
-    public IntelHexToFlash(Flash flash) {
-        this.flashBuilder = flash.getFlashBuilder();
-    }
+  public IntelHexToFlash(Flash flash) {
+    this.flashBuilder = flash.getFlashBuilder();
+  }
 
-    @Override
-    public void data(long address, byte[] data) {
-        regions.add(address, data.length);
+  @Override
+  public void data(long address, byte[] data) {
+    regions.add(address, data.length);
 
-        // Add this data range to Flash Builder.
-        flashBuilder.addData(address, data);
-    }
+    // Add this data range to Flash Builder.
+    flashBuilder.addData(address, data);
+  }
 
-    @Override
-    public void eof() {
-        regions.compact();
-    }
+  @Override
+  public void eof() {
+    regions.compact();
+  }
 
-    public void reset() {
-        regions.clear();
-    }
+  public void reset() {
+    regions.clear();
+  }
 
-    public Region getFullRangeRegion() {
-        return regions.getFullRangeRegion();
-    }
+  public Region getFullRangeRegion() {
+    return regions.getFullRangeRegion();
+  }
 
-    public MemoryRegions getMemoryRegions() {
-        return regions;
-    }
+  public MemoryRegions getMemoryRegions() {
+    return regions;
+  }
 
-    /*
-     * Return the FlashBuilder. FlashBuilder will be ready to program,
-     * if call this class method be called after "parser" InterHex.
-     */
-    public FlashBuilder getFlashBuilder() {
-        return flashBuilder;
-    }
+  /*
+   * Return the FlashBuilder. FlashBuilder will be ready to program,
+   * if call this class method be called after "parser" InterHex.
+   */
+  public FlashBuilder getFlashBuilder() {
+    return flashBuilder;
+  }
 }

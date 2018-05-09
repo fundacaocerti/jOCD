@@ -17,6 +17,6 @@ package br.org.certi.jocd.flash;
 
 public class ProgrammingInfo {
 
-    // Logging
-    private static final String TAG = "ProgrammingInfo";
+  // Logging
+  private static final String TAG = "ProgrammingInfo";
 }

@@ -17,54 +17,55 @@ package br.org.certi.jocd.flash;
 
 public class FlashPage {
 
-    // Logging
-    private static final String TAG = "FlashPage";
+  // Logging
+  private static final String TAG = "FlashPage";
 
-    final long address;
-    final long size;
-    public byte[] data;
-    final double eraseWeight;
-    final double programWeight;
-    boolean erased;
-    boolean same;
+  final long address;
+  final long size;
+  public byte[] data;
+  final double eraseWeight;
+  final double programWeight;
+  boolean erased;
+  boolean same;
 
-    // Number of bytes in a page to read to quickly determine if the page has the same data
-    public static final int PAGE_ESTIMATE_SIZE = 32;
-    public static final double PAGE_READ_WEIGHT = 0.3;
+  // Number of bytes in a page to read to quickly determine if the page has the same data
+  public static final int PAGE_ESTIMATE_SIZE = 32;
+  public static final double PAGE_READ_WEIGHT = 0.3;
 
-    // ~40KB/s, depends on clock speed, theoretical limit for HID is 56,000 B/s
-    public static final int DATA_TRANSFER_RATE_B_PER_S = (40 * 1000);
+  // ~40KB/s, depends on clock speed, theoretical limit for HID is 56,000 B/s
+  public static final int DATA_TRANSFER_RATE_B_PER_S = (40 * 1000);
 
 
-    /*
-     * Constructor
-     */
-    public FlashPage(long address, long size, byte data[], double eraseWeight, double programWeight) {
-        this.address = address;
-        this.size = size;
-        this.data = data;
-        this.eraseWeight = eraseWeight;
-        this.programWeight = programWeight;
-    }
+  /*
+   * Constructor
+   */
+  public FlashPage(long address, long size, byte data[], double eraseWeight, double programWeight) {
+    this.address = address;
+    this.size = size;
+    this.data = data;
+    this.eraseWeight = eraseWeight;
+    this.programWeight = programWeight;
+  }
 
-    /*
-     * Get time to program a page including the data transfer.
-     */
-    public double getProgramWeight() {
-        return this.programWeight + ((double)data.length / (double)DATA_TRANSFER_RATE_B_PER_S);
-    }
+  /*
+   * Get time to program a page including the data transfer.
+   */
+  public double getProgramWeight() {
+    return this.programWeight + ((double) data.length / (double) DATA_TRANSFER_RATE_B_PER_S);
+  }
 
-    /*
-     * Get time to erase and program a page including data transfer time.
-     */
-    public double getEraseProgramWeight() {
-        return this.eraseWeight + this.programWeight + ((double)data.length / (double)DATA_TRANSFER_RATE_B_PER_S);
-    }
+  /*
+   * Get time to erase and program a page including data transfer time.
+   */
+  public double getEraseProgramWeight() {
+    return this.eraseWeight + this.programWeight + ((double) data.length
+        / (double) DATA_TRANSFER_RATE_B_PER_S);
+  }
 
-    /*
-     * Get time to verify a page.
-     */
-    public double getVerifyWeight() {
-        return ((double)this.size / (double)DATA_TRANSFER_RATE_B_PER_S);
-    }
+  /*
+   * Get time to verify a page.
+   */
+  public double getVerifyWeight() {
+    return ((double) this.size / (double) DATA_TRANSFER_RATE_B_PER_S);
+  }
 }

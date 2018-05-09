@@ -17,24 +17,24 @@ package br.org.certi.jocd.core;
 
 public class MemoryRangeBase {
 
-    // Logging
-    private static final String TAG = "MemoryRangeBase";
+  // Logging
+  private static final String TAG = "MemoryRangeBase";
 
-    long start = 0;
-    long end = 0;
-    long length = 0;
+  long start = 0;
+  long end = 0;
+  long length = 0;
 
-    public static final long DEFAULT_START = 0;
-    public static final long DEFAULT_END = 0;
-    public static final int DEFAULT_LENGTH = 0;
+  public static final long DEFAULT_START = 0;
+  public static final long DEFAULT_END = 0;
+  public static final int DEFAULT_LENGTH = 0;
 
-    public MemoryRangeBase(long start, long end, long length) {
-        this.start = start;
-        this.end = end;
-        this.length = length;
-    }
+  public MemoryRangeBase(long start, long end, long length) {
+    this.start = start;
+    this.end = end;
+    this.length = length;
+  }
 
-    public boolean containsAddress(long address) {
-        return (address >= this.start) && (address <= this.end);
-    }
+  public boolean containsAddress(long address) {
+    return (address >= this.start) && (address <= this.end);
+  }
 }

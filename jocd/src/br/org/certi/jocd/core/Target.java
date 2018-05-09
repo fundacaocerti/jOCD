@@ -19,45 +19,45 @@ import br.org.certi.jocd.flash.Flash;
 
 public class Target {
 
-    // Logging
-    private static final String TAG = "Target";
+  // Logging
+  private static final String TAG = "Target";
 
-    public MemoryMap memoryMap;
+  public MemoryMap memoryMap;
 
-    /*
-     * Must be called right after constructor.
-     */
-    public void setup(MemoryMap memoryMap) {
-        this.memoryMap = memoryMap;
-    }
+  /*
+   * Must be called right after constructor.
+   */
+  public void setup(MemoryMap memoryMap) {
+    this.memoryMap = memoryMap;
+  }
 
-    public MemoryMap getMemoryMap() {
-        return memoryMap;
-    }
+  public MemoryMap getMemoryMap() {
+    return memoryMap;
+  }
 
-    public void writeMemory(long address, long value) {
-        throw new InternalError("Not implemented");
-    }
+  public void writeMemory(long address, long value) {
+    throw new InternalError("Not implemented");
+  }
 
-    public void writeMemory(long address, long value, int transferSize) {
-        throw new InternalError("Not implemented");
-    }
+  public void writeMemory(long address, long value, int transferSize) {
+    throw new InternalError("Not implemented");
+  }
 
-    public void reset() {
-        throw new InternalError("Not implemented");
-    }
+  public void reset() {
+    throw new InternalError("Not implemented");
+  }
 
-    public byte[] readBlockMemoryUnaligned8(long address, long size) {
-        throw new InternalError("Not implemented");
-    }
+  public byte[] readBlockMemoryUnaligned8(long address, long size) {
+    throw new InternalError("Not implemented");
+  }
 
-    public Flash getFlash() {
-        throw new InternalError("Not implemented");
-    }
+  public Flash getFlash() {
+    throw new InternalError("Not implemented");
+  }
 
-    public boolean massErase() {
-        throw new InternalError("Not implemented");
-    }
+  public boolean massErase() {
+    throw new InternalError("Not implemented");
+  }
 
 
 }
