@@ -20,7 +20,6 @@ package br.org.certi.jocd.dapaccess;
 
 import android.util.Log;
 
-
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.dapexceptions.CommandError;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
