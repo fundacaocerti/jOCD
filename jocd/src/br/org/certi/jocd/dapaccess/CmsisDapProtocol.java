@@ -151,6 +151,25 @@ public class CmsisDapProtocol {
     return port;
   }
 
+  public byte disconnect() throws DeviceError, CommandError {
+    byte[] cmd = new byte[2];
+    cmd[0] = CmsisDapCore.CommandId.DAP_DISCONNECT.getValue();
+    this.connectionInterface.write(cmd);
+
+    byte[] response = this.connectionInterface.read();
+    if (response[0] != CmsisDapCore.CommandId.DAP_DISCONNECT.getValue()) {
+      // Response is to a different command.
+      throw new DeviceError();
+    }
+
+    if (response[1] != DAP_OK) {
+      // DAP Transfer Configure failed.
+      throw new CommandError();
+    }
+
+    return response[1];
+  }
+
   /*
    * Overload for transferConfigure(byte idleCycles, int waitRetry, int matchRetry) using default
    * values.
