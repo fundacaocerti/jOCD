@@ -18,19 +18,50 @@
  */
 package br.org.certi.jocd.dapaccess;
 
+import android.util.Log;
+
+
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
+import br.org.certi.jocd.dapaccess.dapexceptions.CommandError;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import java.util.EnumSet;
 
 /*
-* This class implements the CMSIS-DAP wire protocol.
-*/
+ * This class implements the CMSIS-DAP wire protocol.
+ */
 public class CmsisDapProtocol {
 
   // Logging
   private static final String TAG = "CmsisDapProtocol";
 
   private ConnectionInterface connectionInterface = null;
+
+  public static enum Port {
+    DEFAULT((byte) 0x00),
+    SWD((byte) 0x01),
+    JTAG((byte) 0x02);
+
+    public final byte value;
+
+    Port(byte id) {
+      this.value = id;
+    }
+
+    public byte getValue() {
+      return value;
+    }
+
+    public static Port fromId(int id) {
+      for (Port port : Port.values()) {
+        if (port.getValue() == id) {
+          return port;
+        }
+      }
+      return null;
+    }
+  }
+
+  private static final byte DAP_OK = 0x00;
 
   /*
    * Constructor.
@@ -81,5 +112,91 @@ public class CmsisDapProtocol {
     System.arraycopy(response, 2, data, 0, arraySize);
     String dataString = new String(data);
     return dataString;
+  }
+
+  /*
+   * Overload for connect(mode), using default value: Port.Default.
+   */
+  public Port connect() throws DeviceError, CommandError {
+    return connect(Port.DEFAULT);
+  }
+
+  public Port connect(Port mode) throws DeviceError, CommandError {
+    byte[] cmd = new byte[2];
+    cmd[0] = CmsisDapCore.CommandId.DAP_CONNECT.getValue();
+    cmd[1] = mode.getValue();
+    this.connectionInterface.write(cmd);
+
+    byte[] response = this.connectionInterface.read();
+    if (response[0] != CmsisDapCore.CommandId.DAP_CONNECT.getValue()) {
+      // Response is to a different command.
+      throw new DeviceError();
+    }
+
+    Port port = Port.fromId(response[1]);
+
+    if (port == Port.DEFAULT) {
+      // DAP connect failed.
+      throw new CommandError();
+    } else if (port == Port.SWD) {
+      // DAP SWD MODE initialized.
+      Log.d(TAG, "DAP SWD MODE initialized");
+    } else if (port == Port.JTAG) {
+      // DAP JTAG MODE initialized.
+      Log.d(TAG, "DAP JTAG MODE initialized");
+    } else {
+      // Unexpected port.
+      throw new CommandError();
+    }
+
+    return port;
+  }
+
+  /*
+   * Overload for transferConfigure(byte idleCycles, int waitRetry, int matchRetry) using default
+   * values.
+   */
+  public byte transferConfigure() throws DeviceError, CommandError {
+    return transferConfigure((byte) 0x00, 0x0050, 0x0000);
+  }
+
+  public byte transferConfigure(byte idleCycles, int waitRetry, int matchRetry)
+      throws DeviceError, CommandError {
+    byte[] cmd = new byte[6];
+    cmd[0] = CmsisDapCore.CommandId.DAP_TRANSFER_CONFIGURE.getValue();
+    cmd[1] = idleCycles;
+
+    // Split waitRetry (16 bit) in 2 bytes.
+    byte lowWaitRetry = (byte) (waitRetry & 0x00FF);
+    byte highWaitRetry = (byte) ((waitRetry >> 8) & 0x00FF);
+    cmd[2] = lowWaitRetry;
+    cmd[3] = highWaitRetry;
+
+    // Split matchRetry (16 bit) in 2 bytes.
+    byte lowMatchRetry = (byte) (waitRetry & 0x00FF);
+    byte highMatchRetry = (byte) ((waitRetry >> 8) & 0x00FF);
+    cmd[4] = lowMatchRetry;
+    cmd[5] = highMatchRetry;
+
+    // Write the command.
+    this.connectionInterface.write(cmd);
+
+    byte[] response = this.connectionInterface.read();
+    if (response[0] != CmsisDapCore.CommandId.DAP_TRANSFER_CONFIGURE.getValue()) {
+      // Response is to a different command.
+      throw new DeviceError();
+    }
+
+    if (response[1] != DAP_OK) {
+      // DAP Transfer Configure failed.
+      throw new CommandError();
+    }
+
+    return response[1];
+  }
+
+  public byte setSWJClock(int freq) {
+    // TODO
+    return 0x00;
   }
 }
