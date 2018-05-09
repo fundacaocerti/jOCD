@@ -20,53 +20,52 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
-
 import br.org.certi.jocd.tools.AsyncResponse;
 
 public class MainActivity extends AppCompatActivity implements
-        AsyncResponse {
+    AsyncResponse {
 
-    // Logging
-    private static final String TAG = "MainActivity";
+  // Logging
+  private static final String TAG = "MainActivity";
 
-    TextView textViewConnectedBoards;
+  TextView textViewConnectedBoards;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
 
-        textViewConnectedBoards = (TextView)findViewById(R.id.textViewConnectedBoards);
-        textViewConnectedBoards.setText("Devices....");
-    }
+    textViewConnectedBoards = (TextView) findViewById(R.id.textViewConnectedBoards);
+    textViewConnectedBoards.setText("Devices....");
+  }
 
-    public void onClickListDevices(View view) {
-        Log.d("CLICK", "Button list devices clicked");
+  public void onClickListDevices(View view) {
+    Log.d("CLICK", "Button list devices clicked");
 
-        // Create a new async task to list all connected devices.
-        AsyncFlashToolListDevices asyncListDevices = new AsyncFlashToolListDevices(this,this);
-        asyncListDevices.execute();
-    }
+    // Create a new async task to list all connected devices.
+    AsyncFlashToolListDevices asyncListDevices = new AsyncFlashToolListDevices(this, this);
+    asyncListDevices.execute();
+  }
 
-    public void onClickFlashDevice(View view) {
-        Log.d("CLICK", "Button flash device clicked");
+  public void onClickFlashDevice(View view) {
+    Log.d("CLICK", "Button flash device clicked");
 
-        // Create a new async task to list all connected devices.
-        AsyncFlashToolFlashBoard asyncFlashDevice = new AsyncFlashToolFlashBoard(this,this);
-        asyncFlashDevice.execute();
-    }
+    // Create a new async task to list all connected devices.
+    AsyncFlashToolFlashBoard asyncFlashDevice = new AsyncFlashToolFlashBoard(this, this);
+    asyncFlashDevice.execute();
+  }
 
-    /*
-     * Callback to onProgressUpdate (from AsyncTask).
-     */
-    public void processAsyncTaskUpdate(String status) {
-        textViewConnectedBoards.setText(status);
-    }
+  /*
+   * Callback to onProgressUpdate (from AsyncTask).
+   */
+  public void processAsyncTaskUpdate(String status) {
+    textViewConnectedBoards.setText(status);
+  }
 
-    /*
-     * Callback to onPostExecute (from AsyncTask).
-     */
-    public void processAsyncTaskFinish(String result) {
-        textViewConnectedBoards.setText(result);
-    }
+  /*
+   * Callback to onPostExecute (from AsyncTask).
+   */
+  public void processAsyncTaskFinish(String result) {
+    textViewConnectedBoards.setText(result);
+  }
 }

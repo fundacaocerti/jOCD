@@ -29,26 +29,24 @@ import android.util.Log;
 */
 public class Command {
 
-    // Logging
-    private static final String TAG = "Command";
+  // Logging
+  private static final String TAG = "Command";
 
-    private int size;
-    private int readCount = 0;
-    private int writeCount = 0;
-    private boolean blockAllowed = true;
-    private int blockRequest;
-    private byte[] data;
-    private int dapIndex;
-    private boolean dataEncoded = false;
+  private int size;
+  private int readCount = 0;
+  private int writeCount = 0;
+  private boolean blockAllowed = true;
+  private int blockRequest;
+  private byte[] data;
+  private int dapIndex;
+  private boolean dataEncoded = false;
 
-
-    /*
-     * Constructor.
-     */
-    public Command(int size) {
-        super();
-        this.size = size;
-        Log.d(TAG, "New Command");
-    }
-
+  /*
+   * Constructor.
+   */
+  public Command(int size) {
+    super();
+    this.size = size;
+    Log.d(TAG, "New Command");
+  }
 }

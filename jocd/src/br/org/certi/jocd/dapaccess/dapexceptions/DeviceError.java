@@ -18,18 +18,17 @@
  */
 package br.org.certi.jocd.dapaccess.dapexceptions;
 
-public class DeviceError extends Error{
+public class DeviceError extends Error {
 
-    // Logging
-    private static final String TAG = "DeviceError";
+  // Logging
+  private static final String TAG = "DeviceError";
 
-    public DeviceError(){
-        super("Error communicating with device");
-    }
+  public DeviceError() {
+    super("Error communicating with device");
+  }
 
-    public DeviceError(String message)
-    {
-        super(message);
-    }
+  public DeviceError(String message) {
+    super(message);
+  }
 
 }

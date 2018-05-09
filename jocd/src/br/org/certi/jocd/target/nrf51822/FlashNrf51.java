@@ -21,19 +21,19 @@ import br.org.certi.jocd.flash.FlashAlgo;
 
 public class FlashNrf51 extends Flash {
 
-    // Logging
-    private static final String TAG = "FlashNrf51";
+  // Logging
+  private static final String TAG = "FlashNrf51";
 
-    FlashAlgo flashAlgo;
+  FlashAlgo flashAlgo;
 
-    /*
-     * Constructor.
-     */
-    public FlashNrf51(Target target) {
-        // TODO - pass flashalgo.
+  /*
+   * Constructor.
+   */
+  public FlashNrf51(Target target) {
+    // TODO - pass flashalgo.
 
-        this.flashAlgo = new FlashAlgo();
+    this.flashAlgo = new FlashAlgo();
 
-        super.setup(target, flashAlgo);
-    }
+    super.setup(target, flashAlgo);
+  }
 }

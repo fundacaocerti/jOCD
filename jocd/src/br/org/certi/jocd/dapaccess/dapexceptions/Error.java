@@ -18,18 +18,17 @@
  */
 package br.org.certi.jocd.dapaccess.dapexceptions;
 
-public class Error extends Exception{
+public class Error extends Exception {
 
-    // Logging
-    private static final String TAG = "Error";
+  // Logging
+  private static final String TAG = "Error";
 
-    public Error(){
-        super("Parent of all error DAPAccess can raise");
-    }
+  public Error() {
+    super("Parent of all error DAPAccess can raise");
+  }
 
-    public Error(String message)
-    {
-        super(message);
-    }
+  public Error(String message) {
+    super(message);
+  }
 
 }

@@ -17,19 +17,18 @@ package br.org.certi.jocd.core;
 
 public class RomRegion extends MemoryRegion {
 
-    // Logging
-    private static final String TAG = "RomRegion";
+  // Logging
+  private static final String TAG = "RomRegion";
 
-    /*
-     * Constructor.
-     */
-    public RomRegion(long start, long end, long length, int blockSize,
-                     String name, boolean isBootMemory,
-                     boolean isPoweredOnBoot, boolean isCacheable,
-                     boolean invalidateCacheOnRun) {
-        super(MemoryMap.RegionType.Rom, start, end, length, blockSize, name, isBootMemory,
-                isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
-    }
+  /*
+   * Constructor.
+   */
+  public RomRegion(long start, long end, long length, int blockSize, String name,
+      boolean isBootMemory, boolean isPoweredOnBoot, boolean isCacheable,
+      boolean invalidateCacheOnRun) {
+    super(MemoryMap.RegionType.Rom, start, end, length, blockSize, name, isBootMemory,
+        isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
+  }
 
-    // TODO
+  // TODO
 }

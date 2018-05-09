@@ -20,21 +20,22 @@ import android.util.Log;
 
 public class UsbFactory {
 
-    // Logging
-    private static final String TAG = "UsbFactory";
+  // Logging
+  private static final String TAG = "UsbFactory";
 
-    public static enum connectionInterfaceEnum {
-        androidUsbManager
-    }
+  public static enum connectionInterfaceEnum {
+    androidUsbManager
+  }
 
-    public static ConnectionInterface getUSBInterface(Context context,
-                                                      connectionInterfaceEnum intfEnum) {
-        switch (intfEnum) {
-            case androidUsbManager: return new AndroidUsbDevice(context);
-            default:
-                Log.e(TAG,"Default case on switch ConnectionIntf. "
-                        + "Unexpected interface: " + intfEnum.toString());
-                return null;
-        }
+  public static ConnectionInterface getUSBInterface(Context context,
+      connectionInterfaceEnum intfEnum) {
+    switch (intfEnum) {
+      case androidUsbManager:
+        return new AndroidUsbDevice(context);
+      default:
+        Log.e(TAG, "Default case on switch ConnectionIntf. " + "Unexpected interface: " + intfEnum
+            .toString());
+        return null;
     }
+  }
 }
