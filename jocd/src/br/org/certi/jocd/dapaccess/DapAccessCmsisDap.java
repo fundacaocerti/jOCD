@@ -19,8 +19,10 @@ import static br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory.connect
 
 import android.content.Context;
 import android.util.Log;
+import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Port;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory;
+import br.org.certi.jocd.dapaccess.dapexceptions.CommandError;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -143,9 +145,9 @@ public class DapAccessCmsisDap {
   }
 
   /*
-  * Initialize or reinitialize all the deferred transfer buffers
-  * Calling this method will drop all pending transactions so use with care.
-  */
+   * Initialize or reinitialize all the deferred transfer buffers
+   * Calling this method will drop all pending transactions so use with care.
+   */
   private void initDeferredBuffers() {
     // List of transfers that have been started, but not completed
     // (started by write_reg, read_reg, reg_write_repeat and reg_read_repeat)
@@ -165,6 +167,24 @@ public class DapAccessCmsisDap {
 
     flush();
     connectionInterface.close();
+  }
+
+  /*
+   * Overload for connect(port), using default value: Port.Default.
+   */
+  public void connect() throws DeviceError, CommandError {
+    connect(Port.DEFAULT);
+  }
+
+  public void connect(Port port) throws DeviceError, CommandError {
+    Port actualPort = this.protocol.connect(port);
+
+    // Set clock frequency.
+    // TODO
+    this.protocol.setSWJClock(this.frequency);
+
+    // Configure transfer.
+    this.protocol.transferConfigure();
   }
 
   private void flush() {
