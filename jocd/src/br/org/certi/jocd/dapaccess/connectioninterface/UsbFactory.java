@@ -13,28 +13,29 @@
  * See the license for the specific language governing permissions and
  * limitations under the license.
  */
-package br.org.certi.jocd.dapaccess.usbinterface;
+package br.org.certi.jocd.dapaccess.connectioninterface;
 
 import android.content.Context;
 import android.util.Log;
 
 public class UsbFactory {
 
-    // Logging
-    private static final String TAG = "UsbFactory";
+  // Logging
+  private static final String TAG = "UsbFactory";
 
-    public static enum connectionInterfaceEnum {
-        androidUsbManager
-    }
+  public static enum connectionInterfaceEnum {
+    androidUsbManager
+  }
 
-    public static UsbInterface getUSBInterface(Context context,
-                                               connectionInterfaceEnum intfEnum) {
-        switch (intfEnum) {
-            case androidUsbManager: return new AndroidUsbDevice(context);
-            default:
-                Log.e(TAG,"Default case on switch ConnectionIntf. "
-                        + "Unexpected interface: " + intfEnum.toString());
-                return null;
-        }
+  public static ConnectionInterface getUSBInterface(Context context,
+      connectionInterfaceEnum intfEnum) {
+    switch (intfEnum) {
+      case androidUsbManager:
+        return new AndroidUsbDevice(context);
+      default:
+        Log.e(TAG, "Default case on switch ConnectionIntf. " + "Unexpected interface: " + intfEnum
+            .toString());
+        return null;
     }
+  }
 }

@@ -17,8 +17,8 @@ package br.org.certi.jocd.tools;
 
 public interface ProgressUpdateInterface {
 
-    // Logging
-    static final String TAG = "ProgressUpdateInterface";
+  // Logging
+  static final String TAG = "ProgressUpdateInterface";
 
-    void progressUpdateCallback(int percentage);
+  void progressUpdateCallback(int percentage);
 }

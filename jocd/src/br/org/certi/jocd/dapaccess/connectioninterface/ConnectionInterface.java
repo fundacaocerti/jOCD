@@ -13,28 +13,40 @@
  * See the license for the specific language governing permissions and
  * limitations under the license.
  */
-package br.org.certi.jocd.flash;
+package br.org.certi.jocd.dapaccess.connectioninterface;
 
 import java.util.List;
 
-public class FlashAlgo {
+public interface ConnectionInterface {
 
   // Logging
-  private static final String TAG = "FlashAlgo";
+  static final String TAG = "ConnectionInterface";
 
-  public int loadAddress;
-  public List<Integer> instructions;
-  public int pcInit;
-  public int pcEraseAll;
-  public int pcEraseSector;
-  public int pcProgramPage;
-  public int beginData;
-  public List<Integer> pageBuffers;
-  public int beginStack;
-  public int staticBase;
-  public int minProgramLength;
-  public boolean analyzerSupported;
-  public int analyzerAddress;
+  public List<ConnectionInterface> getAllConnectedDevices();
 
-  // TODO
+  public int getVendorId();
+
+  public int getProductId();
+
+  public String getDeviceName();
+
+  public String getProductName();
+
+  public String getManufacturerName();
+
+  public String getSerialNumber();
+
+  public void rxHandler();
+
+  public byte[] read();
+
+  public void write(byte[] data);
+
+  public void open();
+
+  public void close();
+
+  public void setPacketCount(int packetCount);
+
+  public void setPacketSize(int packetSize);
 }

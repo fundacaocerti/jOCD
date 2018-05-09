@@ -19,36 +19,35 @@ import android.text.TextUtils;
 
 public class MemoryRegion extends MemoryRangeBase {
 
-    // Logging
-    private static final String TAG = "MemoryRegion";
+  // Logging
+  private static final String TAG = "MemoryRegion";
 
-    final MemoryMap.RegionType regionType;
-    public int blockSize = 0;
-    String name;
-    boolean isBootMemory;
-    boolean isPoweredOnBoot;
-    boolean isCacheable;
-    boolean invalidateCacheOnRun;
+  final MemoryMap.RegionType regionType;
+  public int blockSize = 0;
+  String name;
+  boolean isBootMemory;
+  boolean isPoweredOnBoot;
+  boolean isCacheable;
+  boolean invalidateCacheOnRun;
 
-    public static final int DEFAULT_BLOCK_SIZE = 0;
-    public static final boolean DEFAULT_IS_BOOT_MEMORY = false;
-    public static final boolean DEFAULT_IS_POWERED_ON_BOOT = true;
-    public static final boolean DEFAULT_IS_CACHEABLE = true;
-    public static final boolean DEFAULT_INVALIDATE_CACHE_ON_RUN = true;
+  public static final int DEFAULT_BLOCK_SIZE = 0;
+  public static final boolean DEFAULT_IS_BOOT_MEMORY = false;
+  public static final boolean DEFAULT_IS_POWERED_ON_BOOT = true;
+  public static final boolean DEFAULT_IS_CACHEABLE = true;
+  public static final boolean DEFAULT_INVALIDATE_CACHE_ON_RUN = true;
 
-    public MemoryRegion(MemoryMap.RegionType type, long start, long end, long length, int blockSize,
-                        String name, boolean isBootMemory,
-                        boolean isPoweredOnBoot, boolean isCacheable,
-                        boolean invalidateCacheOnRun) {
+  public MemoryRegion(MemoryMap.RegionType type, long start, long end, long length, int blockSize,
+      String name, boolean isBootMemory, boolean isPoweredOnBoot, boolean isCacheable,
+      boolean invalidateCacheOnRun) {
 
-        super(start, end, length);
-        this.regionType = type;
-        this.blockSize = blockSize;
-        this.name = TextUtils.isEmpty(name) ? this.regionType.toString() : name;
-        this.isBootMemory = isBootMemory;
-        this.isPoweredOnBoot = isPoweredOnBoot;
-        this.isCacheable = isCacheable;
-        this.invalidateCacheOnRun = invalidateCacheOnRun;
-    }
-    // TODO
+    super(start, end, length);
+    this.regionType = type;
+    this.blockSize = blockSize;
+    this.name = TextUtils.isEmpty(name) ? this.regionType.toString() : name;
+    this.isBootMemory = isBootMemory;
+    this.isPoweredOnBoot = isPoweredOnBoot;
+    this.isCacheable = isCacheable;
+    this.invalidateCacheOnRun = invalidateCacheOnRun;
+  }
+  // TODO
 }

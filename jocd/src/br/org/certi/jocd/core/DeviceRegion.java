@@ -17,19 +17,18 @@ package br.org.certi.jocd.core;
 
 public class DeviceRegion extends MemoryRegion {
 
-    // Logging
-    private static final String TAG = "DeviceRegion";
+  // Logging
+  private static final String TAG = "DeviceRegion";
 
-    /*
-     * Constructor.
-     */
-    public DeviceRegion(long start, long end, long length, int blockSize,
-                        String name, boolean isBootMemory,
-                        boolean isPoweredOnBoot, boolean isCacheable,
-                        boolean invalidateCacheOnRun) {
-        super(MemoryMap.RegionType.Device, start, end, length, blockSize, name, isBootMemory,
-                isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
-    }
+  /*
+   * Constructor.
+   */
+  public DeviceRegion(long start, long end, long length, int blockSize, String name,
+      boolean isBootMemory, boolean isPoweredOnBoot, boolean isCacheable,
+      boolean invalidateCacheOnRun) {
+    super(MemoryMap.RegionType.Device, start, end, length, blockSize, name, isBootMemory,
+        isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
+  }
 
-    // TODO
+  // TODO
 }
