@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AndroidUsbDevice implements ConnectionInterface {
@@ -133,14 +134,14 @@ public class AndroidUsbDevice implements ConnectionInterface {
    * Overload to read(timeout).
    * Use 20ms as the default timeout.
    */
-  public byte[] read() {
+  public byte[] read() throws TimeoutException {
     return this.read(20);
   }
 
   /*
    * Read data on the IN endpoint associated to the HID interface.
    */
-  public byte[] read(int timeout) {
+  public byte[] read(int timeout) throws TimeoutException {
     if (device == null) {
       Log.e(TAG, "Internal Error. Trying to read from null device");
       return null;
@@ -158,9 +159,8 @@ public class AndroidUsbDevice implements ConnectionInterface {
         // 2. CMSIS-DAP firmware problem cause a dropped read or write
         // 3. CMSIS-DAP is performing a long operation or is being
         //    halted in a debugger
-        // TODO Throw and exception.
         Log.e(TAG, "Read timed out.");
-        return null;
+        throw new TimeoutException();
       }
     }
 

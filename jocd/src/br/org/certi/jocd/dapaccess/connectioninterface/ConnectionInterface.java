@@ -16,6 +16,7 @@
 package br.org.certi.jocd.dapaccess.connectioninterface;
 
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public interface ConnectionInterface {
 
@@ -38,7 +39,7 @@ public interface ConnectionInterface {
 
   public void rxHandler();
 
-  public byte[] read();
+  public byte[] read() throws TimeoutException;
 
   public void write(byte[] data);
 

@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public class FlashTool {
 
@@ -58,7 +59,7 @@ public class FlashTool {
     this.context = context;
   }
 
-  public String listConnectedBoards() throws DeviceError {
+  public String listConnectedBoards() throws DeviceError, TimeoutException {
     List<MbedBoard> boards = MbedBoard.getAllConnectedBoards(context);
 
     String resp = "";
@@ -76,7 +77,7 @@ public class FlashTool {
    */
   public boolean flashBoard(ProgressUpdateInterface progressUpdate)
       throws MbedBoard.NoBoardConnectedException, MbedBoard.UniqueIDNotFoundException,
-      MbedBoard.UnspecifiedBoardIDException, InternalError, DeviceError {
+      MbedBoard.UnspecifiedBoardIDException, InternalError, DeviceError, TimeoutException {
 
     // TODO - change this a to path with the correct file.
     String file = "microbit.hex";
@@ -117,7 +118,7 @@ public class FlashTool {
       Integer frequency    // Set the SWD clock frequency in Hz."
   )
       throws MbedBoard.NoBoardConnectedException, MbedBoard.UniqueIDNotFoundException,
-      MbedBoard.UnspecifiedBoardIDException, InternalError, DeviceError {
+      MbedBoard.UnspecifiedBoardIDException, InternalError, DeviceError, TimeoutException {
 
     // Select default values.
     if (count == null) {

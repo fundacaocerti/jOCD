@@ -22,6 +22,7 @@ import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.tools.AsyncResponse;
 import br.org.certi.jocd.tools.FlashTool;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
+import java.util.concurrent.TimeoutException;
 
 public class AsyncFlashToolListDevices extends AsyncTask<String, String, String> implements
     ProgressUpdateInterface {
@@ -55,6 +56,8 @@ public class AsyncFlashToolListDevices extends AsyncTask<String, String, String>
     try {
       resp = tool.listConnectedBoards();
     } catch (DeviceError exception) {
+      Log.e(TAG, exception.getMessage());
+    } catch (TimeoutException exception) {
       Log.e(TAG, exception.getMessage());
     }
 
