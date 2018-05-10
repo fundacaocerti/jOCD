@@ -16,6 +16,12 @@
 package br.org.certi.jocd.dapaccess;
 
 import android.util.Log;
+import java.util.List;
+
+import br.org.certi.jocd.dapaccess.CmsisDapCore.CommandId;
+import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
+import br.org.certi.jocd.dapaccess.dapexceptions.TransferFaultError;
+import br.org.certi.jocd.dapaccess.dapexceptions.TransferTimeoutError;
 
 /*
 * A wrapper object representing a command send to the layer below (ex. USB).
@@ -36,9 +42,9 @@ public class Command {
   private int readCount = 0;
   private int writeCount = 0;
   private boolean blockAllowed = true;
-  private int blockRequest;
-  private byte[] data;
-  private int dapIndex;
+  private Byte blockRequest;
+  private List<DataTuple> data;
+  private byte dapIndex;
   private boolean dataEncoded = false;
 
   /*
@@ -48,5 +54,197 @@ public class Command {
     super();
     this.size = size;
     Log.d(TAG, "New Command");
+  }
+
+  /*
+ * Return true if no transfers have been added to this packet
+ */
+  public boolean getEmpty() {
+    return this.data.size() == 0;
+  }
+
+  /*
+   * Encode this command into a byte array that can be sent
+   * The data returned by this function is a bytearray in
+   * the format that of a DAP_Transfer CMSIS-DAP command.
+   */
+  public byte[] encodeTransferData() {
+    assert this.getEmpty() == false;
+    byte[] buf = new byte[this.size];
+    int transferCount = this.readCount + this.writeCount;
+    int pos = 0;
+    buf[pos] = CommandId.DAP_TRANSFER.getValue();
+    pos += 1;
+    buf[pos] = this.dapIndex;
+    pos += 1;
+    buf[pos] = (byte) transferCount;
+    pos += 1;
+    for (DataTuple dt : this.data) {
+      int count = dt.getCount();
+      byte request = dt.getRequest();
+      byte[] writeList = dt.getData();
+      assert writeList == null || writeList.length <= count;
+      int writePos = 0;
+      for (int i = 0; i <= count; i++) {
+        buf[pos] = (byte) request;
+        pos += 1;
+        if ((request & DapAccessCmsisDap.READ) > 0) {
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 0)) & 0xff);
+          pos += 1;
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 1)) & 0xff);
+          pos += 1;
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 2)) & 0xff);
+          pos += 1;
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 3)) & 0xff);
+          pos += 1;
+          writePos += 1;
+        }
+      }
+    }
+    return buf;
+  }
+
+  /*
+   * Take a byte array and extract the data from it
+   * Decode the response returned by a DAP_Transfer CMSIS-DAP command
+   * and return it as an array of bytes.
+   */
+  private byte[] decodeTransferData(byte[] data) throws TransferError {
+    assert this.getEmpty() == false;
+    if (data[0] != CommandId.DAP_TRANSFER.getValue()) {
+      throw new IllegalArgumentException("DAP_TRANSFER response error");
+    }
+
+    if (data[2] != CmsisDapProtocol.DAP_TRANSFER_OK) {
+      if (data[2] == CmsisDapProtocol.DAP_TRANSFER_FAULT) {
+        throw new TransferFaultError();
+      } else if (data[2] == CmsisDapProtocol.DAP_TRANSFER_WAIT) {
+        throw new TransferTimeoutError();
+      }
+      throw new TransferError();
+    }
+
+    // Check for count mismatch after checking for DAP_TRANSFER_FAULT
+    // This allows TransferFaultError or TransferTimeoutError to get
+    // thrown instead of TransferFaultError
+    if (data[1] != this.readCount + this.writeCount) {
+      throw new TransferError();
+    }
+
+    int arraySize = 4 * this.readCount;
+    byte[] decodedData = new byte[arraySize];
+    System.arraycopy(data, 3, decodedData, 0, arraySize);
+    return decodedData;
+  }
+
+  /*
+   * Encode this command into a byte array that can be sent
+   * The data returned by this function is a bytearray in
+   * the format that of a DAP_TransferBlock CMSIS-DAP command.
+   */
+  public byte[] encodeTransferBlockData() {
+    assert this.getEmpty() == false;
+    byte[] buf = new byte[this.size];
+    int transferCount = this.readCount + this.writeCount;
+    assert !(this.readCount != 0 && this.writeCount != 0);
+    assert this.blockRequest != null;
+    int pos = 0;
+    buf[pos] = CommandId.DAP_TRANSFER_BLOCK.getValue();
+    pos += 1;
+    buf[pos] = this.dapIndex;
+    pos += 1;
+    buf[pos] = (byte) (transferCount & 0xff);
+    pos += 1;
+    buf[pos] = (byte) ((transferCount >> 8) & 0xff);
+    pos += 1;
+    buf[pos] = this.blockRequest;
+    pos += 1;
+    for (DataTuple dt : this.data) {
+      int count = dt.getCount();
+      int request = dt.getRequest();
+      byte[] writeList = dt.getData();
+      assert writeList == null || writeList.length <= count;
+      assert request == this.blockRequest;
+      int writePos = 0;
+      if ((request & DapAccessCmsisDap.READ) > 0) {
+        for (int i = 0; i <= count; i++) {
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 0)) & 0xff);
+          pos += 1;
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 1)) & 0xff);
+          pos += 1;
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 2)) & 0xff);
+          pos += 1;
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 3)) & 0xff);
+          pos += 1;
+          writePos += 1;
+        }
+      }
+    }
+    return buf;
+  }
+
+  /*
+   * Take a byte array and extract the data from it
+   * Decode the response returned by a DAP_TransferBlock
+   * CMSIS-DAP command and return it as an array of bytes.
+   */
+  private byte[] decodeTransferBlockData(byte[] data)
+      throws TransferFaultError, TransferTimeoutError, TransferError {
+    assert this.getEmpty() == false;
+    if (data[0] != CommandId.DAP_TRANSFER_BLOCK.getValue()) {
+      throw new IllegalArgumentException("DAP_TRANSFER_BLOCK response error");
+    }
+
+    if (data[3] != CmsisDapProtocol.DAP_TRANSFER_OK) {
+      if (data[3] == CmsisDapProtocol.DAP_TRANSFER_FAULT) {
+        throw new TransferFaultError();
+      } else if (data[3] == CmsisDapProtocol.DAP_TRANSFER_WAIT) {
+        throw new TransferTimeoutError();
+      }
+      throw new TransferError();
+    }
+
+    // Check for count mismatch after checking for DAP_TRANSFER_FAULT
+    // This allows TransferFaultError or TransferTimeoutError to get
+    // thrown instead of TransferFaultError
+    int transferCount = data[1] | (data[2] << 8);
+    if (transferCount != this.readCount + this.writeCount) {
+      throw new TransferError();
+    }
+
+    int arraySize = 4 * this.readCount;
+    byte[] decodedData = new byte[arraySize];
+    System.arraycopy(data, 4, decodedData, 0, arraySize);
+    return decodedData;
+  }
+
+  /*
+   * Encode this command into a byte array that can be sent
+   * The actual command this is encoded into depends on the data that was added.
+   */
+  public byte[] encodeData() {
+    assert this.getEmpty() == false;
+    this.dataEncoded = true;
+    byte[] data;
+    if (this.blockAllowed) {
+      data = this.encodeTransferBlockData();
+    } else {
+      data = this.encodeTransferData();
+    }
+    return data;
+  }
+
+  /*
+   * Decode the response data
+   */
+  public byte[] decodeData(byte[] data) throws TransferError {
+    assert this.getEmpty() == false;
+    assert this.dataEncoded == true;
+    if (this.blockAllowed) {
+      data = this.decodeTransferBlockData(data);
+    } else {
+      data = this.decodeTransferData(data);
+    }
+    return data;
   }
 }

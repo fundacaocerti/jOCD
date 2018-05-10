@@ -218,12 +218,12 @@ public class CmsisDapProtocol {
     return response[1];
   }
 
-  public int setSWJClock() throws DeviceError, CommandError {
-    return setSWJClock(1000000);
+  public byte setSWJClock() throws DeviceError {
+    return setSWJClock(DapAccessCmsisDap.FREQUENCY);
   }
 
-  public byte setSWJClock(int clock) throws DeviceError, CommandError {
-    byte[] cmd = new byte[2];
+  public byte setSWJClock(int clock) throws DeviceError {
+    byte[] cmd = new byte[5];
     cmd[0] = (byte) CommandId.DAP_SWJ_CLOCK.getValue();
     cmd[1] = (byte) (clock & 0xff);
     cmd[2] = (byte) ((clock >> 8) & 0xff);
