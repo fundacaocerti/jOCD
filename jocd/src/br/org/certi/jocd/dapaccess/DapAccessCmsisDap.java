@@ -22,10 +22,12 @@ import android.util.Log;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Port;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory;
-import br.org.certi.jocd.dapaccess.dapexceptions.CommandError;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
+import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 public class DapAccessCmsisDap {
@@ -33,22 +35,23 @@ public class DapAccessCmsisDap {
   // Logging
   private static final String TAG = "DapAccessCmsisDap";
 
+  //CMSIS-DAP values
+  public static final byte READ = 1 << 1;
+
+  public static final int FREQUENCY = 1000000; // 1MHz default clock
+
   private ConnectionInterface connectionInterface = null;
   private boolean deferredTransfer = false;
   private int packetCount = 0;
   private String uniqueId;
-  private int frequency = 1000000; // 1MHz default clock
+  private int frequency;
   private int dapPort = 0;
-  // TODO _transfer_list
-  // TODO _crnt_cmd
   private int packetSize = 0;
-  // TODO commandsToRead
-  // TODO commandResponseBuf
   private CmsisDapProtocol protocol;
-  private ArrayDeque transferList;
+  private LinkedList<Transfer> transferList;
   private Command crntCmd;
   private ArrayDeque commandsToRead;
-  private List<Byte> commandsResponseBuf;
+  private byte[] commandsResponseBuf;
 
   /*
    * Constructor.
@@ -56,6 +59,7 @@ public class DapAccessCmsisDap {
   public DapAccessCmsisDap(String uniqueId) {
     super();
     this.uniqueId = uniqueId;
+    this.frequency = FREQUENCY;
   }
 
   /*
@@ -140,8 +144,63 @@ public class DapAccessCmsisDap {
     this.initDeferredBuffers();
   }
 
+  public void close() throws TransferError {
+    if (connectionInterface == null) {
+      return;
+    }
+
+    flush();
+    connectionInterface.close();
+  }
+
   private String getUniqueId(ConnectionInterface device) {
     return device.getSerialNumber();
+  }
+
+  public String getUniqueId() {
+    return uniqueId;
+  }
+
+  private void flush() throws TransferError {
+    // Send current packet
+    this.sendPacket();
+    // Read all backlogged
+    for (Iterator itr = this.commandsToRead.iterator(); itr.hasNext(); ) {
+      this.readPacket();
+    }
+  }
+
+  /*
+   * Overload for connect(port), using default value: Port.Default.
+   */
+  public void connect() throws DeviceError {
+    connect(Port.DEFAULT);
+  }
+
+  public void connect(Port port) throws DeviceError {
+    Port actualPort = this.protocol.connect(port);
+
+    // Set clock frequency.
+    this.protocol.setSWJClock(this.frequency);
+
+    // Configure transfer.
+    this.protocol.transferConfigure();
+  }
+
+  public void disconnect() throws DeviceError {
+    this.flush();
+    this.protocol.disconnect();
+  }
+
+  public void setAttributes() {
+    // TODO
+    // Not implemented. We don't support WS.
+  }
+
+  public void setClock(int frequency) throws DeviceError {
+    this.flush();
+    this.protocol.setSWJClock(frequency);
+    this.frequency = frequency;
   }
 
   /*
@@ -151,57 +210,113 @@ public class DapAccessCmsisDap {
   private void initDeferredBuffers() {
     // List of transfers that have been started, but not completed
     // (started by write_reg, read_reg, reg_write_repeat and reg_read_repeat)
-    this.transferList = new ArrayDeque();
+    this.transferList = new LinkedList<Transfer>();
     // The current packet - this can contain multiple  different transfers
     this.crntCmd = new Command(this.packetSize);
     // Packets that have been sent but not read
     this.commandsToRead = new ArrayDeque();
     // Buffer for data returned for completed commands. This data will be added to transfers
-    this.commandsResponseBuf = new ArrayList<Byte>();
-  }
-
-  public void close() {
-    if (connectionInterface == null) {
-      return;
-    }
-
-    flush();
-    connectionInterface.close();
+    this.commandsResponseBuf = new byte[0];
   }
 
   /*
-   * Overload for connect(port), using default value: Port.Default.
+  * Reads and decodes a single packet
+  * Reads a single packet from the device and  stores the data from it in the current Command object
    */
-  public void connect() throws DeviceError, CommandError {
-    connect(Port.DEFAULT);
+  private void readPacket() throws TransferError {
+    // Grab command, send it and decode response
+    Command command = (Command) this.commandsToRead.poll();
+    byte[] decodedData;
+    try {
+      byte[] rawData = this.connectionInterface.read();
+      decodedData = command.decodeData(rawData);
+    } catch (Exception exception) {
+      this.abortAllTransfers(exception);
+      throw exception;
+    }
+
+    byte[] c = new byte[decodedData.length + this.commandsResponseBuf.length];
+    System.arraycopy(decodedData, 0, c, 0, decodedData.length);
+    System.arraycopy(this.commandsResponseBuf, 0, c, decodedData.length,
+        this.commandsResponseBuf.length);
+
+    // Attach data to transfers
+    int pos = 0;
+    while (true) {
+      int sizeLeft = this.commandsResponseBuf.length - pos;
+      if (sizeLeft == 0) {
+        // If size left is 0 then the transfer list might be empty, so don't try to access element 0
+        break;
+      }
+      Transfer transfer = this.transferList.get(0);
+      int size = transfer.getDataSize();
+      if (size > sizeLeft) {
+        break;
+      }
+
+      this.transferList.poll();
+      int arraySize = pos + size;
+      byte[] data = new byte[arraySize];
+      System.arraycopy(this.commandsResponseBuf, pos, data, 0, arraySize);
+      pos = size;
+      transfer.addResponse(data);
+    }
+
+    // Remove used data from _command_response_buf
+    if (pos > 0) {
+      int arraySize = this.commandsResponseBuf.length - pos;
+      byte[] data = new byte[arraySize];
+      System.arraycopy(this.commandsResponseBuf, pos, data, 0, arraySize);
+      this.commandsResponseBuf = data;
+    }
   }
 
-  public void connect(Port port) throws DeviceError, CommandError {
-    Port actualPort = this.protocol.connect(port);
+  /*
+   * Send a single packet to the interface
+   * This function guarantees that the number of packets that are stored in daplink's buffer
+   * (the number of packets written but not read) does not exceed the number supported by
+   * the given device.
+   */
+  private void sendPacket() throws TransferError {
+    Command command = this.crntCmd;
+    if (command.getEmpty()) {
+      return;
+    }
 
-    // Set clock frequency.
-    // TODO
-    this.protocol.setSWJClock(this.frequency);
-
-    // Configure transfer.
-    this.protocol.transferConfigure();
+    int maxPackets = this.connectionInterface.getPacketCount();
+    if (this.commandsToRead.size() >= maxPackets) {
+      this.readPacket();
+    }
+    byte[] data = command.encodeData();
+    try {
+      this.connectionInterface.write(data);
+    } catch (Exception exception) {
+      this.abortAllTransfers(exception);
+      throw exception;
+    }
+    this.commandsToRead.add(command);
+    this.crntCmd = new Command(this.packetSize);
   }
 
-  public void disconnect() throws DeviceError, CommandError {
-    this.flush();
-    this.protocol.disconnect();
-  }
+  /*
+   * Abort any ongoing transfers and clear all buffers
+   */
+  private void abortAllTransfers(Exception exception) {
+    int pendingReads = this.commandsToRead.size();
+    // Invalidate transferList
+    for (Transfer transfer : this.transferList) {
+      transfer.addError(exception);
+    }
+    // Clear allDeferredBuffers
+    this.initDeferredBuffers();
 
-  private void flush() {
-    // TODO
-  }
-
-  public void setAttributes() {
-    // TODO
-    // Not implemented. We don't support WS.
-  }
-
-  public String getUniqueId() {
-    return uniqueId;
+    // Finish all pending reads and ignore the data
+    // Only do this if the error is a transfer error.
+    // Otherwise this could cause another exception
+    if (exception instanceof TransferError) {
+      for (int i = 0; i < pendingReads; i++) {
+        this.connectionInterface.read();
+      }
+    }
   }
 }
