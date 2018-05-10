@@ -180,7 +180,7 @@ public class DapAccessCmsisDap {
   }
 
   public void connect(Port port) throws DeviceError, TimeoutException {
-    Port actualPort = this.protocol.connect(port);
+    this.dapPort = this.protocol.connect(port);
 
     // Set clock frequency.
     this.protocol.setSWJClock(this.frequency);
