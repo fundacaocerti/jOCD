@@ -59,7 +59,7 @@ public class Command {
  * Return true if no transfers have been added to this packet
  */
   public boolean getEmpty() {
-    return this.data.size() == 0;
+    return this.data == null || this.data.size() == 0;
   }
 
   /*
