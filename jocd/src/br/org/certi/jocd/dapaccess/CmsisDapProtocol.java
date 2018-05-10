@@ -19,7 +19,7 @@
 package br.org.certi.jocd.dapaccess;
 
 import android.util.Log;
-
+import br.org.certi.jocd.dapaccess.CmsisDapCore.CommandId;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.dapexceptions.CommandError;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
@@ -61,6 +61,11 @@ public class CmsisDapProtocol {
   }
 
   private static final byte DAP_OK = 0x00;
+
+  // Responses to DAP_Transfer and DAP_TransferBlock
+  public static final int DAP_TRANSFER_OK = 1;
+  public static final int DAP_TRANSFER_WAIT = 2;
+  public static final int DAP_TRANSFER_FAULT = 4;
 
   /*
    * Constructor.
@@ -213,8 +218,29 @@ public class CmsisDapProtocol {
     return response[1];
   }
 
-  public byte setSWJClock(int freq) {
-    // TODO
-    return 0x00;
+  public int setSWJClock() throws DeviceError, CommandError {
+    return setSWJClock(1000000);
+  }
+
+  public byte setSWJClock(int clock) throws DeviceError, CommandError {
+    byte[] cmd = new byte[2];
+    cmd[0] = (byte) CommandId.DAP_SWJ_CLOCK.getValue();
+    cmd[1] = (byte) (clock & 0xff);
+    cmd[2] = (byte) ((clock >> 8) & 0xff);
+    cmd[3] = (byte) ((clock >> 16) & 0xff);
+    cmd[4] = (byte) ((clock >> 24) & 0xff);
+    this.connectionInterface.write(cmd);
+
+    byte[] response = this.connectionInterface.read();
+    if (response[0] != CommandId.DAP_SWJ_CLOCK.getValue()) {
+      // Response is to a different command
+      throw new DeviceError();
+    }
+    if (response[1] != DAP_OK) {
+      // DAP SWJ Clock failed
+      throw new CommandError();
+    }
+
+    return response[1];
   }
 }
