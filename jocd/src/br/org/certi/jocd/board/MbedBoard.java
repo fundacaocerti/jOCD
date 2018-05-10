@@ -25,6 +25,7 @@ import br.org.certi.jocd.target.TargetFactory;
 import br.org.certi.jocd.target.TargetFactory.targetEnum;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public class MbedBoard extends Board {
 
@@ -78,7 +79,8 @@ public class MbedBoard extends Board {
   /*
    * Overload for getAllConnectedBoards using default values.
    */
-  public static List<MbedBoard> getAllConnectedBoards(Context context) throws DeviceError {
+  public static List<MbedBoard> getAllConnectedBoards(Context context)
+      throws DeviceError, TimeoutException {
     return getAllConnectedBoards(context, false, true, null, 0);
   }
 
@@ -86,7 +88,8 @@ public class MbedBoard extends Board {
    * Return an array of all mbed boards connected.
    */
   public static List<MbedBoard> getAllConnectedBoards(Context context, boolean close,
-      boolean blocking, targetEnum targetOverride, int frequency) throws DeviceError {
+      boolean blocking, targetEnum targetOverride, int frequency)
+      throws DeviceError, TimeoutException {
     List<MbedBoard> mbedList = new ArrayList<MbedBoard>();
 
     while (true) {
@@ -134,7 +137,7 @@ public class MbedBoard extends Board {
    */
   public static MbedBoard chooseBoard(Context context)
       throws NoBoardConnectedException, UniqueIDNotFoundException, UnspecifiedBoardIDException,
-      DeviceError {
+      DeviceError, TimeoutException {
     return chooseBoard(context, true, false, null, null, 0, true);
   }
 
@@ -144,7 +147,7 @@ public class MbedBoard extends Board {
   public static MbedBoard chooseBoard(Context context, boolean blocking, boolean returnFirst,
       String boardId, String targetOverride, int frequency, boolean initBoard)
       throws NoBoardConnectedException, UniqueIDNotFoundException, UnspecifiedBoardIDException,
-      DeviceError {
+      DeviceError, TimeoutException {
 
     // Get all connected boards.
     List<MbedBoard> allBoards = MbedBoard.getAllConnectedBoards(context);

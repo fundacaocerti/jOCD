@@ -23,6 +23,7 @@ import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.dapexceptions.CommandError;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import java.util.EnumSet;
+import java.util.concurrent.TimeoutException;
 
 /*
  * This class implements the CMSIS-DAP wire protocol.
@@ -129,11 +130,12 @@ public class CmsisDapProtocol {
     this.connectionInterface = connectionInterface;
   }
 
-  public Object dapInfo(IdInfo id) throws DeviceError {
+  public Object dapInfo(IdInfo id) throws DeviceError, TimeoutException {
     byte[] cmd = new byte[2];
     cmd[0] = ((byte) CommandId.DAP_INFO.getValue());
     cmd[1] = (byte) id.getValue();
     this.connectionInterface.write(cmd);
+
     byte[] response = this.connectionInterface.read();
 
     if (response[0] != CommandId.DAP_INFO.getValue()) {
@@ -175,11 +177,11 @@ public class CmsisDapProtocol {
   /*
    * Overload for connect(mode), using default value: Port.Default.
    */
-  public Port connect() throws DeviceError {
+  public Port connect() throws DeviceError, TimeoutException {
     return connect(Port.DEFAULT);
   }
 
-  public Port connect(Port mode) throws DeviceError {
+  public Port connect(Port mode) throws DeviceError, TimeoutException {
     byte[] cmd = new byte[2];
     cmd[0] = CommandId.DAP_CONNECT.getValue();
     cmd[1] = mode.getValue();
@@ -210,7 +212,7 @@ public class CmsisDapProtocol {
     return port;
   }
 
-  public byte disconnect() throws DeviceError {
+  public byte disconnect() throws DeviceError, TimeoutException {
     byte[] cmd = new byte[2];
     cmd[0] = CommandId.DAP_DISCONNECT.getValue();
     this.connectionInterface.write(cmd);
@@ -233,12 +235,12 @@ public class CmsisDapProtocol {
    * Overload for transferConfigure(byte idleCycles, int waitRetry, int matchRetry) using default
    * values.
    */
-  public byte transferConfigure() throws DeviceError {
+  public byte transferConfigure() throws DeviceError, TimeoutException {
     return transferConfigure((byte) 0x00, 0x0050, 0x0000);
   }
 
   public byte transferConfigure(byte idleCycles, int waitRetry, int matchRetry)
-      throws DeviceError {
+      throws DeviceError, TimeoutException {
     byte[] cmd = new byte[6];
     cmd[0] = CommandId.DAP_TRANSFER_CONFIGURE.getValue();
     cmd[1] = idleCycles;
@@ -272,11 +274,11 @@ public class CmsisDapProtocol {
     return response[1];
   }
 
-  public byte setSWJClock() throws DeviceError {
+  public byte setSWJClock() throws DeviceError, TimeoutException {
     return setSWJClock(DapAccessCmsisDap.FREQUENCY);
   }
 
-  public byte setSWJClock(int clock) throws DeviceError {
+  public byte setSWJClock(int clock) throws DeviceError, TimeoutException {
     byte[] cmd = new byte[5];
     cmd[0] = (byte) CommandId.DAP_SWJ_CLOCK.getValue();
     cmd[1] = (byte) (clock & 0xff);
@@ -301,11 +303,11 @@ public class CmsisDapProtocol {
   /*
    * Overload for swdConfigure(byte conf) using default conf.
    */
-  public byte swdConfigure() throws DeviceError {
+  public byte swdConfigure() throws DeviceError, TimeoutException {
     return swdConfigure((byte) 0x00);
   }
 
-  public byte swdConfigure(byte conf) throws DeviceError {
+  public byte swdConfigure(byte conf) throws DeviceError, TimeoutException {
     byte[] cmd = new byte[2];
     cmd[0] = CommandId.DAP_SWD_CONFIGURE.getValue();
     cmd[1] = conf;
@@ -327,7 +329,7 @@ public class CmsisDapProtocol {
     return response[1];
   }
 
-  public byte swjSequence(byte[] data) throws DeviceError {
+  public byte swjSequence(byte[] data) throws DeviceError, TimeoutException {
     // Swj sequence will have the following structure:
     //     CMD  -  Bit Count - DATA....
     //   1 byte +   1 byte   + SIZEOF(DATA)
@@ -360,11 +362,11 @@ public class CmsisDapProtocol {
   /*
    * Overload for jtagConfigure(byte irlen, byte devNum) using default devNum.
    */
-  public byte[] jtagConfigure(byte irlen) throws DeviceError {
+  public byte[] jtagConfigure(byte irlen) throws DeviceError, TimeoutException {
     return jtagConfigure(irlen, (byte) 0x01);
   }
 
-  public byte[] jtagConfigure(byte irlen, byte devNum) throws DeviceError {
+  public byte[] jtagConfigure(byte irlen, byte devNum) throws DeviceError, TimeoutException {
     byte[] cmd = new byte[3];
     cmd[0] = CommandId.DAP_JTAG_CONFIGURE.getValue();
     cmd[1] = devNum;
