@@ -19,7 +19,6 @@
 package br.org.certi.jocd.dapaccess;
 
 import android.util.Log;
-import br.org.certi.jocd.dapaccess.CmsisDapCore.CommandId;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.dapexceptions.CommandError;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
@@ -34,6 +33,61 @@ public class CmsisDapProtocol {
   private static final String TAG = "CmsisDapProtocol";
 
   private ConnectionInterface connectionInterface = null;
+
+  public static enum CommandId {
+    DAP_INFO((byte) 0x00),
+    DAP_LED((byte) 0x01),
+    DAP_CONNECT((byte) 0x02),
+    DAP_DISCONNECT((byte) 0x03),
+    DAP_TRANSFER_CONFIGURE((byte) 0x04),
+    DAP_TRANSFER((byte) 0x05),
+    DAP_TRANSFER_BLOCK((byte) 0x06),
+    DAP_TRANSFER_ABORT((byte) 0x07),
+    DAP_WRITE_ABORT((byte) 0x08),
+    DAP_DELAY((byte) 0x09),
+    DAP_RESET_TARGET((byte) 0x0a),
+    DAP_SWJ_PINS((byte) 0x10),
+    DAP_SWJ_CLOCK((byte) 0x11),
+    DAP_SWJ_SEQUENCE((byte) 0x12),
+    DAP_SWD_CONFIGURE((byte) 0x13),
+    DAP_JTAG_SEQUENCE((byte) 0x14),
+    DAP_JTAG_CONFIGURE((byte) 0x15),
+    DAP_JTAG_IDCODE((byte) 0x16),
+    DAP_VENDOR0((byte) 0x80);
+
+    public final byte value;
+
+    CommandId(byte id) {
+      this.value = id;
+    }
+
+    public byte getValue() {
+      return value;
+    }
+  }
+
+  public static enum IdInfo {
+    VENDOR_ID((byte) 0x01),
+    PRODUCT_ID((byte) 0x02),
+    SERIAL_NUMBER((byte) 0x03),
+    CMSIS_DAP_FW_VERSION((byte) 0x04),
+    TARGET_DEVICE_VENDOR((byte) 0x05),
+    TARGET_DEVICE_NAME((byte) 0x06),
+    CAPABILITIES((byte) 0xf0),
+    SWO_BUFFER_SIZE((byte) 0xfd),
+    PACKET_COUNT((byte) 0xfe),
+    PACKET_SIZE((byte) 0xff);
+
+    public final byte value;
+
+    IdInfo(byte id) {
+      this.value = id;
+    }
+
+    public byte getValue() {
+      return value;
+    }
+  }
 
   public static enum Port {
     DEFAULT((byte) 0x00),
@@ -75,14 +129,14 @@ public class CmsisDapProtocol {
     this.connectionInterface = connectionInterface;
   }
 
-  public Object dapInfo(CmsisDapCore.IdInfo id) throws DeviceError {
+  public Object dapInfo(IdInfo id) throws DeviceError {
     byte[] cmd = new byte[2];
-    cmd[0] = ((byte) CmsisDapCore.CommandId.DAP_INFO.getValue());
+    cmd[0] = ((byte) CommandId.DAP_INFO.getValue());
     cmd[1] = (byte) id.getValue();
     this.connectionInterface.write(cmd);
     byte[] response = this.connectionInterface.read();
 
-    if (response[0] != CmsisDapCore.CommandId.DAP_INFO.getValue()) {
+    if (response[0] != CommandId.DAP_INFO.getValue()) {
       // Response is to a different command
       throw new DeviceError();
     }
@@ -91,9 +145,9 @@ public class CmsisDapProtocol {
       return null;
     }
 
-    EnumSet<CmsisDapCore.IdInfo> intIdInfo = EnumSet
-        .of(CmsisDapCore.IdInfo.CAPABILITIES, CmsisDapCore.IdInfo.SWO_BUFFER_SIZE,
-            CmsisDapCore.IdInfo.PACKET_COUNT, CmsisDapCore.IdInfo.PACKET_SIZE);
+    EnumSet<IdInfo> intIdInfo = EnumSet
+        .of(IdInfo.CAPABILITIES, IdInfo.SWO_BUFFER_SIZE,
+            IdInfo.PACKET_COUNT, IdInfo.PACKET_SIZE);
 
     // Integer values
     if (intIdInfo.contains(id)) {
@@ -127,12 +181,12 @@ public class CmsisDapProtocol {
 
   public Port connect(Port mode) throws DeviceError {
     byte[] cmd = new byte[2];
-    cmd[0] = CmsisDapCore.CommandId.DAP_CONNECT.getValue();
+    cmd[0] = CommandId.DAP_CONNECT.getValue();
     cmd[1] = mode.getValue();
     this.connectionInterface.write(cmd);
 
     byte[] response = this.connectionInterface.read();
-    if (response[0] != CmsisDapCore.CommandId.DAP_CONNECT.getValue()) {
+    if (response[0] != CommandId.DAP_CONNECT.getValue()) {
       // Response is to a different command.
       throw new DeviceError();
     }
@@ -158,11 +212,11 @@ public class CmsisDapProtocol {
 
   public byte disconnect() throws DeviceError {
     byte[] cmd = new byte[2];
-    cmd[0] = CmsisDapCore.CommandId.DAP_DISCONNECT.getValue();
+    cmd[0] = CommandId.DAP_DISCONNECT.getValue();
     this.connectionInterface.write(cmd);
 
     byte[] response = this.connectionInterface.read();
-    if (response[0] != CmsisDapCore.CommandId.DAP_DISCONNECT.getValue()) {
+    if (response[0] != CommandId.DAP_DISCONNECT.getValue()) {
       // Response is to a different command.
       throw new DeviceError();
     }
@@ -186,7 +240,7 @@ public class CmsisDapProtocol {
   public byte transferConfigure(byte idleCycles, int waitRetry, int matchRetry)
       throws DeviceError {
     byte[] cmd = new byte[6];
-    cmd[0] = CmsisDapCore.CommandId.DAP_TRANSFER_CONFIGURE.getValue();
+    cmd[0] = CommandId.DAP_TRANSFER_CONFIGURE.getValue();
     cmd[1] = idleCycles;
 
     // Split waitRetry (16 bit) in 2 bytes.
@@ -205,7 +259,7 @@ public class CmsisDapProtocol {
     this.connectionInterface.write(cmd);
 
     byte[] response = this.connectionInterface.read();
-    if (response[0] != CmsisDapCore.CommandId.DAP_TRANSFER_CONFIGURE.getValue()) {
+    if (response[0] != CommandId.DAP_TRANSFER_CONFIGURE.getValue()) {
       // Response is to a different command.
       throw new DeviceError();
     }
@@ -253,14 +307,14 @@ public class CmsisDapProtocol {
 
   public byte swdConfigure(byte conf) throws DeviceError {
     byte[] cmd = new byte[2];
-    cmd[0] = CmsisDapCore.CommandId.DAP_SWD_CONFIGURE.getValue();
+    cmd[0] = CommandId.DAP_SWD_CONFIGURE.getValue();
     cmd[1] = conf;
 
     // Write the command.
     this.connectionInterface.write(cmd);
 
     byte[] response = this.connectionInterface.read();
-    if (response[0] != CmsisDapCore.CommandId.DAP_SWD_CONFIGURE.getValue()) {
+    if (response[0] != CommandId.DAP_SWD_CONFIGURE.getValue()) {
       // Response is to a different command.
       throw new DeviceError();
     }
@@ -278,7 +332,7 @@ public class CmsisDapProtocol {
     //     CMD  -  Bit Count - DATA....
     //   1 byte +   1 byte   + SIZEOF(DATA)
     byte[] cmd = new byte[1 + 1 + data.length];
-    cmd[0] = CmsisDapCore.CommandId.DAP_SWJ_SEQUENCE.getValue();
+    cmd[0] = CommandId.DAP_SWJ_SEQUENCE.getValue();
     // The second byte will carry the BIT count.
     cmd[1] = (byte) (data.length * 8);
 
@@ -290,7 +344,7 @@ public class CmsisDapProtocol {
     this.connectionInterface.write(cmd);
 
     byte[] response = this.connectionInterface.read();
-    if (response[0] != CmsisDapCore.CommandId.DAP_SWJ_SEQUENCE.getValue()) {
+    if (response[0] != CommandId.DAP_SWJ_SEQUENCE.getValue()) {
       // Response is to a different command.
       throw new DeviceError();
     }
@@ -312,7 +366,7 @@ public class CmsisDapProtocol {
 
   public byte[] jtagConfigure(byte irlen, byte devNum) throws DeviceError {
     byte[] cmd = new byte[3];
-    cmd[0] = CmsisDapCore.CommandId.DAP_JTAG_CONFIGURE.getValue();
+    cmd[0] = CommandId.DAP_JTAG_CONFIGURE.getValue();
     cmd[1] = devNum;
     cmd[2] = irlen;
 
@@ -320,7 +374,7 @@ public class CmsisDapProtocol {
     this.connectionInterface.write(cmd);
 
     byte[] response = this.connectionInterface.read();
-    if (response[0] != CmsisDapCore.CommandId.DAP_JTAG_CONFIGURE.getValue()) {
+    if (response[0] != CommandId.DAP_JTAG_CONFIGURE.getValue()) {
       // Response is to a different command.
       throw new DeviceError();
     }

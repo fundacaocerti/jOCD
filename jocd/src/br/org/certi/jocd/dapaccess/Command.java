@@ -16,12 +16,11 @@
 package br.org.certi.jocd.dapaccess;
 
 import android.util.Log;
-import java.util.List;
-
-import br.org.certi.jocd.dapaccess.CmsisDapCore.CommandId;
+import br.org.certi.jocd.dapaccess.CmsisDapProtocol.CommandId;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferFaultError;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferTimeoutError;
+import java.util.List;
 
 /*
 * A wrapper object representing a command send to the layer below (ex. USB).
@@ -188,8 +187,7 @@ public class Command {
    * Decode the response returned by a DAP_TransferBlock
    * CMSIS-DAP command and return it as an array of bytes.
    */
-  private byte[] decodeTransferBlockData(byte[] data)
-      throws TransferFaultError, TransferTimeoutError, TransferError {
+  private byte[] decodeTransferBlockData(byte[] data) throws TransferError {
     assert this.getEmpty() == false;
     if (data[0] != CommandId.DAP_TRANSFER_BLOCK.getValue()) {
       throw new IllegalArgumentException("DAP_TRANSFER_BLOCK response error");
