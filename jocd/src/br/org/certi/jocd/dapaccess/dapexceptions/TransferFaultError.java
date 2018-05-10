@@ -18,17 +18,40 @@
  */
 package br.org.certi.jocd.dapaccess.dapexceptions;
 
-public class CommandError extends DeviceError {
+
+/*
+ * A SWD Fault occurred
+ */
+public class TransferFaultError extends TransferError {
 
   // Logging
-  private static final String TAG = "CommandError";
+  private static final String TAG = "TransferFaultError";
 
-  public CommandError() {
-    this("The host debugger reported failure for the given command");
+  private Integer address;
+
+  public TransferFaultError() {
+    this("The host debugger reported failure for the given command", null);
   }
 
-  public CommandError(String message) {
+  public TransferFaultError(String message, Integer faultAddress) {
     super(message);
+    this.address = faultAddress;
+  }
+
+  private Integer getFaultAddress() {
+    return this.address;
+  }
+
+  private void setFaultAddress(Integer address) {
+    this.address = address;
+  }
+
+  public String toString() {
+    String desc = "SWD/JTAG Transfer Fault";
+    if (this.address != null) {
+      desc += " @ " + String.format("0x%08x", address);
+    }
+    return desc;
   }
 
 }
