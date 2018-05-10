@@ -18,16 +18,16 @@
  */
 package br.org.certi.jocd.dapaccess.dapexceptions;
 
-public class CommandError extends DeviceError {
+public class TransferError extends CommandError {
 
   // Logging
-  private static final String TAG = "CommandError";
+  private static final String TAG = "TransferError";
 
-  public CommandError() {
-    this("The host debugger reported failure for the given command");
+  public TransferError() {
+    this("Error ocurred with a transfer over SWD or JTAG");
   }
 
-  public CommandError(String message) {
+  public TransferError(String message) {
     super(message);
   }
 

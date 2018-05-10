@@ -24,7 +24,7 @@ public class Error extends Exception {
   private static final String TAG = "Error";
 
   public Error() {
-    super("Parent of all error DAPAccess can raise");
+    this("Parent of all error DAPAccess can raise");
   }
 
   public Error(String message) {
