@@ -24,7 +24,7 @@ public class DeviceError extends Error {
   private static final String TAG = "DeviceError";
 
   public DeviceError() {
-    super("Error communicating with device");
+    this("Error communicating with device");
   }
 
   public DeviceError(String message) {
