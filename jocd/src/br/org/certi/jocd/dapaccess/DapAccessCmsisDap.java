@@ -19,6 +19,7 @@ import static br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory.connect
 
 import android.content.Context;
 import android.util.Log;
+import br.org.certi.jocd.dapaccess.CmsisDapProtocol.IdInfo;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Port;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory;
@@ -133,12 +134,12 @@ public class DapAccessCmsisDap {
       this.packetCount = 1;
       Log.d(TAG, "Limiting packet count to" + this.packetCount);
     } else {
-      this.packetCount = ((Byte) this.protocol.dapInfo(CmsisDapCore.IdInfo.PACKET_COUNT))
+      this.packetCount = ((Byte) this.protocol.dapInfo(IdInfo.PACKET_COUNT))
           .intValue();
     }
 
     this.connectionInterface.setPacketCount(this.packetCount);
-    this.packetSize = (Integer) this.protocol.dapInfo(CmsisDapCore.IdInfo.PACKET_SIZE);
+    this.packetSize = (Integer) this.protocol.dapInfo(IdInfo.PACKET_SIZE);
     this.connectionInterface.setPacketSize(this.packetSize);
 
     this.initDeferredBuffers();
