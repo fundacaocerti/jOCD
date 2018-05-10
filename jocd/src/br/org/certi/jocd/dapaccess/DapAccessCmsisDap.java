@@ -45,7 +45,7 @@ public class DapAccessCmsisDap {
   private int packetCount = 0;
   private String uniqueId;
   private int frequency;
-  private int dapPort = 0;
+  private Port dapPort = Port.DEFAULT;
   private int packetSize = 0;
   private CmsisDapProtocol protocol;
   private LinkedList<Transfer> transferList;
@@ -190,6 +190,42 @@ public class DapAccessCmsisDap {
   public void disconnect() throws DeviceError {
     this.flush();
     this.protocol.disconnect();
+  }
+
+  public void swjSequence() throws DeviceError {
+    if (this.dapPort == Port.SWD) {
+      // Configure swd protocol.
+      this.protocol.swdConfigure();
+      // Switch from jtag to swd.
+      jtagToSwd();
+    } else if (this.dapPort == Port.JTAG) {
+      // Configure jtag protocol.
+      this.protocol.jtagConfigure((byte) 4);
+      // Test logic reset, run test idle.
+      this.protocol.swjSequence(new byte[]{0x1F});
+    } else {
+      Log.e(TAG, "Unexpected DAP port: " + this.dapPort.toString());
+    }
+  }
+
+  /*
+   * Send the command to switch from SWD to jtag.
+   */
+  private void jtagToSwd() throws DeviceError {
+    byte[] data;
+    data = new byte[]{(byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
+        (byte) 0xff};
+    this.protocol.swjSequence(data);
+
+    data = new byte[]{(byte) 0x9e, (byte) 0xe7};
+    this.protocol.swjSequence(data);
+
+    data = new byte[]{(byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
+        (byte) 0xff};
+    this.protocol.swjSequence(data);
+
+    data = new byte[]{(byte) 0x00};
+    this.protocol.swjSequence(data);
   }
 
   public void setAttributes() {
