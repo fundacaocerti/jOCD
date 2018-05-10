@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public class DapAccessCmsisDap {
 
@@ -107,7 +108,7 @@ public class DapAccessCmsisDap {
     return allDAPLinks;
   }
 
-  public void open(Context context) throws DeviceError {
+  public void open(Context context) throws DeviceError, TimeoutException {
     if (connectionInterface == null) {
       List<ConnectionInterface> allDevices = this.getDevices(context);
       for (ConnectionInterface device : allDevices) {
@@ -145,7 +146,7 @@ public class DapAccessCmsisDap {
     this.initDeferredBuffers();
   }
 
-  public void close() throws TransferError {
+  public void close() throws TransferError, TimeoutException {
     if (connectionInterface == null) {
       return;
     }
@@ -162,7 +163,7 @@ public class DapAccessCmsisDap {
     return uniqueId;
   }
 
-  private void flush() throws TransferError {
+  private void flush() throws TransferError, TimeoutException {
     // Send current packet
     this.sendPacket();
     // Read all backlogged
@@ -174,11 +175,11 @@ public class DapAccessCmsisDap {
   /*
    * Overload for connect(port), using default value: Port.Default.
    */
-  public void connect() throws DeviceError {
+  public void connect() throws DeviceError, TimeoutException {
     connect(Port.DEFAULT);
   }
 
-  public void connect(Port port) throws DeviceError {
+  public void connect(Port port) throws DeviceError, TimeoutException {
     Port actualPort = this.protocol.connect(port);
 
     // Set clock frequency.
@@ -188,12 +189,12 @@ public class DapAccessCmsisDap {
     this.protocol.transferConfigure();
   }
 
-  public void disconnect() throws DeviceError {
+  public void disconnect() throws DeviceError, TimeoutException {
     this.flush();
     this.protocol.disconnect();
   }
 
-  public void swjSequence() throws DeviceError {
+  public void swjSequence() throws DeviceError, TimeoutException {
     if (this.dapPort == Port.SWD) {
       // Configure swd protocol.
       this.protocol.swdConfigure();
@@ -212,7 +213,7 @@ public class DapAccessCmsisDap {
   /*
    * Send the command to switch from SWD to jtag.
    */
-  private void jtagToSwd() throws DeviceError {
+  private void jtagToSwd() throws DeviceError, TimeoutException {
     byte[] data;
     data = new byte[]{(byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
         (byte) 0xff};
@@ -234,7 +235,7 @@ public class DapAccessCmsisDap {
     // Not implemented. We don't support WS.
   }
 
-  public void setClock(int frequency) throws DeviceError {
+  public void setClock(int frequency) throws DeviceError, TimeoutException {
     this.flush();
     this.protocol.setSWJClock(frequency);
     this.frequency = frequency;
@@ -257,10 +258,10 @@ public class DapAccessCmsisDap {
   }
 
   /*
-  * Reads and decodes a single packet
-  * Reads a single packet from the device and  stores the data from it in the current Command object
+   * Reads and decodes a single packet
+   * Reads a single packet from the device and  stores the data from it in the current Command object
    */
-  private void readPacket() throws TransferError {
+  private void readPacket() throws TransferError, TimeoutException {
     // Grab command, send it and decode response
     Command command = (Command) this.commandsToRead.poll();
     byte[] decodedData;
@@ -314,7 +315,7 @@ public class DapAccessCmsisDap {
    * (the number of packets written but not read) does not exceed the number supported by
    * the given device.
    */
-  private void sendPacket() throws TransferError {
+  private void sendPacket() throws TransferError, TimeoutException {
     Command command = this.crntCmd;
     if (command.getEmpty()) {
       return;
@@ -352,7 +353,11 @@ public class DapAccessCmsisDap {
     // Otherwise this could cause another exception
     if (exception instanceof TransferError) {
       for (int i = 0; i < pendingReads; i++) {
-        this.connectionInterface.read();
+        try {
+          this.connectionInterface.read();
+        } catch (TimeoutException e) {
+          // Couldn't read. Keep on loop to clean the "pendingReads".
+        }
       }
     }
   }
