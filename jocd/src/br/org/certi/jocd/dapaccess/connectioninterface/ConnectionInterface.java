@@ -49,4 +49,6 @@ public interface ConnectionInterface {
   public void setPacketCount(int packetCount);
 
   public void setPacketSize(int packetSize);
+
+  public int getPacketCount();
 }
