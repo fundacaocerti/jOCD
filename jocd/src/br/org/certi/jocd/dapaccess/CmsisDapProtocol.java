@@ -121,11 +121,11 @@ public class CmsisDapProtocol {
   /*
    * Overload for connect(mode), using default value: Port.Default.
    */
-  public Port connect() throws DeviceError, CommandError {
+  public Port connect() throws DeviceError {
     return connect(Port.DEFAULT);
   }
 
-  public Port connect(Port mode) throws DeviceError, CommandError {
+  public Port connect(Port mode) throws DeviceError {
     byte[] cmd = new byte[2];
     cmd[0] = CmsisDapCore.CommandId.DAP_CONNECT.getValue();
     cmd[1] = mode.getValue();
@@ -156,7 +156,7 @@ public class CmsisDapProtocol {
     return port;
   }
 
-  public byte disconnect() throws DeviceError, CommandError {
+  public byte disconnect() throws DeviceError {
     byte[] cmd = new byte[2];
     cmd[0] = CmsisDapCore.CommandId.DAP_DISCONNECT.getValue();
     this.connectionInterface.write(cmd);
@@ -179,12 +179,12 @@ public class CmsisDapProtocol {
    * Overload for transferConfigure(byte idleCycles, int waitRetry, int matchRetry) using default
    * values.
    */
-  public byte transferConfigure() throws DeviceError, CommandError {
+  public byte transferConfigure() throws DeviceError {
     return transferConfigure((byte) 0x00, 0x0050, 0x0000);
   }
 
   public byte transferConfigure(byte idleCycles, int waitRetry, int matchRetry)
-      throws DeviceError, CommandError {
+      throws DeviceError {
     byte[] cmd = new byte[6];
     cmd[0] = CmsisDapCore.CommandId.DAP_TRANSFER_CONFIGURE.getValue();
     cmd[1] = idleCycles;
@@ -242,5 +242,96 @@ public class CmsisDapProtocol {
     }
 
     return response[1];
+  }
+
+  /*
+   * Overload for swdConfigure(byte conf) using default conf.
+   */
+  public byte swdConfigure() throws DeviceError {
+    return swdConfigure((byte) 0x00);
+  }
+
+  public byte swdConfigure(byte conf) throws DeviceError {
+    byte[] cmd = new byte[2];
+    cmd[0] = CmsisDapCore.CommandId.DAP_SWD_CONFIGURE.getValue();
+    cmd[1] = conf;
+
+    // Write the command.
+    this.connectionInterface.write(cmd);
+
+    byte[] response = this.connectionInterface.read();
+    if (response[0] != CmsisDapCore.CommandId.DAP_SWD_CONFIGURE.getValue()) {
+      // Response is to a different command.
+      throw new DeviceError();
+    }
+
+    if (response[1] != DAP_OK) {
+      // DAP Transfer Configure failed.
+      throw new CommandError();
+    }
+
+    return response[1];
+  }
+
+  public byte swjSequence(byte[] data) throws DeviceError {
+    // Swj sequence will have the following structure:
+    //     CMD  -  Bit Count - DATA....
+    //   1 byte +   1 byte   + SIZEOF(DATA)
+    byte[] cmd = new byte[1 + 1 + data.length];
+    cmd[0] = CmsisDapCore.CommandId.DAP_SWJ_SEQUENCE.getValue();
+    // The second byte will carry the BIT count.
+    cmd[1] = (byte) (data.length * 8);
+
+    for (int i = 0; i < data.length; i++) {
+      cmd[2 + i] = data[i];
+    }
+
+    // Write the command.
+    this.connectionInterface.write(cmd);
+
+    byte[] response = this.connectionInterface.read();
+    if (response[0] != CmsisDapCore.CommandId.DAP_SWJ_SEQUENCE.getValue()) {
+      // Response is to a different command.
+      throw new DeviceError();
+    }
+
+    if (response[1] != DAP_OK) {
+      // DAP Transfer Configure failed.
+      throw new CommandError();
+    }
+
+    return response[1];
+  }
+
+  /*
+   * Overload for jtagConfigure(byte irlen, byte devNum) using default devNum.
+   */
+  public byte[] jtagConfigure(byte irlen) throws DeviceError {
+    return jtagConfigure(irlen, (byte) 0x01);
+  }
+
+  public byte[] jtagConfigure(byte irlen, byte devNum) throws DeviceError {
+    byte[] cmd = new byte[3];
+    cmd[0] = CmsisDapCore.CommandId.DAP_JTAG_CONFIGURE.getValue();
+    cmd[1] = devNum;
+    cmd[2] = irlen;
+
+    // Write the command.
+    this.connectionInterface.write(cmd);
+
+    byte[] response = this.connectionInterface.read();
+    if (response[0] != CmsisDapCore.CommandId.DAP_JTAG_CONFIGURE.getValue()) {
+      // Response is to a different command.
+      throw new DeviceError();
+    }
+
+    if (response[1] != DAP_OK) {
+      // DAP Transfer Configure failed.
+      throw new CommandError();
+    }
+
+    byte[] ret = new byte[response.length - 2];
+    System.arraycopy(response, 2, ret, 0, ret.length);
+    return ret;
   }
 }
