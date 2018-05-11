@@ -18,64 +18,82 @@ package br.org.certi.flashtooltest;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
+import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import br.org.certi.jocd.tools.AsyncResponse;
 import br.org.certi.jocd.tools.FlashTool;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-public class AsyncFlashToolListDevices extends AsyncTask<String, String, String> implements
+public class AsyncFlashToolListDevices extends AsyncTask<String, String, List<MbedBoard>> implements
     ProgressUpdateInterface {
 
   // Logging
   private static final String TAG = "AsyncListDevices";
 
   // Callback to the UI activity.
-  private AsyncResponse delegate = null;
+  private AsyncResponse.ListBoards delegate = null;
 
   // Context (for USB Manager).
   private Context context = null;
+  private boolean exceptionOccurred = false;
 
   /*
    * Constructor.
    */
   public AsyncFlashToolListDevices(Context context,
-      AsyncResponse delegate) {
+      AsyncResponse.ListBoards delegate) {
     this.context = context;
     this.delegate = delegate;
   }
 
   @Override
-  protected String doInBackground(String... params) {
+  protected List<MbedBoard> doInBackground(String... params) {
     String resp = "Devices: ";
 
-    FlashTool tool = new FlashTool(context);
+    List<MbedBoard> boards = null;
+    this.exceptionOccurred = false;
 
     publishProgress("Starting listing devices...");
 
     try {
-      resp = tool.listConnectedBoards();
-    } catch (DeviceError exception) {
-      Log.e(TAG, exception.getMessage());
-    } catch (TimeoutException exception) {
-      Log.e(TAG, exception.getMessage());
+      boards = MbedBoard.getAllConnectedBoards(context);
+    } catch (Exception exception) {
+      this.exceptionOccurred = true;
+      onException(exception);
+      return null;
     }
 
     publishProgress("Finished listing devices.");
 
-    return resp;
+    return boards;
   }
 
   @Override
   protected void onProgressUpdate(String... text) {
+    if (this.exceptionOccurred) {
+      return;
+    }
+
     Log.d(TAG, text[0]);
     delegate.processAsyncTaskUpdate(text[0]);
   }
 
   @Override
-  protected void onPostExecute(String result) {
-    Log.d(TAG, result);
-    delegate.processAsyncTaskFinish(result);
+  protected void onPostExecute(List<MbedBoard> boards) {
+    if (this.exceptionOccurred) {
+      return;
+    }
+
+    Log.d(TAG, "Number of boards: " + (boards == null ? 0 : boards.size()));
+    delegate.processAsyncTaskFinish(boards);
+  }
+
+  protected void onException(Exception exception) {
+    Log.d(TAG, "Exception " + exception.getMessage());
+    delegate.processAsyncException(exception);
   }
 
   /*

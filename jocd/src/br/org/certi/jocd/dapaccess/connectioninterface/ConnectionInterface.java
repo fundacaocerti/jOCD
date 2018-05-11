@@ -15,6 +15,7 @@
  */
 package br.org.certi.jocd.dapaccess.connectioninterface;
 
+import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
@@ -43,7 +44,7 @@ public interface ConnectionInterface {
 
   public void write(byte[] data);
 
-  public void open();
+  public void open() throws InsufficientPermissions;
 
   public void close();
 
