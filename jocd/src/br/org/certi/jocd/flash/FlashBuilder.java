@@ -15,7 +15,6 @@
  */
 package br.org.certi.jocd.flash;
 
-import android.os.SystemClock;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -168,7 +167,11 @@ public class FlashBuilder {
     int progress;
     for (progress = 0; progress < 100; progress++) {
       progressUpdate.progressUpdateCallback(progress);
-      SystemClock.sleep(100);
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException exception) {
+        LOGGER.log(Level.SEVERE, exception.toString());
+      }
       progress += 50;
     }
     progressUpdate.progressUpdateCallback(progress);

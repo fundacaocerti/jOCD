@@ -15,8 +15,6 @@
  */
 package br.org.certi.jocd.board;
 
-import android.os.SystemClock;
-import android.text.TextUtils;
 import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
@@ -125,7 +123,11 @@ public class MbedBoard extends Board {
       else {
         // WARNING: Make sure to not call this from a UI thread.
         //          (SystemClock) shouldn't be called from an UI thread.
-        SystemClock.sleep(10);
+        try {
+          Thread.sleep(10);
+        } catch (InterruptedException e) {
+          LOGGER.log(Level.SEVERE, e.toString());
+        }
       }
 
       break;
@@ -155,7 +157,7 @@ public class MbedBoard extends Board {
     List<MbedBoard> allBoards = MbedBoard.getAllConnectedBoards();
 
     // If the board id (serial number) is specified, ignore all other boards.
-    if (!TextUtils.isEmpty(boardId)) {
+    if (boardId != null && !boardId.isEmpty()) {
 
       // Create a new list that will replace the list of all boards.
       // This list will contain only the requested board.
@@ -187,7 +189,7 @@ public class MbedBoard extends Board {
       // wrong id).
       // Throw this info as exception as Java does't allow us
       // to return more than one object.
-      if (TextUtils.isEmpty(boardId)) {
+      if (boardId == null || boardId.isEmpty()) {
         throw new NoBoardConnectedException(allBoards);
       } else {
         throw new UniqueIDNotFoundException(allBoards);
