@@ -20,6 +20,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
+import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import br.org.certi.jocd.flash.FlashBuilder;
 import br.org.certi.jocd.flash.PageInfo;
 import br.org.certi.jocd.target.TargetFactory.targetEnum;
@@ -59,7 +60,8 @@ public class FlashTool {
     this.context = context;
   }
 
-  public String listConnectedBoards() throws DeviceError, TimeoutException {
+  public String listConnectedBoards()
+      throws DeviceError, TimeoutException, InsufficientPermissions {
     List<MbedBoard> boards = MbedBoard.getAllConnectedBoards(context);
 
     String resp = "";
@@ -77,7 +79,8 @@ public class FlashTool {
    */
   public boolean flashBoard(ProgressUpdateInterface progressUpdate)
       throws MbedBoard.NoBoardConnectedException, MbedBoard.UniqueIDNotFoundException,
-      MbedBoard.UnspecifiedBoardIDException, InternalError, DeviceError, TimeoutException {
+      MbedBoard.UnspecifiedBoardIDException, InternalError, DeviceError, TimeoutException,
+      InsufficientPermissions {
 
     // TODO - change this a to path with the correct file.
     String file = "microbit.hex";
@@ -118,7 +121,8 @@ public class FlashTool {
       Integer frequency    // Set the SWD clock frequency in Hz."
   )
       throws MbedBoard.NoBoardConnectedException, MbedBoard.UniqueIDNotFoundException,
-      MbedBoard.UnspecifiedBoardIDException, InternalError, DeviceError, TimeoutException {
+      MbedBoard.UnspecifiedBoardIDException, InternalError, DeviceError, TimeoutException,
+      InsufficientPermissions {
 
     // Select default values.
     if (count == null) {

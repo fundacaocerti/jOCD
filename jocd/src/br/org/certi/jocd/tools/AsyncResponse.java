@@ -15,12 +15,24 @@
  */
 package br.org.certi.jocd.tools;
 
-public interface AsyncResponse {
+import br.org.certi.jocd.board.MbedBoard;
+import java.util.List;
+
+public class AsyncResponse {
 
   // Logging
   static final String TAG = "AsyncResponse";
 
-  void processAsyncTaskFinish(String result);
+  public interface ListBoards {
+    void processAsyncTaskFinish(List<MbedBoard> boards);
+    void processAsyncTaskUpdate(String status);
+    void processAsyncException(Exception exception);
+  }
 
-  void processAsyncTaskUpdate(String status);
+  public interface FlashBoard {
+    void processAsyncTaskFinish(String result);
+    void processAsyncTaskUpdate(String status);
+    void processAsyncException(Exception exception);
+  }
+
 }

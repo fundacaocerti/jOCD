@@ -15,15 +15,18 @@
  */
 package br.org.certi.flashtooltest;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.tools.AsyncResponse;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements
-    AsyncResponse {
+    AsyncResponse.ListBoards, AsyncResponse.FlashBoard {
 
   // Logging
   private static final String TAG = "MainActivity";
@@ -40,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements
   }
 
   public void onClickListDevices(View view) {
-    Log.d("CLICK", "Button list devices clicked");
+    Log.d("CLICK", "Button list devices clicked.");
 
     // Create a new async task to list all connected devices.
     AsyncFlashToolListDevices asyncListDevices = new AsyncFlashToolListDevices(this, this);
@@ -48,11 +51,18 @@ public class MainActivity extends AppCompatActivity implements
   }
 
   public void onClickFlashDevice(View view) {
-    Log.d("CLICK", "Button flash device clicked");
+    Log.d("CLICK", "Button flash device clicked.");
 
     // Create a new async task to list all connected devices.
     AsyncFlashToolFlashBoard asyncFlashDevice = new AsyncFlashToolFlashBoard(this, this);
     asyncFlashDevice.execute();
+  }
+
+  public void onClickTestsButon(View view) {
+    Log.d("CLICK", "Button open tests clicked.");
+
+    Intent intent = new Intent(this, TestsActivity.class);
+    startActivity(intent);
   }
 
   /*
@@ -63,9 +73,28 @@ public class MainActivity extends AppCompatActivity implements
   }
 
   /*
-   * Callback to onPostExecute (from AsyncTask).
+   * Callback to onPostExecute (from AsyncTask.FlashBoard).
    */
   public void processAsyncTaskFinish(String result) {
     textViewConnectedBoards.setText(result);
+  }
+
+  /*
+   * Callback to onPostExecute (from AsyncTask.ListBoards).
+   */
+  public void processAsyncTaskFinish(List<MbedBoard> boards) {
+    String boardsText = "";
+    for (int i  = 0; i < boards.size(); i++) {
+      MbedBoard board = boards.get(i);
+      boardsText = boardsText + "Board " + i + ": " + board.name + " (Board ID: " + board.boardId + ")\n";
+    }
+    textViewConnectedBoards.setText(boardsText);
+  }
+
+  /*
+   * Callback to onException (from AsyncTask.ListBoards/FlashBoard).
+   */
+  public void processAsyncException(Exception exception) {
+    // TODO
   }
 }

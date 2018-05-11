@@ -26,6 +26,7 @@ import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.util.Log;
 
+import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,7 +52,6 @@ public class AndroidUsbDevice implements ConnectionInterface {
   private final Context context;
   private UsbDevice device;
   private AtomicBoolean atomicOpen = new AtomicBoolean(false);
-  private final String actionUsbPermission;
   private final String appName;
 
   private int packetCount = 1;
@@ -81,7 +81,6 @@ public class AndroidUsbDevice implements ConnectionInterface {
   public AndroidUsbDevice(Context context) {
     this.context = context;
     this.usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
-    this.actionUsbPermission = context.getPackageName() + ".USB_PERMISSION";
 
     ApplicationInfo applicationInfo = context.getApplicationInfo();
     int stringId = applicationInfo.labelRes;
@@ -234,7 +233,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
   /*
    * Open the device.
    */
-  public void open() {
+  public void open() throws InsufficientPermissions {
     // From now, no one else can open this device until we do not set it to false again.
     if (!atomicOpen.compareAndSet(false, true)) {
       Log.w(TAG, "Trying to open USB device while is already opened.");
@@ -258,10 +257,9 @@ public class AndroidUsbDevice implements ConnectionInterface {
         Log.w(TAG, appName + " doesn't have permission to access device with Product ID: "
             + device.getProductId() + ", Vendor ID: " + device.getVendorId() + " and " +
             "serial number: " + device.getSerialNumber());
-        PendingIntent pi = PendingIntent.getBroadcast(context, 0,
-            new Intent(actionUsbPermission), 0);
-        usbManager.requestPermission(device, pi);
-        return;
+
+        // Throw exception, so others will know that this operation failed.
+        throw new InsufficientPermissions(device);
       }
 
       // Attempt to open the device.
