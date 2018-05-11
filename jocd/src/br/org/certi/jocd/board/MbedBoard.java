@@ -21,6 +21,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
+import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import br.org.certi.jocd.target.TargetFactory;
 import br.org.certi.jocd.target.TargetFactory.targetEnum;
 import java.util.ArrayList;
@@ -80,7 +81,7 @@ public class MbedBoard extends Board {
    * Overload for getAllConnectedBoards using default values.
    */
   public static List<MbedBoard> getAllConnectedBoards(Context context)
-      throws DeviceError, TimeoutException {
+      throws DeviceError, TimeoutException, InsufficientPermissions {
     return getAllConnectedBoards(context, false, true, null, 0);
   }
 
@@ -89,7 +90,7 @@ public class MbedBoard extends Board {
    */
   public static List<MbedBoard> getAllConnectedBoards(Context context, boolean close,
       boolean blocking, targetEnum targetOverride, int frequency)
-      throws DeviceError, TimeoutException {
+      throws DeviceError, TimeoutException, InsufficientPermissions {
     List<MbedBoard> mbedList = new ArrayList<MbedBoard>();
 
     while (true) {
@@ -137,7 +138,7 @@ public class MbedBoard extends Board {
    */
   public static MbedBoard chooseBoard(Context context)
       throws NoBoardConnectedException, UniqueIDNotFoundException, UnspecifiedBoardIDException,
-      DeviceError, TimeoutException {
+      DeviceError, TimeoutException, InsufficientPermissions {
     return chooseBoard(context, true, false, null, null, 0, true);
   }
 
@@ -147,7 +148,7 @@ public class MbedBoard extends Board {
   public static MbedBoard chooseBoard(Context context, boolean blocking, boolean returnFirst,
       String boardId, String targetOverride, int frequency, boolean initBoard)
       throws NoBoardConnectedException, UniqueIDNotFoundException, UnspecifiedBoardIDException,
-      DeviceError, TimeoutException {
+      DeviceError, TimeoutException, InsufficientPermissions {
 
     // Get all connected boards.
     List<MbedBoard> allBoards = MbedBoard.getAllConnectedBoards(context);

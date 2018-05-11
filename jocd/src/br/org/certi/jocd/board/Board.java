@@ -28,7 +28,7 @@ public class Board {
   private static final String TAG = "Board";
 
   // Link to the dap CMSIS DAP.
-  protected DapAccessCmsisDap dapAccessLink;
+  public DapAccessCmsisDap dapAccessLink;
 
   public Target target;
   public Flash flash;

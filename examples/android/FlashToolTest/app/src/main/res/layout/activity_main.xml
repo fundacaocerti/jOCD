@@ -52,15 +52,28 @@
     android:id="@+id/flashDevice"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="108dp"
+    android:layout_marginBottom="50dp"
     android:layout_marginStart="8dp"
     android:layout_marginEnd="8dp"
     android:onClick="onClickFlashDevice"
     android:text="Flash Device"
     app:layout_constraintBottom_toTopOf="@+id/result"
     app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.501"
     app:layout_constraintStart_toStartOf="parent"/>
 
+  <Button
+    android:id="@+id/openTestsButton"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="20dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    android:onClick="onClickTestsButon"
+    android:text="Open Tests"
+    app:layout_constraintBottom_toTopOf="@+id/flashDevice"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"/>
   <TextView
     android:id="@+id/textViewConnectedBoards"
     android:layout_width="wrap_content"
@@ -70,7 +83,7 @@
     android:layout_marginStart="8dp"
     android:layout_marginEnd="8dp"
     android:text="ConnectedBoards"
-    app:layout_constraintBottom_toTopOf="@+id/flashDevice"
+    app:layout_constraintBottom_toTopOf="@+id/openTestsButton"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintHorizontal_bias="0.501"
     app:layout_constraintStart_toStartOf="parent"

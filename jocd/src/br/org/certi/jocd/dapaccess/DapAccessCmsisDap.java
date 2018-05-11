@@ -24,6 +24,7 @@ import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Port;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
+import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -108,7 +109,7 @@ public class DapAccessCmsisDap {
     return allDAPLinks;
   }
 
-  public void open(Context context) throws DeviceError, TimeoutException {
+  public void open(Context context) throws DeviceError, TimeoutException, InsufficientPermissions {
     if (connectionInterface == null) {
       List<ConnectionInterface> allDevices = this.getDevices(context);
       for (ConnectionInterface device : allDevices) {
