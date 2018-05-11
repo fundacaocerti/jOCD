@@ -28,6 +28,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import br.org.certi.jocd.board.MbedBoard;
+import br.org.certi.jocd.dapaccess.connectioninterface.android.AndroidApplicationContext;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import br.org.certi.jocd.tools.AsyncResponse;
 import java.util.List;
@@ -66,6 +67,8 @@ public class MainActivity extends AppCompatActivity implements
     textViewConnectedBoards = (TextView) findViewById(R.id.textViewConnectedBoards);
     textViewResult = (TextView) findViewById(R.id.textViewResult);
     textViewConnectedBoards.setText("Devices....");
+
+    AndroidApplicationContext.getInstance().init(getApplicationContext());
 
     // Register the broadcast receiver to request permission for USB devices.
     ACTION_USB_PERMISSION = this.getPackageName() + ".USB_PERMISSION";

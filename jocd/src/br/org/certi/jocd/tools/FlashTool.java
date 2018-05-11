@@ -15,7 +15,6 @@
  */
 package br.org.certi.jocd.tools;
 
-import android.content.Context;
 import android.text.TextUtils;
 import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
@@ -51,20 +50,16 @@ public class FlashTool {
   // (All others targets except cortex_m: No generic programming)
   EnumSet<targetEnum> supportedTargets = EnumSet.of(targetEnum.nrf51);
 
-  private final Context context;
-
   /*
    * Constructor.
    */
-  public FlashTool(Context context) {
+  public FlashTool() {
     LOGGER.log(Level.FINE, "Constructor");
-
-    this.context = context;
   }
 
   public String listConnectedBoards()
       throws DeviceError, TimeoutException, InsufficientPermissions {
-    List<MbedBoard> boards = MbedBoard.getAllConnectedBoards(context);
+    List<MbedBoard> boards = MbedBoard.getAllConnectedBoards();
 
     String resp = "";
     int i = 0;
@@ -134,7 +129,7 @@ public class FlashTool {
       skip = 1;
     }
 
-    MbedBoard selectedBoard = MbedBoard.chooseBoard(context);
+    MbedBoard selectedBoard = MbedBoard.chooseBoard();
 
     // As we throw exceptions when MbedBoard.chooseBoard
     // can't find the board, we should never get here with
@@ -210,7 +205,7 @@ public class FlashTool {
 
       // Open the file.
       try {
-        InputStream is = context.openFileInput(file);
+        InputStream is = new FileInputStream(file);
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // TODO flashBlock (....???????...)
         //selectedBoard.flash.flashBlock(address);
