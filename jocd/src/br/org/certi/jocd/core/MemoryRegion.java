@@ -19,9 +19,6 @@ import android.text.TextUtils;
 
 public class MemoryRegion extends MemoryRangeBase {
 
-  // Logging
-  private static final String TAG = "MemoryRegion";
-
   final MemoryMap.RegionType regionType;
   public int blockSize = 0;
   String name;

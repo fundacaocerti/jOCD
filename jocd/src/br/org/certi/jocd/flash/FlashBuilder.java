@@ -16,21 +16,23 @@
 package br.org.certi.jocd.flash;
 
 import android.os.SystemClock;
-import android.util.Log;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class FlashBuilder {
+
+  // Logging
+  private final static String CLASS_NAME = FlashBuilder.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   final Flash flash;
   final long flashStart;
 
   boolean enableDoubleBuffering;
-
-  // Logging
-  private static final String TAG = "FlashBuilder";
 
   // List of flash operations.
   List<FlashOperation> flashOperations = new ArrayList<FlashOperation>();
@@ -54,7 +56,7 @@ public class FlashBuilder {
   public void addData(long address, byte[] data) {
     // Protection.
     if (address < this.flashStart) {
-      Log.e(TAG,
+      LOGGER.log(Level.SEVERE,
           "Invalid flash address " + String.format("%08X", address) + " is before flash start "
               + String.format("%08X", this, flashStart));
       return;
@@ -71,7 +73,7 @@ public class FlashBuilder {
     for (FlashOperation op : flashOperations) {
       if (prevOp != null) {
         if ((prevOp.address + prevOp.data.length) > op.address) {
-          Log.e(TAG,
+          LOGGER.log(Level.SEVERE,
               "Error adding data - Data at " + String.format("%08X", prevOp.address) + ".." + String
                   .format("%08X", prevOp.address + prevOp.data.length) + " overlaps with " + String
                   .format("%08X", op.address) + ".." + String
@@ -105,7 +107,7 @@ public class FlashBuilder {
 
     // There must be at least 1 flash operation.
     if (flashOperations.size() == 0) {
-      Log.w(TAG, "No pages were programmed");
+      LOGGER.log(Level.WARNING, "No pages were programmed");
       return null;
       // TODO we should have a better way to advise UI.
     }
@@ -187,7 +189,7 @@ public class FlashBuilder {
     // Sanity check.
     int count = end - start;
     if (count < 0) {
-      Log.e(TAG, "Internal error: end position is lower than start position at" +
+      LOGGER.log(Level.SEVERE, "Internal error: end position is lower than start position at" +
           "appendDataInArray.");
       return null;
     }

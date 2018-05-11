@@ -23,9 +23,6 @@ import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 */
 public class Transfer {
 
-  // Logging
-  private static final String TAG = "Transfer";
-
   private Exception error;
   private int sizeBytes = 0;
   private int[] result;

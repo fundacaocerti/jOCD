@@ -19,9 +19,6 @@ import java.util.List;
 
 public class FlashAlgo {
 
-  // Logging
-  private static final String TAG = "FlashAlgo";
-
   public int loadAddress;
   public List<Integer> instructions;
   public int pcInit;

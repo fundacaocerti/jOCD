@@ -16,12 +16,14 @@
 package br.org.certi.jocd.dapaccess.connectioninterface;
 
 import android.content.Context;
-import android.util.Log;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class UsbFactory {
 
   // Logging
-  private static final String TAG = "UsbFactory";
+  private final static String CLASS_NAME = UsbFactory.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   public static enum connectionInterfaceEnum {
     androidUsbManager
@@ -33,8 +35,9 @@ public class UsbFactory {
       case androidUsbManager:
         return new AndroidUsbDevice(context);
       default:
-        Log.e(TAG, "Default case on switch ConnectionIntf. " + "Unexpected interface: " + intfEnum
-            .toString());
+        LOGGER.log(Level.SEVERE,
+            "Default case on switch ConnectionIntf. " + "Unexpected interface: " + intfEnum
+                .toString());
         return null;
     }
   }

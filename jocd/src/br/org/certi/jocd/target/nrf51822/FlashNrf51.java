@@ -21,9 +21,6 @@ import br.org.certi.jocd.flash.FlashAlgo;
 
 public class FlashNrf51 extends Flash {
 
-  // Logging
-  private static final String TAG = "FlashNrf51";
-
   FlashAlgo flashAlgo;
 
   /*

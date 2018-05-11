@@ -20,9 +20,6 @@ package br.org.certi.jocd.dapaccess.dapexceptions;
 
 public class CommandError extends DeviceError {
 
-  // Logging
-  private static final String TAG = "CommandError";
-
   public CommandError() {
     this("The host debugger reported failure for the given command");
   }

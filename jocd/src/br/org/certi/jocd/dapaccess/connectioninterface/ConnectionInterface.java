@@ -21,9 +21,6 @@ import java.util.concurrent.TimeoutException;
 
 public interface ConnectionInterface {
 
-  // Logging
-  static final String TAG = "ConnectionInterface";
-
   public List<ConnectionInterface> getAllConnectedDevices();
 
   public int getVendorId();

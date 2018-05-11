@@ -17,9 +17,6 @@ package br.org.certi.jocd.core;
 
 public class MemoryRangeBase {
 
-  // Logging
-  private static final String TAG = "MemoryRangeBase";
-
   long start = 0;
   long end = 0;
   long length = 0;

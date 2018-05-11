@@ -17,9 +17,6 @@ package br.org.certi.jocd.core;
 
 public class FlashRegion extends MemoryRegion {
 
-  // Logging
-  private static final String TAG = "FlashRegion";
-
   /*
    * Constructor.
    */

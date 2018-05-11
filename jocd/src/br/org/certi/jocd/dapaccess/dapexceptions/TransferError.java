@@ -20,9 +20,6 @@ package br.org.certi.jocd.dapaccess.dapexceptions;
 
 public class TransferError extends CommandError {
 
-  // Logging
-  private static final String TAG = "TransferError";
-
   public TransferError() {
     this("Error ocurred with a transfer over SWD or JTAG");
   }

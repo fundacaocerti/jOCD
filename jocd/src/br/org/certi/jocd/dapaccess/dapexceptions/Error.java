@@ -20,9 +20,6 @@ package br.org.certi.jocd.dapaccess.dapexceptions;
 
 public class Error extends Exception {
 
-  // Logging
-  private static final String TAG = "Error";
-
   public Error() {
     this("Parent of all error DAPAccess can raise");
   }

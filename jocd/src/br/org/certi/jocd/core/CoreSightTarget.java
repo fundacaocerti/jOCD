@@ -17,9 +17,6 @@ package br.org.certi.jocd.core;
 
 public class CoreSightTarget extends Target {
 
-  // Logging
-  private static final String TAG = "CoreSightTarget";
-
   /*
    * Must be called right after constructor.
    */

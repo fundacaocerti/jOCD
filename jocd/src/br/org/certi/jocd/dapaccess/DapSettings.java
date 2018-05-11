@@ -17,9 +17,6 @@ package br.org.certi.jocd.dapaccess;
 
 public class DapSettings {
 
-  // Logging
-  private static final String TAG = "DapSettings";
-
   // Define if we should use WebSocket.
   // WS is not implemented yet.
   public static boolean useWs = false;

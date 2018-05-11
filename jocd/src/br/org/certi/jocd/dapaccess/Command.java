@@ -15,12 +15,13 @@
  */
 package br.org.certi.jocd.dapaccess;
 
-import android.util.Log;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.CommandId;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferFaultError;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferTimeoutError;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
 * A wrapper object representing a command send to the layer below (ex. USB).
@@ -35,7 +36,8 @@ import java.util.List;
 public class Command {
 
   // Logging
-  private static final String TAG = "Command";
+  private final static String CLASS_NAME = Command.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   private int size;
   private int readCount = 0;
@@ -52,7 +54,7 @@ public class Command {
   public Command(int size) {
     super();
     this.size = size;
-    Log.d(TAG, "New Command");
+    LOGGER.log(Level.FINE, "New Command");
   }
 
   /*
