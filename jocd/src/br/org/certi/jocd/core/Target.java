@@ -19,9 +19,6 @@ import br.org.certi.jocd.flash.Flash;
 
 public class Target {
 
-  // Logging
-  private static final String TAG = "Target";
-
   public MemoryMap memoryMap;
 
   /*

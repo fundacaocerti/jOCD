@@ -23,9 +23,6 @@ import cz.jaybee.intelhex.Region;
 
 public class IntelHexToFlash implements DataListener {
 
-  // Logging
-  private static final String TAG = "IntelHexToFlash";
-
   private final MemoryRegions regions = new MemoryRegions();
 
   private final FlashBuilder flashBuilder;

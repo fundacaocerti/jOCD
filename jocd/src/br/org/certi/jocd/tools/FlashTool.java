@@ -17,7 +17,6 @@ package br.org.certi.jocd.tools;
 
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Log;
 import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
@@ -35,11 +34,14 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class FlashTool {
 
   // Logging
-  private static final String TAG = "FlashTool";
+  private final static String CLASS_NAME = FlashTool.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   List<String> supportedFormats = Arrays.asList("bin", "hex");
 
@@ -55,7 +57,7 @@ public class FlashTool {
    * Constructor.
    */
   public FlashTool(Context context) {
-    Log.d(TAG, "Constructor");
+    LOGGER.log(Level.FINE, "Constructor");
 
     this.context = context;
   }
@@ -70,7 +72,7 @@ public class FlashTool {
       i++;
       resp = resp + "Board " + i + ": " + board.name + " (Board ID: " + board.boardId + ")" + "\n";
     }
-    Log.d(TAG, resp);
+    LOGGER.log(Level.FINE, resp);
     return resp;
   }
 
@@ -138,27 +140,27 @@ public class FlashTool {
     // can't find the board, we should never get here with
     // selectedBoard == null.
     if (selectedBoard == null) {
-      Log.e(TAG, "Unexpected null pointer on flashBoard(). selectedBoard is " +
+      LOGGER.log(Level.SEVERE, "Unexpected null pointer on flashBoard(). selectedBoard is " +
           "null after chooseBoard");
       throw new InternalError();
     }
 
     if (chipErase) {
-      Log.d(TAG, "Mass erasing device...");
+      LOGGER.log(Level.FINE, "Mass erasing device...");
       if (selectedBoard.target.massErase()) {
-        Log.d(TAG, "Successfully erased.");
+        LOGGER.log(Level.FINE, "Successfully erased.");
       } else {
-        Log.e(TAG, "Error while mass erasing board.");
+        LOGGER.log(Level.SEVERE, "Error while mass erasing board.");
         return false;
       }
     }
 
     if (TextUtils.isEmpty(file)) {
       if (chipErase) {
-        Log.d(TAG, "Erasing chip...");
+        LOGGER.log(Level.FINE, "Erasing chip...");
         selectedBoard.flash.init();
         selectedBoard.flash.eraseAll();
-        Log.d(TAG, "Done.");
+        LOGGER.log(Level.FINE, "Done.");
       } else if (sectorErase) {
         selectedBoard.flash.init();
         Long pageAddr = address;
@@ -175,19 +177,19 @@ public class FlashTool {
 
             if (delta > 0) {
               // Address unaligned.
-              Log.w(TAG, "Warning: sector address " +
+              LOGGER.log(Level.WARNING, "Warning: sector address " +
                   String.format("%08X", pageAddr) + " is unaligned");
               // TODO implement a better way to give this feedback to user.
               pageAddr -= delta;
             }
           }
-          Log.d(TAG, "Erasing sector " + String.format("%08X", pageAddr));
+          LOGGER.log(Level.FINE, "Erasing sector " + String.format("%08X", pageAddr));
           selectedBoard.flash.erasePage(pageAddr);
           pageAddr += pageInfo.size;
         }
       } else {
         // TODO implement a better way to give this feedback to user.
-        Log.d(TAG, "No operation performed");
+        LOGGER.log(Level.FINE, "No operation performed");
         return false;
       }
       return true;
@@ -213,7 +215,7 @@ public class FlashTool {
         // TODO flashBlock (....???????...)
         //selectedBoard.flash.flashBlock(address);
       } catch (FileNotFoundException e) {
-        Log.e(TAG, "File not found: " + file);
+        LOGGER.log(Level.SEVERE, "File not found: " + file);
       }
     }
     // Intel Hex format.
@@ -239,11 +241,11 @@ public class FlashTool {
         FlashBuilder flashBuilder = listener.getFlashBuilder();
         flashBuilder.program(chipErase, progressUpdate, true, fastProgram);
       } catch (FileNotFoundException e) {
-        Log.e(TAG, "File not found: " + file);
+        LOGGER.log(Level.SEVERE, "File not found: " + file);
       } catch (IOException e) {
-        Log.e(TAG, "IOException while trying program using IntelHex.");
+        LOGGER.log(Level.SEVERE, "IOException while trying program using IntelHex.");
       } catch (IntelHexException e) {
-        Log.e(TAG, "IntelHexException while trying to parse IntelHex.");
+        LOGGER.log(Level.SEVERE, "IntelHexException while trying to parse IntelHex.");
       }
 
     }

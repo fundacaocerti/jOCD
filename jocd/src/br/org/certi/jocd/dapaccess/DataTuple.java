@@ -20,9 +20,6 @@ package br.org.certi.jocd.dapaccess;
 
 public class DataTuple {
 
-  // Logging
-  private static final String TAG = "DataTuple";
-
   private int count;
   private byte request;
   private byte[] data;

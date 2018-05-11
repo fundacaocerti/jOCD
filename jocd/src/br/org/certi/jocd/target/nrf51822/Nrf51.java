@@ -15,7 +15,6 @@
  */
 package br.org.certi.jocd.target.nrf51822;
 
-import android.util.Log;
 import br.org.certi.jocd.core.CoreSightTarget;
 import br.org.certi.jocd.core.FlashRegion;
 import br.org.certi.jocd.core.MemoryMap;
@@ -26,11 +25,14 @@ import br.org.certi.jocd.flash.FlashAlgo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Nrf51 extends CoreSightTarget {
 
   // Logging
-  private static final String TAG = "Nrf51";
+  private final static String CLASS_NAME = Nrf51.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   final FlashAlgo flashAlgo;
 
@@ -101,7 +103,7 @@ public class Nrf51 extends CoreSightTarget {
   @Override
   public boolean massErase() {
     // Not implemented.
-    Log.e(TAG, "Not implemented method massErase for nRF51");
+    LOGGER.log(Level.SEVERE, "Not implemented method massErase for nRF51");
     return false;
   }
 
@@ -111,11 +113,11 @@ public class Nrf51 extends CoreSightTarget {
    */
   public void resetN() {
     // Regular reset will kick NRF out of DBG mode
-    Log.d(TAG, "target_nrf51.reset: enable reset pin");
+    LOGGER.log(Level.FINE, "target_nrf51.reset: enable reset pin");
     writeMemory(reset, resetEnable);
 
     // Reset.
-    Log.d(TAG, "target_nrf51.reset: trigger nRST pin");
+    LOGGER.log(Level.FINE, "target_nrf51.reset: trigger nRST pin");
     reset();
   }
 }

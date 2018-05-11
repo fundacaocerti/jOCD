@@ -15,14 +15,16 @@
  */
 package br.org.certi.jocd.target;
 
-import android.util.Log;
 import br.org.certi.jocd.core.Target;
 import br.org.certi.jocd.target.nrf51822.Nrf51;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TargetFactory {
 
   // Logging
-  static final String TAG = "TargetFactory";
+  private final static String CLASS_NAME = TargetFactory.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   public static enum targetEnum {
     cortex_m,    // Not implemented.
@@ -76,7 +78,7 @@ public class TargetFactory {
       case nrf51:
         return new Nrf51();
       default:
-        Log.e(TAG,
+        LOGGER.log(Level.SEVERE,
             "Default case on switch GetTarget. " + "Unexpected interface: " + target.toString());
     }
     return null;

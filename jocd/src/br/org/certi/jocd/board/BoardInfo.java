@@ -19,9 +19,6 @@ import br.org.certi.jocd.target.TargetFactory;
 
 public class BoardInfo {
 
-  // Logging
-  private static final String TAG = "BoardInfo";
-
   public final String name;
   public final TargetFactory.targetEnum target;
   public final String binary;

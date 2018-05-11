@@ -17,9 +17,6 @@ package br.org.certi.jocd.flash;
 
 public class FlashPage {
 
-  // Logging
-  private static final String TAG = "FlashPage";
-
   final long address;
   final long size;
   public byte[] data;

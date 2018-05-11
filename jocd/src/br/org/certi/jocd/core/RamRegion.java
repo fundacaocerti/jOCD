@@ -17,9 +17,6 @@ package br.org.certi.jocd.core;
 
 public class RamRegion extends MemoryRegion {
 
-  // Logging
-  private static final String TAG = "RamRegion";
-
   /*
    * Constructor.
    */

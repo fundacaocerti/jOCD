@@ -17,9 +17,6 @@ package br.org.certi.jocd.flash;
 
 public class PageInfo {
 
-  // Logging
-  private static final String TAG = "PageInfo";
-
   // Default time to program a page in seconds.
   public static final double DEFAULT_PAGE_PROGRAM_WEIGHT = 0.130;
 

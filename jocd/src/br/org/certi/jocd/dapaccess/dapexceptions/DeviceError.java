@@ -20,9 +20,6 @@ package br.org.certi.jocd.dapaccess.dapexceptions;
 
 public class DeviceError extends Error {
 
-  // Logging
-  private static final String TAG = "DeviceError";
-
   public DeviceError() {
     this("Error communicating with device");
   }

@@ -18,7 +18,6 @@ package br.org.certi.jocd.dapaccess;
 import static br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory.connectionInterfaceEnum.androidUsbManager;
 
 import android.content.Context;
-import android.util.Log;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.IdInfo;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Port;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
@@ -32,11 +31,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DapAccessCmsisDap {
 
   // Logging
-  private static final String TAG = "DapAccessCmsisDap";
+  private final static String CLASS_NAME = DapAccessCmsisDap.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   //CMSIS-DAP values
   public static final byte READ = 1 << 1;
@@ -71,7 +73,7 @@ public class DapAccessCmsisDap {
   private static List<ConnectionInterface> getDevices(Context context) {
     if (DapSettings.useWs) {
       // Not implemented!
-      Log.e(TAG, "Not implemented! Trying to use WS interface.");
+      LOGGER.log(Level.SEVERE, "Not implemented! Trying to use WS interface.");
       return null;
     }
     return UsbFactory.getUSBInterface(context, androidUsbManager).getAllConnectedDevices();
@@ -101,7 +103,7 @@ public class DapAccessCmsisDap {
         DapAccessCmsisDap dapLink = new DapAccessCmsisDap(uniqueId);
         allDAPLinks.add(dapLink);
       } catch (Exception e) {
-        Log.e(TAG,
+        LOGGER.log(Level.SEVERE,
             "Exception caught while trying to iterate over " + "all connections interfaces.");
         return null;
       }
@@ -121,7 +123,7 @@ public class DapAccessCmsisDap {
             this.connectionInterface = device;
           }
         } catch (Exception exception) {
-          Log.e(TAG, "Failed to get unique id for open", exception);
+          LOGGER.log(Level.SEVERE, "Failed to get unique id for open", exception);
         }
       }
       if (connectionInterface == null) {
@@ -134,7 +136,7 @@ public class DapAccessCmsisDap {
 
     if (DapSettings.limitPackets) {
       this.packetCount = 1;
-      Log.d(TAG, "Limiting packet count to" + this.packetCount);
+      LOGGER.log(Level.FINE, "Limiting packet count to" + this.packetCount);
     } else {
       this.packetCount = ((Byte) this.protocol.dapInfo(IdInfo.PACKET_COUNT))
           .intValue();
@@ -207,7 +209,7 @@ public class DapAccessCmsisDap {
       // Test logic reset, run test idle.
       this.protocol.swjSequence(new byte[]{0x1F});
     } else {
-      Log.e(TAG, "Unexpected DAP port: " + this.dapPort.toString());
+      LOGGER.log(Level.SEVERE, "Unexpected DAP port: " + this.dapPort.toString());
     }
   }
 

@@ -20,9 +20,6 @@ package br.org.certi.jocd.dapaccess.dapexceptions;
 
 public class TransferTimeoutError extends TransferError {
 
-  // Logging
-  private static final String TAG = "TransferTimeoutError";
-
   public TransferTimeoutError() {
     this("A SWD or JTAG timeout occurred");
   }

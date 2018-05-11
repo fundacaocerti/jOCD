@@ -15,10 +15,11 @@
  */
 package br.org.certi.jocd.flash;
 
-import android.util.Log;
 import br.org.certi.jocd.core.MemoryRegion;
 import br.org.certi.jocd.core.Target;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
  * This class is responsible to flash a new binary in a target.
@@ -26,7 +27,8 @@ import br.org.certi.jocd.tools.ProgressUpdateInterface;
 public class Flash {
 
   // Logging
-  private static final String TAG = "Flash";
+  private final static String CLASS_NAME = Flash.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   FlashAlgo flashAlgo;
   Target target;
@@ -68,7 +70,8 @@ public class Flash {
 
     // Check the return code
     if (result != 0) {
-      Log.e(TAG, "erasePage(" + String.format("%08X", flashPtr) + ") error: " + result);
+      LOGGER
+          .log(Level.SEVERE, "erasePage(" + String.format("%08X", flashPtr) + ") error: " + result);
     }
   }
 
