@@ -49,7 +49,7 @@ public class AsyncFlashToolFlashBoard extends AsyncTask<String, Integer, String>
   protected String doInBackground(String... params) {
     String resp = "Devices: ";
 
-    FlashTool tool = new FlashTool(context);
+    FlashTool tool = new FlashTool();
     this.exceptionOccurred = false;
 
     try {

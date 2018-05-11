@@ -17,7 +17,6 @@ package br.org.certi.jocd.dapaccess;
 
 import static br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory.connectionInterfaceEnum.androidUsbManager;
 
-import android.content.Context;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.IdInfo;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Port;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
@@ -70,25 +69,25 @@ public class DapAccessCmsisDap {
   /*
    * Get the connected USB devices
    */
-  private static List<ConnectionInterface> getDevices(Context context) {
+  private static List<ConnectionInterface> getDevices() {
     if (DapSettings.useWs) {
       // Not implemented!
       LOGGER.log(Level.SEVERE, "Not implemented! Trying to use WS interface.");
       return null;
     }
-    return UsbFactory.getUSBInterface(context, androidUsbManager).getAllConnectedDevices();
+    return UsbFactory.getUSBInterface(androidUsbManager).getAllConnectedDevices();
   }
 
   /*
    * Return an array of all mbed boards connected
    */
-  public static List<DapAccessCmsisDap> getConnectedDevices(Context context) {
+  public static List<DapAccessCmsisDap> getConnectedDevices() {
 
     // Store all the DAP links.
     List<DapAccessCmsisDap> allDAPLinks = new ArrayList<DapAccessCmsisDap>();
 
     // Get all the connected interfaces.
-    List<ConnectionInterface> allDevices = getDevices(context);
+    List<ConnectionInterface> allDevices = getDevices();
 
     // For each interface connected try to create a DAP
     // link and add to our allDAPLinks.
@@ -111,9 +110,9 @@ public class DapAccessCmsisDap {
     return allDAPLinks;
   }
 
-  public void open(Context context) throws DeviceError, TimeoutException, InsufficientPermissions {
+  public void open() throws DeviceError, TimeoutException, InsufficientPermissions {
     if (connectionInterface == null) {
-      List<ConnectionInterface> allDevices = this.getDevices(context);
+      List<ConnectionInterface> allDevices = this.getDevices();
       for (ConnectionInterface device : allDevices) {
         try {
           String uniqueId = getUniqueId(device);

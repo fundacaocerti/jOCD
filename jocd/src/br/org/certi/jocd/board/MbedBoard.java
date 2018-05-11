@@ -15,7 +15,6 @@
  */
 package br.org.certi.jocd.board;
 
-import android.content.Context;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
@@ -82,21 +81,21 @@ public class MbedBoard extends Board {
   /*
    * Overload for getAllConnectedBoards using default values.
    */
-  public static List<MbedBoard> getAllConnectedBoards(Context context)
+  public static List<MbedBoard> getAllConnectedBoards()
       throws DeviceError, TimeoutException, InsufficientPermissions {
-    return getAllConnectedBoards(context, false, true, null, 0);
+    return getAllConnectedBoards(false, true, null, 0);
   }
 
   /*
    * Return an array of all mbed boards connected.
    */
-  public static List<MbedBoard> getAllConnectedBoards(Context context, boolean close,
-      boolean blocking, targetEnum targetOverride, int frequency)
+  public static List<MbedBoard> getAllConnectedBoards(boolean close, boolean blocking,
+      targetEnum targetOverride, int frequency)
       throws DeviceError, TimeoutException, InsufficientPermissions {
     List<MbedBoard> mbedList = new ArrayList<MbedBoard>();
 
     while (true) {
-      List<DapAccessCmsisDap> connectedDaps = DapAccessCmsisDap.getConnectedDevices(context);
+      List<DapAccessCmsisDap> connectedDaps = DapAccessCmsisDap.getConnectedDevices();
 
       // Loop for each device.
       for (DapAccessCmsisDap dapAccess : connectedDaps) {
@@ -110,7 +109,7 @@ public class MbedBoard extends Board {
 
       if (close == false) {
         for (DapAccessCmsisDap dapAccess : connectedDaps) {
-          dapAccess.open(context);
+          dapAccess.open();
         }
       }
 
@@ -138,22 +137,22 @@ public class MbedBoard extends Board {
   /*
    * Overwrite for chooseBoard using default values.
    */
-  public static MbedBoard chooseBoard(Context context)
+  public static MbedBoard chooseBoard()
       throws NoBoardConnectedException, UniqueIDNotFoundException, UnspecifiedBoardIDException,
       DeviceError, TimeoutException, InsufficientPermissions {
-    return chooseBoard(context, true, false, null, null, 0, true);
+    return chooseBoard(true, false, null, null, 0, true);
   }
 
   /*
    * Return an array of all mbed boards connected.
    */
-  public static MbedBoard chooseBoard(Context context, boolean blocking, boolean returnFirst,
+  public static MbedBoard chooseBoard(boolean blocking, boolean returnFirst,
       String boardId, String targetOverride, int frequency, boolean initBoard)
       throws NoBoardConnectedException, UniqueIDNotFoundException, UnspecifiedBoardIDException,
       DeviceError, TimeoutException, InsufficientPermissions {
 
     // Get all connected boards.
-    List<MbedBoard> allBoards = MbedBoard.getAllConnectedBoards(context);
+    List<MbedBoard> allBoards = MbedBoard.getAllConnectedBoards();
 
     // If the board id (serial number) is specified, ignore all other boards.
     if (!TextUtils.isEmpty(boardId)) {
@@ -212,7 +211,7 @@ public class MbedBoard extends Board {
     // When we get here, means that the have one (and only one)
     // board on the allBoards list.
     MbedBoard board = allBoards.get(0);
-    board.dapAccessLink.open(context);
+    board.dapAccessLink.open();
 
     // Init the board (if we should...).
     if (initBoard) {
