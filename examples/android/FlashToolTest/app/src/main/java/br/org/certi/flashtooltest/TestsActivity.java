@@ -48,13 +48,13 @@ public class TestsActivity extends AppCompatActivity implements AsyncResponse.Li
   private PendingIntent permissionIntent;
 
   private static enum Fsm {
-    STARTED,
+    INIT,
     CLICKED_CONNECT_DISCONNECT,
-    STARTING_CONNECT_DISCONNECT
+    STARTED_LISTING_DEVICES,
+    STARTED_CONNECT_DISCONNECT
   }
 
-  ;
-  Fsm fsm = Fsm.STARTED;
+  Fsm fsm = Fsm.INIT;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -70,15 +70,19 @@ public class TestsActivity extends AppCompatActivity implements AsyncResponse.Li
     ACTION_USB_PERMISSION = this.getPackageName() + ".USB_PERMISSION";
     permissionIntent = PendingIntent.getBroadcast(this, 0,
         new Intent(ACTION_USB_PERMISSION), 0);
-    IntentFilter filter = new IntentFilter(this.ACTION_USB_PERMISSION);
-    registerReceiver(mUsbReceiver, filter);
+    IntentFilter filter = new IntentFilter();
+    filter.addAction(ACTION_USB_PERMISSION);
+    registerReceiver(broadcastReceiver, filter);
   }
 
   public void onClickConnect(View view) {
     Toast.makeText(this, "Button clicked...", Toast.LENGTH_LONG).show();
-
     this.fsm = Fsm.CLICKED_CONNECT_DISCONNECT;
+    listDevices();
+  }
 
+  private void listDevices() {
+    this.fsm = Fsm.STARTED_LISTING_DEVICES;
     // Create a new async task to list all connected devices.
     AsyncFlashToolListDevices asyncListDevices = new AsyncFlashToolListDevices(this, this);
     asyncListDevices.execute();
@@ -86,14 +90,14 @@ public class TestsActivity extends AppCompatActivity implements AsyncResponse.Li
 
   private void doConnectDisconnect() {
     // Update the state.
-    this.fsm = Fsm.STARTING_CONNECT_DISCONNECT;
+    this.fsm = Fsm.STARTED_CONNECT_DISCONNECT;
 
     // Check if we have boards to connect/disconnect.
     if (boards.size() < 1) {
       Toast.makeText(this, "No boards connected", Toast.LENGTH_LONG).show();
 
       // Reset to initial state and exit.
-      this.fsm = Fsm.STARTED;
+      this.fsm = Fsm.INIT;
       return;
     }
 
@@ -112,7 +116,7 @@ public class TestsActivity extends AppCompatActivity implements AsyncResponse.Li
     Toast.makeText(this, "Passed!", Toast.LENGTH_LONG).show();
 
     // Reset to the first state.
-    this.fsm = Fsm.STARTED;
+    this.fsm = Fsm.INIT;
   }
 
   /*
@@ -127,7 +131,7 @@ public class TestsActivity extends AppCompatActivity implements AsyncResponse.Li
   public void processAsyncTaskFinish(List<MbedBoard> boards) {
     this.boards = boards;
 
-    if (this.fsm == Fsm.CLICKED_CONNECT_DISCONNECT) {
+    if (this.fsm == Fsm.STARTED_LISTING_DEVICES) {
       doConnectDisconnect();
     }
   }
@@ -141,7 +145,7 @@ public class TestsActivity extends AppCompatActivity implements AsyncResponse.Li
       // Request permission.
 
       UsbManager usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
-      UsbDevice usbDevice = (UsbDevice)((InsufficientPermissions) exception).usbDevice;
+      UsbDevice usbDevice = (UsbDevice) ((InsufficientPermissions) exception).usbDevice;
       usbManager.requestPermission(usbDevice, permissionIntent);
 
       Log.w(TAG, "Insufficient permissions to access USB Device");
@@ -149,7 +153,7 @@ public class TestsActivity extends AppCompatActivity implements AsyncResponse.Li
     }
   }
 
-  private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+  private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
     public void onReceive(Context context, Intent intent) {
       String action = intent.getAction();
       if (ACTION_USB_PERMISSION.equals(action)) {
@@ -170,13 +174,12 @@ public class TestsActivity extends AppCompatActivity implements AsyncResponse.Li
 
   private void resumeOperation() {
 
-    if (fsm == Fsm.CLICKED_CONNECT_DISCONNECT) {
+    if (this.fsm == Fsm.CLICKED_CONNECT_DISCONNECT || fsm == Fsm.STARTED_LISTING_DEVICES) {
       // Restart.
-      AsyncFlashToolListDevices asyncListDevices = new AsyncFlashToolListDevices(this, this);
-      asyncListDevices.execute();
+      listDevices();
     }
 
-    if (fsm == Fsm.STARTING_CONNECT_DISCONNECT) {
+    if (fsm == Fsm.STARTED_CONNECT_DISCONNECT) {
       // Restart.
       doConnectDisconnect();
     }
