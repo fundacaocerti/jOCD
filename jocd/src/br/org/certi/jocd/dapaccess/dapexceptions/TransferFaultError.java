@@ -24,9 +24,6 @@ package br.org.certi.jocd.dapaccess.dapexceptions;
  */
 public class TransferFaultError extends TransferError {
 
-  // Logging
-  private static final String TAG = "TransferFaultError";
-
   private Integer address;
 
   public TransferFaultError() {

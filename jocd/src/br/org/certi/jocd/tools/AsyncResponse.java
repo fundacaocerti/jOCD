@@ -20,19 +20,21 @@ import java.util.List;
 
 public class AsyncResponse {
 
-  // Logging
-  static final String TAG = "AsyncResponse";
-
   public interface ListBoards {
+
     void processAsyncTaskFinish(List<MbedBoard> boards);
+
     void processAsyncTaskUpdate(String status);
+
     void processAsyncException(Exception exception);
   }
 
   public interface FlashBoard {
+
     void processAsyncTaskFinish(String result);
+
     void processAsyncTaskUpdate(String status);
+
     void processAsyncException(Exception exception);
   }
-
 }

@@ -18,7 +18,6 @@ package br.org.certi.jocd.board;
 import android.content.Context;
 import android.os.SystemClock;
 import android.text.TextUtils;
-import android.util.Log;
 import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
@@ -27,11 +26,14 @@ import br.org.certi.jocd.target.TargetFactory.targetEnum;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MbedBoard extends Board {
 
   // Logging
-  private static final String TAG = "MbedBoard";
+  private final static String CLASS_NAME = MbedBoard.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   public final String uniqueId;
   public final String boardId;
@@ -102,7 +104,7 @@ public class MbedBoard extends Board {
           MbedBoard mbed = new MbedBoard(dapAccess, targetOverride, frequency);
           mbedList.add(mbed);
         } catch (UnsupportedBoardException e) {
-          Log.w(TAG, "Board " + dapAccess.getUniqueId() + " is not supported yet.");
+          LOGGER.log(Level.WARNING, "Board " + dapAccess.getUniqueId() + " is not supported yet.");
         }
       }
 

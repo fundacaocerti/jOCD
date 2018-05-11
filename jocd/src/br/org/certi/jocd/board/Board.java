@@ -15,17 +15,19 @@
  */
 package br.org.certi.jocd.board;
 
-import android.util.Log;
 import br.org.certi.jocd.core.Target;
 import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
 import br.org.certi.jocd.flash.Flash;
 import br.org.certi.jocd.target.TargetFactory;
 import br.org.certi.jocd.target.TargetFactory.targetEnum;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Board {
 
   // Logging
-  private static final String TAG = "Board";
+  private final static String CLASS_NAME = Board.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   // Link to the dap CMSIS DAP.
   public DapAccessCmsisDap dapAccessLink;
@@ -59,7 +61,7 @@ public class Board {
    * Initialize the board.
    */
   public void init() {
-    Log.d(TAG, "init board");
+    LOGGER.log(Level.FINE, "init board");
     // TODO
   }
 }

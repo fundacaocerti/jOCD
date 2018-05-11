@@ -18,12 +18,13 @@
  */
 package br.org.certi.jocd.dapaccess;
 
-import android.util.Log;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.dapexceptions.CommandError;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import java.util.EnumSet;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
  * This class implements the CMSIS-DAP wire protocol.
@@ -31,7 +32,8 @@ import java.util.concurrent.TimeoutException;
 public class CmsisDapProtocol {
 
   // Logging
-  private static final String TAG = "CmsisDapProtocol";
+  private final static String CLASS_NAME = CmsisDapProtocol.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   private ConnectionInterface connectionInterface = null;
 
@@ -200,10 +202,10 @@ public class CmsisDapProtocol {
       throw new CommandError();
     } else if (port == Port.SWD) {
       // DAP SWD MODE initialized.
-      Log.d(TAG, "DAP SWD MODE initialized");
+      LOGGER.log(Level.FINE, "DAP SWD MODE initialized");
     } else if (port == Port.JTAG) {
       // DAP JTAG MODE initialized.
-      Log.d(TAG, "DAP JTAG MODE initialized");
+      LOGGER.log(Level.FINE, "DAP JTAG MODE initialized");
     } else {
       // Unexpected port.
       throw new CommandError();

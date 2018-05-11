@@ -19,9 +19,6 @@ import java.util.List;
 
 public class MemoryMap {
 
-  // Logging
-  private static final String TAG = "MemoryMap";
-
   public static enum RegionType {
     Ram,
     Rom,

@@ -15,17 +15,13 @@
  */
 package br.org.certi.jocd.dapaccess.connectioninterface;
 
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
-import android.util.Log;
-
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -34,11 +30,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AndroidUsbDevice implements ConnectionInterface {
 
   // Logging
-  private static final String TAG = "AndroidUsbDevice";
+  private final static String CLASS_NAME = AndroidUsbDevice.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   protected int vendorId;
   protected int productId;
@@ -97,11 +96,11 @@ public class AndroidUsbDevice implements ConnectionInterface {
 
     List<ConnectionInterface> deviceList = new ArrayList<ConnectionInterface>();
 
-    Log.d(TAG, "Listing connected devices...");
+    LOGGER.log(Level.FINE, "Listing connected devices...");
     for (Map.Entry<String, UsbDevice> entry : usbDevList.entrySet()) {
       UsbDevice device = entry.getValue();
-      Log.d(TAG, "key: " + entry.getKey());
-      Log.d(TAG, "value: " + device);
+      LOGGER.log(Level.FINE, "key: " + entry.getKey());
+      LOGGER.log(Level.FINE, "value: " + device);
 
       AndroidUsbDevice board = new AndroidUsbDevice(context);
       board.device = device;
@@ -114,7 +113,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
 
       // Add this board to the list of devices.
       deviceList.add(board);
-      Log.d(TAG, "Vendor ID: " + board.vendorId +
+      LOGGER.log(Level.FINE, "Vendor ID: " + board.vendorId +
           "\nProduct ID: " + board.productId +
           "\nDevice Name: " + board.deviceName +
           "\nProduct Name: " + board.productName +
@@ -142,7 +141,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
    */
   public byte[] read(int timeout) throws TimeoutException {
     if (device == null) {
-      Log.e(TAG, "Internal Error. Trying to read from null device");
+      LOGGER.log(Level.SEVERE, "Internal Error. Trying to read from null device");
       return null;
     }
 
@@ -158,7 +157,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
         // 2. CMSIS-DAP firmware problem cause a dropped read or write
         // 3. CMSIS-DAP is performing a long operation or is being
         //    halted in a debugger
-        Log.e(TAG, "Read timed out.");
+        LOGGER.log(Level.SEVERE, "Read timed out.");
         throw new TimeoutException();
       }
     }
@@ -179,7 +178,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
    */
   public void write(byte[] data, int timeout) {
     if (device == null || usbInterface == null) {
-      Log.e(TAG, "Internal Error on write. The device/usbInterface is null");
+      LOGGER.log(Level.SEVERE, "Internal Error on write. The device/usbInterface is null");
       return;
     }
 
@@ -236,27 +235,28 @@ public class AndroidUsbDevice implements ConnectionInterface {
   public void open() throws InsufficientPermissions {
     // From now, no one else can open this device until we do not set it to false again.
     if (!atomicOpen.compareAndSet(false, true)) {
-      Log.w(TAG, "Trying to open USB device while is already opened.");
+      LOGGER.log(Level.WARNING, "Trying to open USB device while is already opened.");
       return;
     }
 
     // Do it once, and break to clean if anything goes wrong.
     do {
-      if (this.deviceConnection!= null) {
-        Log.w(TAG, "Trying to open USB device while deviceConnection isn't null.");
+      if (this.deviceConnection != null) {
+        LOGGER.log(Level.WARNING, "Trying to open USB device while deviceConnection isn't null.");
         break;
       }
 
       if (this.device == null) {
-        Log.e(TAG, "Trying to open device a null device.");
+        LOGGER.log(Level.SEVERE, "Trying to open device a null device.");
         break;
       }
 
       // Check if we have permission.
       if (!usbManager.hasPermission(device)) {
-        Log.w(TAG, appName + " doesn't have permission to access device with Product ID: "
-            + device.getProductId() + ", Vendor ID: " + device.getVendorId() + " and " +
-            "serial number: " + device.getSerialNumber());
+        LOGGER.log(Level.WARNING,
+            appName + " doesn't have permission to access device with Product ID: "
+                + device.getProductId() + ", Vendor ID: " + device.getVendorId() + " and " +
+                "serial number: " + device.getSerialNumber());
 
         // Throw exception, so others will know that this operation failed.
         throw new InsufficientPermissions(device);
@@ -265,25 +265,25 @@ public class AndroidUsbDevice implements ConnectionInterface {
       // Attempt to open the device.
       this.deviceConnection = usbManager.openDevice(device);
       if (this.deviceConnection == null) {
-        Log.e(TAG, "Unable to open device.");
+        LOGGER.log(Level.SEVERE, "Unable to open device.");
         return;
       }
 
       // Look for the HID interface.
       if (!lookForHidInterface()) {
-        Log.e(TAG, "Couldn't find any HID device.");
+        LOGGER.log(Level.SEVERE, "Couldn't find any HID device.");
         break;
       }
 
       // Find endpoints.
       if (!findEndpoints()) {
-        Log.e(TAG, "Couldn't find endpoints.");
+        LOGGER.log(Level.SEVERE, "Couldn't find endpoints.");
         break;
       }
 
       // Claim interface.
       if (!this.deviceConnection.claimInterface(usbInterface, true)) {
-        Log.e(TAG, "Couldn't claim interface.");
+        LOGGER.log(Level.SEVERE, "Couldn't claim interface.");
         break;
       }
 
@@ -394,8 +394,9 @@ public class AndroidUsbDevice implements ConnectionInterface {
     // If there is no EP for OUT then we can use CTRL EP.
     // The IN EP is required.
     if (endpointCount > 2) {
-      Log.e(TAG, "Found " + endpointCount + " endpoints on the HID interface while it " +
-          "was expected to have up to 2.");
+      LOGGER.log(Level.SEVERE,
+          "Found " + endpointCount + " endpoints on the HID interface while it " +
+              "was expected to have up to 2.");
       return false;
     }
 
@@ -424,7 +425,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
       while (atomicOpen.get()) {
         synchronized (locker) {
           if (device == null || usbInterface == null || inputEndpoint == null) {
-            Log.e(TAG, "Internal Error on rxTask. The device/usbInterface/" +
+            LOGGER.log(Level.SEVERE, "Internal Error on rxTask. The device/usbInterface/" +
                 "outputEndpoint is null.");
             return;
           }
@@ -461,7 +462,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
    */
   public void startRxThread() {
     if (rxThread != null) {
-      Log.e(TAG, "RX thread has already been started.");
+      LOGGER.log(Level.SEVERE, "RX thread has already been started.");
       return;
     }
 
@@ -474,7 +475,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
    */
   public void stopRxThread() {
     if (rxThread == null) {
-      Log.e(TAG, "RX thread isn't running.");
+      LOGGER.log(Level.SEVERE, "RX thread isn't running.");
       return;
     }
 
@@ -482,8 +483,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
     try {
       rxThread.join(100);
       rxThread = null;
-    }
-    catch (InterruptedException e) {
+    } catch (InterruptedException e) {
       // Main thread interrupted.
       // Just leave.
     }
