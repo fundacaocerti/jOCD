@@ -15,7 +15,7 @@
  */
 package br.org.certi.jocd.dapaccess.connectioninterface;
 
-import android.content.Context;
+import br.org.certi.jocd.dapaccess.connectioninterface.android.AndroidUsbDevice;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,11 +29,10 @@ public class UsbFactory {
     androidUsbManager
   }
 
-  public static ConnectionInterface getUSBInterface(Context context,
-      connectionInterfaceEnum intfEnum) {
+  public static ConnectionInterface getUSBInterface(connectionInterfaceEnum intfEnum) {
     switch (intfEnum) {
       case androidUsbManager:
-        return new AndroidUsbDevice(context);
+        return new AndroidUsbDevice();
       default:
         LOGGER.log(Level.SEVERE,
             "Default case on switch ConnectionIntf. " + "Unexpected interface: " + intfEnum

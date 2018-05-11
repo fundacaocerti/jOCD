@@ -13,7 +13,7 @@
  * See the license for the specific language governing permissions and
  * limitations under the license.
  */
-package br.org.certi.jocd.dapaccess.connectioninterface;
+package br.org.certi.jocd.dapaccess.connectioninterface.android;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -22,6 +22,7 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
+import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -77,14 +78,14 @@ public class AndroidUsbDevice implements ConnectionInterface {
   /*
    * Constructor
    */
-  public AndroidUsbDevice(Context context) {
-    this.context = context;
-    this.usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
+  public AndroidUsbDevice() {
+    this.context = AndroidApplicationContext.get();
+    this.usbManager = (UsbManager) this.context.getSystemService(Context.USB_SERVICE);
 
-    ApplicationInfo applicationInfo = context.getApplicationInfo();
+    ApplicationInfo applicationInfo = this.context.getApplicationInfo();
     int stringId = applicationInfo.labelRes;
     this.appName = stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() :
-        context.getString(stringId);
+        this.context.getString(stringId);
   }
 
   /*
@@ -102,7 +103,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
       LOGGER.log(Level.FINE, "key: " + entry.getKey());
       LOGGER.log(Level.FINE, "value: " + device);
 
-      AndroidUsbDevice board = new AndroidUsbDevice(context);
+      AndroidUsbDevice board = new AndroidUsbDevice();
       board.device = device;
       board.vendorId = device.getVendorId();
       board.productId = device.getProductId();

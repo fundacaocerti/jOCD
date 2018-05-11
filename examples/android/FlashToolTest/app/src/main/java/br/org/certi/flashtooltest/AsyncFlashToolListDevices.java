@@ -59,7 +59,7 @@ public class AsyncFlashToolListDevices extends AsyncTask<String, String, List<Mb
     publishProgress("Starting listing devices...");
 
     try {
-      boards = MbedBoard.getAllConnectedBoards(context);
+      boards = MbedBoard.getAllConnectedBoards();
     } catch (Exception exception) {
       this.exceptionOccurred = true;
       onException(exception);
