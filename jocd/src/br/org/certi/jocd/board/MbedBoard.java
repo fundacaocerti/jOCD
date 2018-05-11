@@ -121,8 +121,6 @@ public class MbedBoard extends Board {
       }
       // Blocking... mbedList empty, sleep 10 ms.
       else {
-        // WARNING: Make sure to not call this from a UI thread.
-        //          (SystemClock) shouldn't be called from an UI thread.
         try {
           Thread.sleep(10);
         } catch (InterruptedException e) {
