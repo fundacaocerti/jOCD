@@ -15,7 +15,6 @@
  */
 package br.org.certi.jocd.tools;
 
-import android.text.TextUtils;
 import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
@@ -150,7 +149,7 @@ public class FlashTool {
       }
     }
 
-    if (TextUtils.isEmpty(file)) {
+    if (file == null || file.isEmpty()) {
       if (chipErase) {
         LOGGER.log(Level.FINE, "Erasing chip...");
         selectedBoard.flash.init();
@@ -192,7 +191,7 @@ public class FlashTool {
 
     // Check if the format was provided. If no format
     // were provided, than use the file's extension.
-    if (TextUtils.isEmpty(format)) {
+    if (format == null || format.isEmpty()) {
       format = file.substring(file.lastIndexOf("."));
     }
 

@@ -15,8 +15,6 @@
  */
 package br.org.certi.jocd.core;
 
-import android.text.TextUtils;
-
 public class MemoryRegion extends MemoryRangeBase {
 
   final MemoryMap.RegionType regionType;
@@ -40,7 +38,7 @@ public class MemoryRegion extends MemoryRangeBase {
     super(start, end, length);
     this.regionType = type;
     this.blockSize = blockSize;
-    this.name = TextUtils.isEmpty(name) ? this.regionType.toString() : name;
+      this.name = (name == null || name.isEmpty()) ? this.regionType.toString() : name;
     this.isBootMemory = isBootMemory;
     this.isPoweredOnBoot = isPoweredOnBoot;
     this.isCacheable = isCacheable;
