@@ -21,10 +21,10 @@ public class PageInfo {
   public static final double DEFAULT_PAGE_PROGRAM_WEIGHT = 0.130;
 
   // Default time to erase a page in milliseconds.
-  public static final double DEFAULT_PAGE_ERASE = 0.048;
+  public static final double DEFAULT_PAGE_ERASE_WEIGHT = 0.048;
 
   // Default time to erase a chip in milliseconds.
-  public static final double DEFAULT_CHIP_ERASE = 0.174;
+  public static final double DEFAULT_CHIP_ERASE_WEIGHT = 0.174;
 
   // Start address of this page in milliseconds
   long baseAddress;
@@ -39,5 +39,5 @@ public class PageInfo {
   public int size;
 
   // Is the function computeCrcs supported?
-  boolean crcSupported;
+  public boolean crcSupported;
 }

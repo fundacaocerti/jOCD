@@ -33,6 +33,15 @@ public class MemoryMap {
     this.memoryRegions = memoryRegions;
   }
 
+  public MemoryRegion getBootMemory() {
+    for (MemoryRegion region : this.memoryRegions) {
+      if (region.isBootMemory) {
+        return region;
+      }
+    }
+    return null;
+  }
+
   /*
    * Look for which region this address belongs to.
    */

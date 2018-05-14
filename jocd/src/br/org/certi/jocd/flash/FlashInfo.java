@@ -18,5 +18,6 @@ package br.org.certi.jocd.flash;
 public class FlashInfo {
 
   public long romStart;
-  public int eraseWeight;
+  public double eraseWeight;
+  public boolean crcSupported;
 }

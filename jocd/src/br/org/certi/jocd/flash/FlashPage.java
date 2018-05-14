@@ -15,6 +15,8 @@
  */
 package br.org.certi.jocd.flash;
 
+import java.util.zip.CRC32;
+
 public class FlashPage {
 
   final long address;
@@ -22,8 +24,10 @@ public class FlashPage {
   public byte[] data;
   final double eraseWeight;
   final double programWeight;
-  boolean erased;
-  boolean same;
+  Boolean erased = null;
+  Boolean same = null;
+
+  public int crc;
 
   // Number of bytes in a page to read to quickly determine if the page has the same data
   public static final int PAGE_ESTIMATE_SIZE = 32;

@@ -33,19 +33,44 @@ public class CoreSightTarget extends Target {
   @Override
   public void writeMemory(long address, long value, int transferSize) {
     // TODO
-    //this.selected_core.writeMemory(addr, value, transfer_size)
-  }
-
-  @Override
-  public void reset() {
-    // TODO
-    //this.selected_core.reset(software_reset=software_reset)
+    //this.selectedCore.writeMemory(address, value, transfer_size);
   }
 
   @Override
   public byte[] readBlockMemoryUnaligned8(long address, long size) {
     // TODO
-    // return this.selected_core.readBlockMemoryUnaligned8(address, size);
+    // return this.selectedCore.readBlockMemoryUnaligned8(address, size);
     return new byte[]{};
+  }
+
+  @Override
+  public int[] readBlockMemoryAligned32(long address, long size) {
+    // TODO
+    // return this.selectedCore.readBlockMemoryAligned32(address, size);
+    return new int[]{};
+  }
+
+  @Override
+  public void writeBlockMemoryUnaligned8(long address, byte[] data) {
+    // TODO
+    //this.ap.writeBlockMemoryUnaligned8(address, data)
+  }
+
+  @Override
+  public void writeBlockMemoryAligned32(long address, int[] data) {
+    // TODO
+    //this.selectedCore.writeBlockMemoryAligned32(address, data);
+  }
+
+  @Override
+  public void reset(Boolean softwareReset) {
+    // TODO
+    //this.selected_core.reset(software_reset=software_reset)
+  }
+
+  @Override
+  public void resetStopOnReset(Boolean softwareReset) {
+    // TODO
+    //this.selectedCore.resetStopOnReset(software_reset)
   }
 }
