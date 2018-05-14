@@ -17,4 +17,16 @@ package br.org.certi.jocd.flash;
 
 public class ProgrammingInfo {
 
+  // Type of programming performed - FLASH_PAGE_ERASE or FLASH_CHIP_ERASE.
+  public int programType;
+
+  // Total programming time.
+  public long programTime;
+
+  // Type of flash analysis performed - FLASH_ANALYSIS_CRC32 or FLASH_ANALYSIS_PARTIAL_PAGE_READ.
+  public String analyzeType;
+
+  // Time to analyze flash contents.
+  public long analyzeTime;
+
 }
