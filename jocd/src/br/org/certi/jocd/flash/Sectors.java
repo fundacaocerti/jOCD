@@ -15,23 +15,13 @@
  */
 package br.org.certi.jocd.flash;
 
-import java.util.List;
+public class Sectors {
 
-public class FlashAlgo {
+  public long address;
+  public long size;
 
-  public long loadAddress;
-  public List<Long> instructions;
-  public long pcInit;
-  public long pcEraseAll;
-  public long pcEraseSector;
-  public long pcProgramPage;
-  public long beginData;
-  public List<Long> pageBuffers;
-  public long beginStack;
-  public long staticBase;
-  public int minProgramLength;
-  public boolean analyzerSupported;
-  public long analyzerAddress;
-
-  // TODO
+  public Sectors(long address, long size) {
+    this.address = address;
+    this.size = size;
+  }
 }

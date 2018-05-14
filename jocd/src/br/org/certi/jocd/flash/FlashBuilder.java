@@ -15,12 +15,16 @@
  */
 package br.org.certi.jocd.flash;
 
+import static br.org.certi.jocd.flash.FlashPage.PAGE_ESTIMATE_SIZE;
+import static java.lang.Math.min;
+
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.CRC32;
 
 public class FlashBuilder {
 
@@ -30,8 +34,24 @@ public class FlashBuilder {
 
   final Flash flash;
   final long flashStart;
+  ProgrammingInfo perf;
 
   boolean enableDoubleBuffering;
+  int maxErrors = 10;
+  int chipEraseCount;
+  double chipEraseWeight;
+  int sectorEraseCount;
+  int pageProgramTime;
+  int pageEraseCount;
+  double pageEraseWeight;
+
+  // Type of flash operation.
+  public final static int FLASH_PAGE_ERASE = 1;
+  public final static int FLASH_CHIP_ERASE = 2;
+
+  // Type of flash analysis.
+  public final static String FLASH_ANALYSIS_CRC32 = "CRC32";
+  public final static String FLASH_ANALYSIS_PARTIAL_PAGE_READ = "PAGE_READ";
 
   // List of flash operations.
   List<FlashOperation> flashOperations = new ArrayList<FlashOperation>();
@@ -43,9 +63,31 @@ public class FlashBuilder {
     this.flash = flash;
     this.flashStart = baseAddress;
 
+    this.perf = new ProgrammingInfo();
     this.enableDoubleBuffering = true;
-
     // TODO
+  }
+
+  private boolean same(byte[] d1, byte[] d2, int size) {
+    if (d1.length < size || d2.length < size) {
+      return false;
+    }
+
+    for (int i = 0; i < size; i++) {
+      if (d1[i] != d2[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private boolean erased(byte[] data) {
+    for (int i = 0; i < data.length; i++) {
+      if (data[i] != 0xFF) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /*
@@ -89,8 +131,8 @@ public class FlashBuilder {
    * Data must have already been added with addData.
    */
   // TODO
-  public ProgrammingInfo program(boolean chipErase, ProgressUpdateInterface progressUpdate,
-      boolean smartFlash, boolean fastVerify) {
+  public ProgrammingInfo program(Boolean chipErase, ProgressUpdateInterface progressUpdate,
+      boolean smartFlash, boolean fastVerify) throws InternalError {
 
     // Assumptions
     // 1. Page erases must be on page boundaries ( page_erase_addr % page_size == 0 )
@@ -102,13 +144,12 @@ public class FlashBuilder {
     // - nRF51       -UICR location far from flash (address 0x10001000)
     // - LPC1768     -Different sized pages
 
-    long startTime = System.currentTimeMillis();
+    long programStartTime = System.currentTimeMillis();
 
     // There must be at least 1 flash operation.
     if (flashOperations.size() == 0) {
       LOGGER.log(Level.WARNING, "No pages were programmed");
-      return null;
-      // TODO we should have a better way to advise UI.
+      throw new InternalError("No flash operations listed.");
     }
 
     // Convert the list of flash operations into flash pages.
@@ -141,7 +182,6 @@ public class FlashBuilder {
         if (flashAddress != pageDataEnd) {
           byte[] oldData = this.flash.target
               .readBlockMemoryUnaligned8(pageDataEnd, flashAddress - pageDataEnd);
-          // TODO - this method copies all the data, and might be optimized.
           currentPage.data = appendDataInArray(currentPage.data, oldData);
         }
 
@@ -149,35 +189,524 @@ public class FlashBuilder {
         int spaceLeftInPage = pageInfo.size - currentPage.data.length;
         int spaceLeftInData = op.data.length - pos;
         int amount = (spaceLeftInPage < spaceLeftInData) ? spaceLeftInPage : spaceLeftInData;
-        // TODO - this method copies all the data, and might be optimized.
         currentPage.data = appendDataInArray(currentPage.data, op.data, pos, amount);
         programByteCount += amount;
       }
     }
 
-    // If smart flash was set to false then mark all pages
-    // as requiring programming.
+    // If smart flash was set to false then mark all pages as requiring programming.
     if (!smartFlash) {
-
+      this.markAllPagesForProgramming();
     }
 
-    // TODO - continue this method.
-
-    // TODO remove this dummy progress update.
-    int progress;
-    for (progress = 0; progress < 100; progress++) {
-      progressUpdate.progressUpdateCallback(progress);
-      try {
-        Thread.sleep(100);
-      } catch (InterruptedException exception) {
-        LOGGER.log(Level.SEVERE, exception.toString());
+    // If the first page being programmed is not the first page in ROM then don't use a chip erase.
+    if (this.pageList.get(0).address > this.flashStart) {
+      if (chipErase == null) {
+        chipErase = false;
+      } else if (chipErase == true) {
+        LOGGER.log(Level.WARNING, String.format(
+            "Chip erase used when flash address 0x%08x is not the same as flash start 0x%08x",
+            this.pageList.get(0).address, this.flashStart));
       }
-      progress += 50;
     }
-    progressUpdate.progressUpdateCallback(progress);
 
-    // TODO - Return the right ProgrammingInfo.
-    return null;
+    this.flash.init();
+
+    // Update this.chipEraseCount, and this.chipEraseWeight.
+    computeChipErasePagesAndWeight();
+    double chipEraseProgramTime = this.chipEraseWeight;
+    int pageEraseMinProgramTime = this.computePageErasePagesWeightMin();
+
+    // If chip_erase hasn't been specified determine if chip erase is faster than page erase
+    // regardless of contents.
+    if (chipErase == null && (chipEraseProgramTime < pageEraseMinProgramTime)) {
+      chipErase = true;
+    }
+
+    // If chip erase isn't true then analyze the flash.
+    if (chipErase == null || chipErase == false) {
+      long analyzeStartTime = System.currentTimeMillis();
+
+      if (this.flash.getFlashInfo().crcSupported) {
+        this.computePageErasePagesAndWeightCrc32(fastVerify);
+        int sectorEraseCount = this.sectorEraseCount;
+        int pageProgramTime = this.pageProgramTime;
+        this.perf.analyzeType = FlashBuilder.FLASH_ANALYSIS_CRC32;
+      } else {
+        this.computePageErasePagesAndWeightSectorRead();
+        int sectorEraseCount = this.sectorEraseCount;
+        int pageProgramTime = this.pageProgramTime;
+        this.perf.analyzeType = FlashBuilder.FLASH_ANALYSIS_PARTIAL_PAGE_READ;
+      }
+
+      long analyzeFinishTime = System.currentTimeMillis();
+      this.perf.analyzeTime = analyzeFinishTime - analyzeStartTime;
+      LOGGER.log(Level.FINE, "Analyze time: " + this.perf.analyzeTime);
+    }
+
+    // If chip erase hasn't been set then determine fastest method to program.
+    if (chipErase == null) {
+      LOGGER.log(Level.FINE,
+          "Chip erase count " + chipEraseCount + ", Page erase est count " + sectorEraseCount);
+      LOGGER.log(Level.FINE,
+          "Chip erase weight " + chipEraseProgramTime + ", Page erase weight " + pageProgramTime);
+      chipErase = chipEraseProgramTime < pageProgramTime;
+    }
+
+    int operation;
+    if (chipErase) {
+      if (this.flash.isDoubleBufferingSupported() && this.enableDoubleBuffering) {
+        LOGGER.log(Level.FINE, "Using double buffer chip erase program");
+        operation = this.chipEraseProgramDoubleBuffer(progressUpdate);
+      } else {
+        operation = this.chipEraseProgram(progressUpdate);
+      }
+    } else {
+      if (this.flash.isDoubleBufferingSupported() && this.enableDoubleBuffering) {
+        LOGGER.log(Level.FINE, "Using double buffer page erase program");
+        operation = this.pageEraseProgramDoubleBuffer(progressUpdate);
+      } else {
+        operation = this.pageEraseProgram(progressUpdate);
+      }
+    }
+
+    this.flash.target.resetStopOnReset(null);
+
+    long programFinishTime = System.currentTimeMillis();
+    this.perf.programTime = programFinishTime - programStartTime;
+    this.perf.programType = operation;
+
+    LOGGER.log(Level.FINE, String
+        .format("Programmed %d bytes (%d pages) at %.02f kB/s", programByteCount, pageList.size(),
+            ((programByteCount / 1024) / this.perf.programTime)));
+
+    return this.perf;
+  }
+
+  private void markAllPagesForProgramming() {
+    for (FlashPage page : this.pageList) {
+      page.erased = false;
+      page.same = false;
+    }
+  }
+
+  /*
+   * Estimate how many pages are the same.
+   *
+   * Quickly estimate how many pages are the same.  These estimates are used by page_erase_program
+   * so it is recommended to call this before beginning programming This is done automatically by
+   * smart_program.
+   */
+  private void computePageErasePagesAndWeightSectorRead() {
+    // Quickly estimate how many pages are the same.
+    int pageEraseCount = 0;
+    double pageEraseWeight = 0;
+
+    for (FlashPage page : this.pageList) {
+      // Analyze pages that haven't been analyzed yet.
+      if (page.same == null) {
+        int size = min(PAGE_ESTIMATE_SIZE, page.data.length);
+        byte[] data = this.flash.target.readBlockMemoryUnaligned8(page.address, size);
+        boolean pageSame = same(data, page.data, size);
+        if (pageSame == false) {
+          page.same = false;
+        }
+      }
+    }
+
+    // Put together page and time estimate.
+    for (FlashPage page : this.pageList) {
+      if (page.same == null) {
+        // Page is probably the same but must be read to confirm.
+        pageEraseWeight += page.getVerifyWeight();
+      } else if (page.same == false) {
+        pageEraseCount += 1;
+        pageEraseWeight += page.getEraseProgramWeight();
+      }
+
+      // If page.same is true, page is confirmed to be the same. So there is no programming weight.
+      // We don't need to do anything.
+    }
+
+    this.pageEraseCount = pageEraseCount;
+    this.pageEraseWeight = pageEraseWeight;
+  }
+
+  /*
+   * Compute the number of erased pages.
+   * Determine how many pages in the new data are already erased.
+   */
+  private void computeChipErasePagesAndWeight() {
+    int chipEraseCount = 0;
+    double chipEraseWeight = 0;
+    chipEraseWeight += this.flash.getFlashInfo().eraseWeight;
+    for (FlashPage page : this.pageList) {
+      if (page.erased == null) {
+        page.erased = erased(page.data);
+      }
+      if (!page.erased) {
+        chipEraseCount += 1;
+        chipEraseWeight += page.getEraseProgramWeight();
+      }
+    }
+
+    this.chipEraseCount = chipEraseCount;
+    this.chipEraseWeight = chipEraseWeight;
+  }
+
+  private int computePageErasePagesWeightMin() {
+    int pageEraseMinWeight = 0;
+    for (FlashPage page : this.pageList) {
+      pageEraseMinWeight += page.getVerifyWeight();
+    }
+    return pageEraseMinWeight;
+  }
+
+  /*
+   * Estimate how many pages are the same.
+   *
+   * Quickly estimate how many pages are the same.  These estimates are used
+   * by page_erase_program so it is recommended to call this before beginning programming
+   * This is done automatically by smart_program.
+   *
+   * If assume_estimate_correct is set to True, then pages with matching CRCs
+   * will be marked as the same.  There is a small chance that the CRCs match even though the
+   * data is different, but the odds of this happing are low: ~1/(2^32) = ~2.33*10^-8%.
+   */
+  private void computePageErasePagesAndWeightCrc32(Boolean assumeEstimateCorrect) {
+    // Set the default value, if null.
+    if (assumeEstimateCorrect == null) {
+      assumeEstimateCorrect = false;
+    }
+
+    // Build list of all the pages that need to be analyzed.
+    List<Sectors> sectorList = new ArrayList<Sectors>();
+    List<FlashPage> pageList = new ArrayList<FlashPage>();
+
+    for (FlashPage page : this.pageList) {
+      if (page.same == null) {
+        // Add sector to computeCrcs.
+        sectorList.add(new Sectors(page.address, page.size));
+        pageList.add(page);
+
+        // Compute CRC of data (Padded with 0xFF).
+        byte[] data = page.data;
+        data = fillArray(data, (int) page.size, (byte) 0xFF);
+        CRC32 crc = new CRC32();
+        crc.update(data);
+        page.crc = (int) (crc.getValue() & 0xFFFFFFFF);
+      }
+    }
+
+    // Analyze pages.
+    int pageEraseCount = 0;
+    double pageEraseWeight = 0;
+    if (pageList.size() > 0) {
+      int[] crcs = this.flash.computeCrcs(sectorList);
+      for (int i = 0; i < pageList.size() && i < crcs.length; i++) {
+        boolean pageSame = (pageList.get(i).crc == crcs[i]);
+        if (assumeEstimateCorrect) {
+          pageList.get(i).same = pageSame;
+        } else if (pageSame == false) {
+          pageList.get(i).same = false;
+        }
+      }
+    }
+
+    // Put together page and time estimate.
+    for (FlashPage page : this.pageList) {
+      if (page.same == null) {
+        // Page is probably the same but must be read to confirm.
+        pageEraseWeight += page.getVerifyWeight();
+      } else if (page.same == false) {
+        pageEraseCount += 1;
+        pageEraseWeight += page.getEraseProgramWeight();
+      }
+
+      // If page.same is true, page is confirmed to be the same. So there is no programming weight.
+      // We don't need to do anything.
+    }
+
+    this.pageEraseCount = pageEraseCount;
+    this.pageEraseWeight = pageEraseWeight;
+  }
+
+  /*
+   * Program by first performing a chip erase.
+   */
+  private int chipEraseProgram(ProgressUpdateInterface progressUpdate) {
+    LOGGER.log(Level.FINE, "Smart chip erase");
+    LOGGER.log(Level.FINE,
+        (this.pageList.size() - this.chipEraseCount) + " of " + this.pageList.size()
+            + "pages already erased.");
+
+    progressUpdate.progressUpdateCallback(0);
+    double progress = 0;
+
+    this.flash.eraseAll();
+    progress += this.flash.getFlashInfo().eraseWeight;
+
+    for (FlashPage page : this.pageList) {
+      if (page.erased == null || page.erased == false) {
+        this.flash.programPage(page.address, page.data);
+        progress += page.getProgramWeight();
+        progressUpdate.progressUpdateCallback((int) ((100 * progress) / chipEraseWeight));
+      }
+    }
+    progressUpdate.progressUpdateCallback(100);
+    return FlashBuilder.FLASH_CHIP_ERASE;
+  }
+
+  private int nextUnerasedPage(int startIndex) {
+
+    FlashPage page;
+
+    for (int i = startIndex; i < pageList.size(); i++) {
+      page = this.pageList.get(i);
+
+      if (page.erased == false) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /*
+   * Program by first performing a chip erase.
+   */
+  private int chipEraseProgramDoubleBuffer(ProgressUpdateInterface progressUpdate) {
+    LOGGER.log(Level.FINE, "Smart chip erase");
+    LOGGER.log(Level.FINE,
+        (this.pageList.size() - this.chipEraseCount) + " of " + this.pageList.size()
+            + "pages already erased.");
+
+    progressUpdate.progressUpdateCallback(0);
+    double progress = 0;
+
+    this.flash.eraseAll();
+    progress += this.flash.getFlashInfo().eraseWeight;
+
+    // Set up page and buffer info.
+    int errorCount = 0;
+    int currentBuffer = 0;
+    int nextBuffer = 1;
+
+    int pageIndex = nextUnerasedPage(0);
+    if (pageIndex < 0) {
+      LOGGER
+          .log(Level.SEVERE, "Unexpected nextUnerasedPage result - All pages are already erased.");
+    }
+    FlashPage page = this.pageList.get(pageIndex);
+
+    // Load first page buffer.
+    this.flash.loadPageBuffer(currentBuffer, page.address, page.data);
+
+    while (pageIndex >= 0) {
+      // Kick off this page program.
+      long currentAddress = page.address;
+      double currentWeight = page.getProgramWeight();
+      this.flash.startProgramPageWithBuffer(currentBuffer, currentAddress);
+
+      // Get next page and load it.
+      pageIndex = nextUnerasedPage(pageIndex);
+      if (pageIndex >= 0) {
+        page = this.pageList.get(pageIndex);
+        this.flash.loadPageBuffer(nextBuffer, page.address, page.data);
+      }
+
+      // Wait for the program to complete.
+      int result = this.flash.waitForCompletion();
+
+      // Check the return code.
+      if (result != 0) {
+        LOGGER.log(Level.SEVERE,
+            String.format("programPage(0x%08x) error: %d.", currentAddress, result));
+        errorCount++;
+        if (errorCount > this.maxErrors) {
+          LOGGER.log(Level.SEVERE, "Too many page programming errors, aborting program operation.");
+          break;
+        }
+      }
+
+      // Swap buffers.
+      int temp = currentBuffer;
+      currentBuffer = nextBuffer;
+      nextBuffer = temp;
+
+      // Update progress.
+      progress += currentWeight;
+      progressUpdate.progressUpdateCallback((int) (100 * progress / this.chipEraseWeight));
+    }
+
+    progressUpdate.progressUpdateCallback(100);
+    return FlashBuilder.FLASH_CHIP_ERASE;
+  }
+
+  /*
+   * Program by performing sector erases.
+   */
+  private int pageEraseProgram(ProgressUpdateInterface progressUpdate) {
+    int actualPageEraseCount = 0;
+    double actualPageEraseWeight = 0;
+    double progress = 0;
+
+    progressUpdate.progressUpdateCallback(0);
+
+    for (FlashPage page : this.pageList) {
+
+      if (page.same != null && page.same == false) {
+        // If the page is not the same.
+        progress += page.getProgramWeight();
+      }
+
+      if (page.same == null) {
+        // Read page data if unknown - after this page.same will be True or False.
+        byte[] data = this.flash.target.readBlockMemoryUnaligned8(page.address, page.data.length);
+        page.same = same(page.data, data, data.length);
+        progress += page.getVerifyWeight();
+      }
+
+      if (page.same == false) {
+        this.flash.erasePage(page.address);
+        this.flash.programPage(page.address, page.data);
+        actualPageEraseCount++;
+        actualPageEraseWeight += page.getEraseProgramWeight();
+      }
+
+      // Update progress.
+      if (this.pageEraseWeight > 0) {
+        progressUpdate.progressUpdateCallback((int) (100 * progress / pageEraseWeight));
+      }
+    }
+
+    progressUpdate.progressUpdateCallback(100);
+
+    LOGGER.log(Level.FINE, "Estimated page erase count: " + this.pageEraseCount);
+    LOGGER.log(Level.FINE, "Actual page erase count: " + actualPageEraseCount);
+    return FlashBuilder.FLASH_PAGE_ERASE;
+  }
+
+  /*
+   * Program by performing sector erases.
+   */
+  private double scanPagesForSame(ProgressUpdateInterface progressUpdate) {
+    double progress = 0;
+    int count = 0;
+    int sameCount = 0;
+
+    for (FlashPage page : this.pageList) {
+      // Read page data if unknown - after this page.same will be True or False.
+      if (page.same == null) {
+        byte[] data = this.flash.target.readBlockMemoryUnaligned8(page.address, page.data.length);
+        page.same = same(page.data, data, data.length);
+        progress += page.getVerifyWeight();
+        count++;
+
+        if (page.same) {
+          sameCount++;
+        }
+
+        // Update progress.
+        progressUpdate.progressUpdateCallback((int) (100 * progress / this.pageEraseWeight));
+      }
+    }
+    return progress;
+  }
+
+  private int nextNonsamePage(int startIndex) {
+    FlashPage page;
+
+    for (int i = startIndex; i < pageList.size(); i++) {
+      page = this.pageList.get(i);
+
+      if (page.same == false) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /*
+   * Program by performing sector erases.
+   */
+  public int pageEraseProgramDoubleBuffer(ProgressUpdateInterface progressUpdate) {
+    int actualPageEraseCount = 0;
+    double actualPageEraseWeight = 0;
+    double progress = 0;
+
+    progressUpdate.progressUpdateCallback(0);
+
+    // Fill in same flag for all pages. This is done up front so we're not trying to read from flash
+    // while simultaneously programming it.
+    progress = this.scanPagesForSame(progressUpdate);
+
+    // Set up page and buffer info.
+    int errorCount = 0;
+    int currentBuffer = 0;
+    int nextBuffer = 1;
+
+    int pageIndex = nextNonsamePage(0);
+    FlashPage page;
+
+    // Make sure there are actually pages to program differently from current flash contents.
+    if (pageIndex >= 0) {
+      page = pageList.get(pageIndex);
+
+      // Load first page buffer.
+      this.flash.loadPageBuffer(currentBuffer, page.address, page.data);
+
+      while (pageIndex >= 0) {
+        assert (page.same != null);
+
+        // Kick off this page program.
+        long currentAddress = page.address;
+        double currentWeight = page.getEraseProgramWeight();
+        this.flash.erasePage(currentAddress);
+        this.flash.startProgramPageWithBuffer(currentBuffer, currentAddress);
+        actualPageEraseCount++;
+        actualPageEraseWeight += page.getEraseProgramWeight();
+
+        // Get next page and load it.
+        pageIndex = nextNonsamePage(pageIndex);
+        if (pageIndex >= 0) {
+          page = pageList.get(pageIndex);
+          this.flash.loadPageBuffer(nextBuffer, page.address, page.data);
+        }
+
+        // Wait for the program to complete.
+        int result = this.flash.waitForCompletion();
+
+        // Check the return code.
+        if (result != 0) {
+          LOGGER.log(Level.SEVERE,
+              String.format("programPage(0x%08x) error: %d", currentAddress, result));
+          errorCount++;
+          if (errorCount > this.maxErrors) {
+            LOGGER
+                .log(Level.SEVERE, "Too many page programming errors, aborting program operation.");
+            break;
+          }
+        }
+
+        // Swap buffers.
+        int temp = currentBuffer;
+        currentBuffer = nextBuffer;
+        nextBuffer = temp;
+
+        // Update progress.
+        progress += currentWeight;
+        if (this.pageEraseWeight > 0) {
+          progressUpdate.progressUpdateCallback((int) (100 * progress / this.pageEraseWeight));
+        }
+      }
+    }
+
+    progressUpdate.progressUpdateCallback(100);
+
+    LOGGER.log(Level.FINE, "Estimated page erase count: " + this.pageEraseCount);
+    LOGGER.log(Level.FINE, "Actual page erase count: " + actualPageEraseCount);
+
+    return FlashBuilder.FLASH_PAGE_ERASE;
   }
 
   /*
@@ -187,7 +716,7 @@ public class FlashBuilder {
    * As we can not expand the size of an array in Java, we need
    * to create a new one, and concatenate both arrays.
    */
-  private byte[] appendDataInArray(byte[] a, byte[] b, int start, int end) {
+  private byte[] appendDataInArray(byte[] src, byte[] append, int start, int end) {
 
     // Sanity check.
     int count = end - start;
@@ -198,17 +727,16 @@ public class FlashBuilder {
     }
 
     // Create a new array to extend its size.
-    byte[] newArray = new byte[a.length + end - start];
+    byte[] newArray = new byte[src.length + end - start];
 
     // Copy currentPage data to the new array.
-    System.arraycopy(a, 0, newArray, 0, a.length);
+    System.arraycopy(src, 0, newArray, 0, src.length);
 
     // Copy oldData to the new array.
-    System.arraycopy(b, start, newArray, a.length, count);
+    System.arraycopy(append, start, newArray, append.length, count);
 
     // Overwrite currentPage.data with the new array.
     return newArray;
-
   }
 
   /*
@@ -218,20 +746,41 @@ public class FlashBuilder {
    * As we can not expand the size of an array in Java, we need
    * to create a new one, and concatenate both arrays.
    */
-  private byte[] appendDataInArray(byte[] a, byte[] b) {
+  private byte[] appendDataInArray(byte[] src, byte[] append) {
 
     // Create a new array to extend its size.
-    byte[] newArray = new byte[a.length + b.length];
+    byte[] newArray = new byte[src.length + append.length];
 
     // Copy currentPage data to the new array.
-    System.arraycopy(a, 0, newArray, 0, a.length);
+    System.arraycopy(src, 0, newArray, 0, src.length);
 
     // Copy oldData to the new array.
-    System.arraycopy(b, 0, newArray, a.length, b.length);
+    System.arraycopy(append, 0, newArray, src.length, append.length);
 
     // Overwrite currentPage.data with the new array.
     return newArray;
+  }
 
+  /*
+   * Fill and existing byte array with a value up to "size".
+   *
+   * As we can not expand the size of an array in Java, we need
+   * to create a new one, and concatenate both arrays.
+   */
+  private byte[] fillArray(byte[] src, int size, byte fillWith) {
+    int bytesLeft = size - src.length;
+
+    if (bytesLeft <= 0) {
+      // There is no bytes left to fill.
+      return src;
+    }
+
+    byte[] append = new byte[bytesLeft];
+    for (int i = 0; i < bytesLeft; i++) {
+      append[i] = fillWith;
+    }
+
+    return appendDataInArray(src, append);
   }
 
   private class FlashOperation implements Comparable<FlashOperation> {

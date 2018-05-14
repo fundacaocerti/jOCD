@@ -403,7 +403,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
 
     for (int i = 0; i < endpointCount; i++) {
       UsbEndpoint endpoint = this.usbInterface.getEndpoint(i);
-      if ((endpoint.getAddress() & USB_INPUT_ENDPOINT_ADDRESS) > 0) {
+      if ((endpoint.getAddress() & USB_INPUT_ENDPOINT_ADDRESS) != 0) {
         inputEndpoint = endpoint;
       } else {
         outputEndpoint = endpoint;

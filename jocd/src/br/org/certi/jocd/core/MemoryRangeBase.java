@@ -17,9 +17,9 @@ package br.org.certi.jocd.core;
 
 public class MemoryRangeBase {
 
-  long start = 0;
-  long end = 0;
-  long length = 0;
+  public long start = 0;
+  public long end = 0;
+  public long length = 0;
 
   public static final long DEFAULT_START = 0;
   public static final long DEFAULT_END = 0;
