@@ -15,6 +15,7 @@
  */
 package br.org.certi.jocd.core;
 
+import cz.jaybee.intelhex.Region;
 import java.util.List;
 
 public class MemoryMap {
