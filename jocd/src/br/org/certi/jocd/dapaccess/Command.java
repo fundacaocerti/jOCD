@@ -45,7 +45,7 @@ public class Command {
   private boolean blockAllowed = true;
   private Byte blockRequest;
   private List<DataTuple> data;
-  private byte dapIndex;
+  private Byte dapIndex;
   private boolean dataEncoded = false;
 
   /*
@@ -58,10 +58,136 @@ public class Command {
   }
 
   /*
+   * Return the number of words free in the transmit packet
+   */
+  public int getFreeWords(boolean blockAllowed, boolean isRead) {
+    if (blockAllowed) {
+      // DAP_TransferBlock request packet:
+      //   BYTE | BYTE *****| SHORT**********| BYTE *************| WORD *********|
+      // > 0x06 | DAP Index | Transfer Count | Transfer Request  | Transfer Data |
+      //  ******|***********|****************|*******************|+++++++++++++++|
+      int send = this.size - 5 - 4 * this.writeCount;
+
+      // DAP_TransferBlock response packet:
+      //   BYTE | SHORT *********| BYTE *************| WORD *********|
+      // < 0x06 | Transfer Count | Transfer Response | Transfer Data |
+      //  ******|****************|*******************|+++++++++++++++|
+      int recv = this.size - 4 - 4 * this.readCount;
+
+      if (isRead) {
+        return recv / 4;
+      } else {
+        return send / 4;
+      }
+    } else {
+      // DAP_Transfer request packet:
+      //   BYTE | BYTE *****| BYTE **********| BYTE *************| WORD *********|
+      // > 0x05 | DAP Index | Transfer Count | Transfer Request  | Transfer Data |
+      //  ******|***********|****************|+++++++++++++++++++++++++++++++++++|
+      int send = this.size - 3 - 1 * this.readCount - 5 * this.writeCount;
+
+      // DAP_Transfer response packet:
+      //   BYTE | BYTE **********| BYTE *************| WORD *********|
+      // < 0x05 | Transfer Count | Transfer Response | Transfer Data |
+      //  ******|****************|*******************|+++++++++++++++|
+      int recv = this.size - 3 - 4 * this.readCount;
+
+      if (isRead) {
+        // 1 request byte in request packet, 4 data bytes in response packet
+        return Math.min(send, recv / 4);
+      } else {
+        // 1 request byte + 4 data bytes
+        return send / 5;
+      }
+    }
+  }
+
+  public int getRequestSpace(int count, byte request, Byte dapIndex) {
+    assert this.dataEncoded == false;
+
+    // Must create another command if the dap index is different.
+    if (this.dapIndex != null && dapIndex != this.dapIndex) {
+      return 0;
+    }
+
+    // Block transfers must use the same request.
+    boolean blockAllowed = this.blockAllowed;
+    if (this.blockRequest != null && request != this.blockRequest) {
+      blockAllowed = false;
+    }
+
+    // Compute the portion of the request that will fit in this packet.
+    boolean isRead = (request & DapAccessCmsisDap.READ) != 0;
+    int free = this.getFreeWords(blockAllowed, isRead);
+    int size = Math.min(count, free);
+
+    // Non-block transfers only have 1 byte for request count.
+    if (!blockAllowed) {
+      int maxCount = this.writeCount + this.readCount + size;
+      int delta = maxCount - 255;
+      size = Math.min(size - delta, size);
+      if (DapAccessCmsisDap.LOG_PACKET_BUILDS) {
+        LOGGER.log(Level.FINE, String.format(
+            "get_request_space(%d, %02x:%s)[wc=%d, rc=%d, ba=%d->%d] -> (sz=%d, free=%d, delta=%d)",
+            count, request, isRead ? 'r' : 'w', this.writeCount, this.readCount, this.blockAllowed,
+            blockAllowed, size, free, delta));
+      }
+    } else if (DapAccessCmsisDap.LOG_PACKET_BUILDS) {
+      LOGGER.log(Level.FINE, String
+          .format("get_request_space(%d, %02x:%s)[wc=%d, rc=%d, ba=%d->%d] -> (sz=%d, free=%d)",
+              count, request, isRead ? 'r' : 'w', this.writeCount, this.readCount,
+              this.blockAllowed, blockAllowed, size, free));
+    }
+
+    // We can get a negative free count if the packet already contains more data than can be
+    // sent by a DAP_Transfer command, but the new request forces DAP_Transfer. In this case,
+    // just return 0 to force the DAP_Transfer_Block to be sent.
+    return Math.max(size, 0);
+  }
+
+  public boolean getFull() {
+    return (this.getFreeWords(this.blockAllowed, true) == 0) || (
+        this.getFreeWords(this.blockAllowed, false) == 0);
+  }
+
+  /*
  * Return true if no transfers have been added to this packet
  */
   public boolean getEmpty() {
     return this.data == null || this.data.size() == 0;
+  }
+
+  /*
+   * Add a single or block register transfer operation to this command
+   */
+  public void add(int count, byte request, byte[] data, Byte dapIndex) {
+    assert this.dataEncoded == false;
+    if (this.dapIndex == null) {
+      this.dapIndex = dapIndex;
+    }
+    assert this.dapIndex == dapIndex;
+
+    if (this.blockRequest == null) {
+      this.blockRequest = request;
+    } else if (request != this.blockRequest) {
+      this.blockAllowed = false;
+    }
+    assert !this.blockAllowed || this.blockRequest == request;
+
+    if ((request & DapAccessCmsisDap.READ) != 0) {
+      this.readCount += count;
+    } else {
+      this.writeCount += count;
+    }
+
+    this.data.add(new DataTuple(count, request, data));
+
+    if (DapAccessCmsisDap.LOG_PACKET_BUILDS) {
+      LOGGER.log(Level.FINE, String
+          .format("add(%d, %02x:%s) -> [wc=%d, rc=%d, ba=%d]", count, request,
+              ((request & DapAccessCmsisDap.READ) != 0) ? 'r' : 'w', this.writeCount,
+              this.readCount, this.blockAllowed));
+    }
   }
 
   /*
@@ -89,7 +215,7 @@ public class Command {
       for (int i = 0; i <= count; i++) {
         buf[pos] = (byte) request;
         pos += 1;
-        if ((request & DapAccessCmsisDap.READ) > 0) {
+        if ((request & DapAccessCmsisDap.READ) != 0) {
           buf[pos] = (byte) ((writeList[writePos] >> (8 * 0)) & 0xff);
           pos += 1;
           buf[pos] = (byte) ((writeList[writePos] >> (8 * 1)) & 0xff);
@@ -167,7 +293,7 @@ public class Command {
       assert writeList == null || writeList.length <= count;
       assert request == this.blockRequest;
       int writePos = 0;
-      if ((request & DapAccessCmsisDap.READ) > 0) {
+      if ((request & DapAccessCmsisDap.READ) != 0) {
         for (int i = 0; i <= count; i++) {
           buf[pos] = (byte) ((writeList[writePos] >> (8 * 0)) & 0xff);
           pos += 1;
