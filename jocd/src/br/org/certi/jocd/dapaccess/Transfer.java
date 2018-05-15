@@ -25,12 +25,29 @@ public class Transfer {
 
   private Exception error;
   private int sizeBytes = 0;
-  private int[] result;
+  private byte[] result;
+  private DapAccessCmsisDap dapLink;
+  private byte dapIndex;
+  private int transferCount;
+  private byte transferRequest;
+  private long[] transferData;
 
   /*
    * Constructor.
    */
-  public Transfer() {
+  public Transfer(DapAccessCmsisDap dapLink, byte dapIndex, int transferCount,
+      byte transferRequest, long[] transferData) {
+    // Writes should not need a transfer object since they don't have any response data
+    assert (transferRequest & DapAccessCmsisDap.READ) != 0;
+
+    this.dapLink = dapLink;
+    this.dapIndex = dapIndex;
+    this.transferCount = transferCount;
+    this.transferRequest = transferRequest;
+    this.transferData = transferData;
+    if ((transferRequest & DapAccessCmsisDap.READ) != 0) {
+      this.sizeBytes = transferCount * 4;
+    }
   }
 
   /*
@@ -47,11 +64,12 @@ public class Transfer {
   public void addResponse(byte[] data) {
     assert data.length == this.sizeBytes;
     int resultSize = this.sizeBytes / 4;
-    int[] result = new int[resultSize];
+    byte[] result = new byte[resultSize];
     int count = 0;
     for (int i = 0; i < this.sizeBytes; i += 4) {
-      int word = ((data[0 + i] << 0) | (data[1 + i] << 8) | (data[2 + i] << 16) | (data[3 + i]
-          << 24));
+      byte word = (byte) (((data[0 + i] << 0) | (data[1 + i] << 8) | (data[2 + i] << 16) | (
+          data[3 + i]
+              << 24)));
       result[count] = word;
       count++;
     }
@@ -66,4 +84,24 @@ public class Transfer {
     this.error = error;
   }
 
+  /*
+   * Get the result of this transfer.
+   */
+  public byte[] getResult() throws Exception {
+    while (this.result == null) {
+      if (this.dapLink.getCommandsToRead().size() > 0) {
+        this.dapLink.readPacket();
+      } else {
+        assert !this.dapLink.getCrntCmd().getEmpty();
+        this.dapLink.flush();
+      }
+    }
+
+    if (this.error != null) {
+      throw this.error;
+    }
+
+    assert this.result != null;
+    return this.result;
+  }
 }
