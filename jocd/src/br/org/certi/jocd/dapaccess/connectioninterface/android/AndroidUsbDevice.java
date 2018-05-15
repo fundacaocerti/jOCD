@@ -24,6 +24,7 @@ import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
+import br.org.certi.jocd.util.Util;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -190,12 +191,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
     }
 
     // Fill the packet the left space, appending 0 on the end of data.
-    byte[] packet = new byte[reportSize];
-
-    System.arraycopy(data, 0, packet, 0, data.length);
-    for (int i = data.length; i < reportSize; i++) {
-      packet[i] = 0x00;
-    }
+    byte[] packet = Util.fillArray(data, reportSize, (byte)0x00);
 
     synchronized (locker) {
 
@@ -440,8 +436,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
           // received data to a new array and pass it to our queue.
           if (received >= 0) {
             byte[] receivedData = new byte[received];
-            System.arraycopy(packet, 0, receivedData, 0, received);
-            rxQueue.add(receivedData);
+            rxQueue.add(Util.getSubArray(packet, 0, received));
           }
         }
 
