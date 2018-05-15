@@ -19,6 +19,7 @@ import static br.org.certi.jocd.flash.FlashPage.PAGE_ESTIMATE_SIZE;
 import static java.lang.Math.min;
 
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
+import br.org.certi.jocd.util.Util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -182,14 +183,14 @@ public class FlashBuilder {
         if (flashAddress != pageDataEnd) {
           byte[] oldData = this.flash.target
               .readBlockMemoryUnaligned8(pageDataEnd, flashAddress - pageDataEnd);
-          currentPage.data = appendDataInArray(currentPage.data, oldData);
+          currentPage.data = Util.appendDataInArray(currentPage.data, oldData);
         }
 
         // Copy data to page and increment pos
         int spaceLeftInPage = pageInfo.size - currentPage.data.length;
         int spaceLeftInData = op.data.length - pos;
         int amount = (spaceLeftInPage < spaceLeftInData) ? spaceLeftInPage : spaceLeftInData;
-        currentPage.data = appendDataInArray(currentPage.data, op.data, pos, amount);
+        currentPage.data = Util.appendDataInArray(currentPage.data, op.data, pos, amount);
         programByteCount += amount;
       }
     }
@@ -391,7 +392,7 @@ public class FlashBuilder {
 
         // Compute CRC of data (Padded with 0xFF).
         byte[] data = page.data;
-        data = fillArray(data, (int) page.size, (byte) 0xFF);
+        data = Util.fillArray(data, (int) page.size, (byte) 0xFF);
         CRC32 crc = new CRC32();
         crc.update(data);
         page.crc = (int) (crc.getValue() & 0xFFFFFFFF);
@@ -707,80 +708,6 @@ public class FlashBuilder {
     LOGGER.log(Level.FINE, "Actual page erase count: " + actualPageEraseCount);
 
     return FlashBuilder.FLASH_PAGE_ERASE;
-  }
-
-  /*
-   * Extend an existing byte array with another array and return
-   * this new concatenated array.
-   *
-   * As we can not expand the size of an array in Java, we need
-   * to create a new one, and concatenate both arrays.
-   */
-  private byte[] appendDataInArray(byte[] src, byte[] append, int start, int end) {
-
-    // Sanity check.
-    int count = end - start;
-    if (count < 0) {
-      LOGGER.log(Level.SEVERE, "Internal error: end position is lower than start position at" +
-          "appendDataInArray.");
-      return null;
-    }
-
-    // Create a new array to extend its size.
-    byte[] newArray = new byte[src.length + end - start];
-
-    // Copy currentPage data to the new array.
-    System.arraycopy(src, 0, newArray, 0, src.length);
-
-    // Copy oldData to the new array.
-    System.arraycopy(append, start, newArray, append.length, count);
-
-    // Overwrite currentPage.data with the new array.
-    return newArray;
-  }
-
-  /*
-   * Extend an existing byte array with another array and return
-   * this new concatenated array.
-   *
-   * As we can not expand the size of an array in Java, we need
-   * to create a new one, and concatenate both arrays.
-   */
-  private byte[] appendDataInArray(byte[] src, byte[] append) {
-
-    // Create a new array to extend its size.
-    byte[] newArray = new byte[src.length + append.length];
-
-    // Copy currentPage data to the new array.
-    System.arraycopy(src, 0, newArray, 0, src.length);
-
-    // Copy oldData to the new array.
-    System.arraycopy(append, 0, newArray, src.length, append.length);
-
-    // Overwrite currentPage.data with the new array.
-    return newArray;
-  }
-
-  /*
-   * Fill and existing byte array with a value up to "size".
-   *
-   * As we can not expand the size of an array in Java, we need
-   * to create a new one, and concatenate both arrays.
-   */
-  private byte[] fillArray(byte[] src, int size, byte fillWith) {
-    int bytesLeft = size - src.length;
-
-    if (bytesLeft <= 0) {
-      // There is no bytes left to fill.
-      return src;
-    }
-
-    byte[] append = new byte[bytesLeft];
-    for (int i = 0; i < bytesLeft; i++) {
-      append[i] = fillWith;
-    }
-
-    return appendDataInArray(src, append);
   }
 
   private class FlashOperation implements Comparable<FlashOperation> {

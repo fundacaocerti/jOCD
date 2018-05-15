@@ -22,9 +22,9 @@ public class DataTuple {
 
   private int count;
   private byte request;
-  private byte[] data;
+  private long[] data;
 
-  public DataTuple(int count, byte request, byte[] data) {
+  public DataTuple(int count, byte request, long[] data) {
     this.count = count;
     this.request = request;
     this.data = data;
@@ -38,7 +38,7 @@ public class DataTuple {
     return request;
   }
 
-  public byte[] getData() {
+  public long[] getData() {
     return data;
   }
 }

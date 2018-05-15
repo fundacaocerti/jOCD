@@ -15,8 +15,6 @@
  */
 package br.org.certi.jocd.dapaccess;
 
-import static br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory.connectionInterfaceEnum.androidUsbManager;
-
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.IdInfo;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Pins;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Port;
@@ -26,6 +24,7 @@ import br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
+import br.org.certi.jocd.util.Util;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -59,7 +58,7 @@ public class DapAccessCmsisDap {
   private CmsisDapProtocol protocol;
   private LinkedList<Transfer> transferList;
   private Command crntCmd;
-  private ArrayDeque commandsToRead;
+  private ArrayDeque<Command> commandsToRead;
   private byte[] commandsResponseBuf;
 
   /*
@@ -88,7 +87,7 @@ public class DapAccessCmsisDap {
       LOGGER.log(Level.SEVERE, "Not implemented! Trying to use WS interface.");
       return null;
     }
-    return UsbFactory.getUSBInterface(androidUsbManager).getAllConnectedDevices();
+    return UsbFactory.getUSBInterface(null).getAllConnectedDevices();
   }
 
   /*
@@ -344,7 +343,7 @@ public class DapAccessCmsisDap {
     // The current packet - this can contain multiple  different transfers
     this.crntCmd = new Command(this.packetSize);
     // Packets that have been sent but not read
-    this.commandsToRead = new ArrayDeque();
+    this.commandsToRead = new ArrayDeque<Command>();
     // Buffer for data returned for completed commands. This data will be added to transfers
     this.commandsResponseBuf = new byte[0];
   }
@@ -365,10 +364,7 @@ public class DapAccessCmsisDap {
       throw exception;
     }
 
-    byte[] c = new byte[decodedData.length + this.commandsResponseBuf.length];
-    System.arraycopy(decodedData, 0, c, 0, decodedData.length);
-    System.arraycopy(this.commandsResponseBuf, 0, c, decodedData.length,
-        this.commandsResponseBuf.length);
+    this.commandsResponseBuf = Util.appendDataInArray(this.commandsResponseBuf, decodedData);
 
     // Attach data to transfers
     int pos = 0;
@@ -385,19 +381,14 @@ public class DapAccessCmsisDap {
       }
 
       this.transferList.poll();
-      int arraySize = pos + size;
-      byte[] data = new byte[arraySize];
-      System.arraycopy(this.commandsResponseBuf, pos, data, 0, arraySize);
-      pos = size;
+      byte[] data = Util.getSubArray(this.commandsResponseBuf, pos, pos + size);
+      pos += size;
       transfer.addResponse(data);
     }
 
-    // Remove used data from _command_response_buf
+    // Remove used data from commandResponseBuf
     if (pos > 0) {
-      int arraySize = this.commandsResponseBuf.length - pos;
-      byte[] data = new byte[arraySize];
-      System.arraycopy(this.commandsResponseBuf, pos, data, 0, arraySize);
-      this.commandsResponseBuf = data;
+      this.commandsResponseBuf = Util.getSubArray(this.commandsResponseBuf, pos, null);
     }
   }
 
@@ -461,13 +452,12 @@ public class DapAccessCmsisDap {
         continue;
       }
 
-      byte[] data;
+      long[] data;
       // Add request to packet.
       if (transferData == null) {
         data = null;
       } else {
-        data = new byte[transDataPos + size];
-        System.arraycopy(transferData, 2, data, 0, data.length);
+        data = Util.getSubArray(transferData, transDataPos, transDataPos + size);
       }
       cmd.add(size, transferRequest, data, dapIndex);
       sizeToTransfer -= size;

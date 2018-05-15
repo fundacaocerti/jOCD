@@ -19,20 +19,21 @@ import br.org.certi.jocd.dapaccess.CmsisDapProtocol.CommandId;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferFaultError;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferTimeoutError;
+import br.org.certi.jocd.util.Util;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /*
-* A wrapper object representing a command send to the layer below (ex. USB).
-* This class wraps the phyiscal commands DAP_Transfer and DAP_TransferBlock
-* to provide a uniform way to build the command to most efficiently transfer
-* the data supplied.  Register reads and writes individually or in blocks
-* are added to a command object until it is full.  Once full, this class
-* decides if it is more efficient to use DAP_Transfer or DAP_TransferBlock.
-* The payload to send over the layer below is constructed with
-* encode_data.  The response to the command is decoded with decode_data.
-*/
+ * A wrapper object representing a command send to the layer below (ex. USB).
+ * This class wraps the phyiscal commands DAP_Transfer and DAP_TransferBlock
+ * to provide a uniform way to build the command to most efficiently transfer
+ * the data supplied.  Register reads and writes individually or in blocks
+ * are added to a command object until it is full.  Once full, this class
+ * decides if it is more efficient to use DAP_Transfer or DAP_TransferBlock.
+ * The payload to send over the layer below is constructed with
+ * encode_data.  The response to the command is decoded with decode_data.
+ */
 public class Command {
 
   // Logging
@@ -149,8 +150,8 @@ public class Command {
   }
 
   /*
- * Return true if no transfers have been added to this packet
- */
+   * Return true if no transfers have been added to this packet
+   */
   public boolean getEmpty() {
     return this.data == null || this.data.size() == 0;
   }
@@ -158,7 +159,7 @@ public class Command {
   /*
    * Add a single or block register transfer operation to this command
    */
-  public void add(int count, byte request, byte[] data, Byte dapIndex) {
+  public void add(int count, byte request, long[] data, Byte dapIndex) {
     assert this.dataEncoded == false;
     if (this.dapIndex == null) {
       this.dapIndex = dapIndex;
@@ -205,7 +206,7 @@ public class Command {
     for (DataTuple dt : this.data) {
       int count = dt.getCount();
       byte request = dt.getRequest();
-      byte[] writeList = dt.getData();
+      long[] writeList = dt.getData();
       assert writeList == null || writeList.length <= count;
       int writePos = 0;
       for (int i = 0; i <= count; i++) {
@@ -254,10 +255,7 @@ public class Command {
       throw new TransferError();
     }
 
-    int arraySize = 4 * this.readCount;
-    byte[] decodedData = new byte[arraySize];
-    System.arraycopy(data, 3, decodedData, 0, arraySize);
-    return decodedData;
+    return Util.getSubArray(data, 3, 3 + (4 * this.readCount));
   }
 
   /*
@@ -285,7 +283,7 @@ public class Command {
     for (DataTuple dt : this.data) {
       int count = dt.getCount();
       int request = dt.getRequest();
-      byte[] writeList = dt.getData();
+      long[] writeList = dt.getData();
       assert writeList == null || writeList.length <= count;
       assert request == this.blockRequest;
       int writePos = 0;
@@ -334,10 +332,7 @@ public class Command {
       throw new TransferError();
     }
 
-    int arraySize = 4 * this.readCount;
-    byte[] decodedData = new byte[arraySize];
-    System.arraycopy(data, 4, decodedData, 0, arraySize);
-    return decodedData;
+    return Util.getSubArray(data, 4, 4 + (4 * this.readCount));
   }
 
   /*
