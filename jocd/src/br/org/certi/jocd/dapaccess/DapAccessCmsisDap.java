@@ -18,7 +18,9 @@ package br.org.certi.jocd.dapaccess;
 import static br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory.connectionInterfaceEnum.androidUsbManager;
 
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.IdInfo;
+import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Pins;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Port;
+import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Reg;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
@@ -40,7 +42,13 @@ public class DapAccessCmsisDap {
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   //CMSIS-DAP values
+  public static final byte AP_ACC = 1 << 0;
+  public static final byte DP_ACC = 0 << 0;
   public static final byte READ = 1 << 1;
+  public static final byte WRITE = 0 << 1;
+
+  // Set to True to enable logging of packet filling logic.
+  public static boolean LOG_PACKET_BUILDS = false;
 
   public static final int FREQUENCY = 1000000; // 1MHz default clock
 
@@ -64,6 +72,14 @@ public class DapAccessCmsisDap {
     super();
     this.uniqueId = uniqueId;
     this.frequency = FREQUENCY;
+  }
+
+  public ArrayDeque getCommandsToRead() {
+    return commandsToRead;
+  }
+
+  public Command getCrntCmd() {
+    return crntCmd;
   }
 
   /*
@@ -165,7 +181,28 @@ public class DapAccessCmsisDap {
     return uniqueId;
   }
 
-  private void flush() throws TransferError, TimeoutException {
+  public void reset() throws InterruptedException, DeviceError, TimeoutException {
+    this.flush();
+    this.protocol.setSWJPins((byte) 0, Pins.nRESET.getValue());
+    Thread.sleep(1000);
+    this.protocol.setSWJPins((byte) 0x80, Pins.nRESET.getValue());
+    Thread.sleep(1000);
+  }
+
+  public void assertReset(boolean asserted) throws DeviceError, TimeoutException {
+    this.flush();
+    if (asserted) {
+      this.protocol.setSWJPins((byte) 0, Pins.nRESET.getValue());
+    } else {
+      this.protocol.setSWJPins((byte) 0x80, Pins.nRESET.getValue());
+    }
+  }
+
+  public Port getSwjMode() {
+    return this.dapPort;
+  }
+
+  public void flush() throws TransferError, TimeoutException {
     // Send current packet
     this.sendPacket();
     // Read all backlogged
@@ -210,6 +247,62 @@ public class DapAccessCmsisDap {
     } else {
       LOGGER.log(Level.SEVERE, "Unexpected DAP port: " + this.dapPort.toString());
     }
+  }
+
+  public void writeReg(long regId, long value) throws TransferError, TimeoutException {
+    this.writeReg(regId, value, (byte) 0);
+  }
+
+  public void writeReg(long regId, long value, byte dapIndex)
+      throws TransferError, TimeoutException {
+    assert Reg.containsReg(regId);
+
+    byte request = WRITE;
+    if (regId < 4) {
+      request |= DP_ACC;
+    } else {
+      request |= AP_ACC;
+    }
+    request |= (regId % 4) * 4;
+    long[] transferData = new long[1];
+    transferData[0] = value;
+    this.write(dapIndex, 1, request, transferData);
+  }
+
+  public byte readRegNow(long regId) throws Exception {
+    return this.readRegNow(regId, (byte) 0);
+  }
+
+  public byte readRegNow(long regId, byte dapIndex)
+      throws Exception {
+    Transfer transfer = readReg(regId, dapIndex);
+    return readRegAsync(transfer);
+  }
+
+  public Transfer readReg(long regId) throws TransferError, TimeoutException {
+    return this.readReg(regId, (byte) 0);
+  }
+
+  public Transfer readReg(long regId, byte dapIndex)
+      throws TransferError, TimeoutException {
+    assert Reg.containsReg(regId);
+
+    byte request = READ;
+    if (regId < 4) {
+      request |= DP_ACC;
+    } else {
+      request |= AP_ACC;
+    }
+    request |= (regId % 4) << 2;
+    Transfer transfer = this.write(dapIndex, 1, request, null);
+    assert transfer != null;
+    return transfer;
+  }
+
+  public byte readRegAsync(Transfer transfer) throws Exception {
+    byte[] res = transfer.getResult();
+    assert res.length == 1;
+    return res[0];
   }
 
   /*
@@ -263,7 +356,7 @@ public class DapAccessCmsisDap {
    * Reads and decodes a single packet
    * Reads a single packet from the device and  stores the data from it in the current Command object
    */
-  private void readPacket() throws TransferError, TimeoutException {
+  public void readPacket() throws TransferError, TimeoutException {
     // Grab command, send it and decode response
     Command command = (Command) this.commandsToRead.poll();
     byte[] decodedData;
@@ -336,6 +429,70 @@ public class DapAccessCmsisDap {
     }
     this.commandsToRead.add(command);
     this.crntCmd = new Command(this.packetSize);
+  }
+
+  /*
+   * Write one or more commands
+   */
+  private Transfer write(byte dapIndex, int transferCount, byte transferRequest,
+      long[] transferData)
+      throws TransferError, TimeoutException {
+    assert dapIndex == 0;
+    assert transferData == null || transferData.length != 0;
+
+    // Create transfer and add to transfer list
+    Transfer transfer = null;
+    if ((transferRequest & READ) != 0) {
+      transfer = new Transfer(this, dapIndex, transferCount, transferRequest, transferData);
+      this.transferList.add(transfer);
+    }
+
+    // Build physical packet by adding it to command
+    Command cmd = this.crntCmd;
+    boolean isRead = (transferRequest & READ) != 0;
+    int sizeToTransfer = transferCount;
+    int transDataPos = 0;
+    while (sizeToTransfer > 0) {
+      // Get the size remaining in the current packet for the given request.
+      int size = cmd.getRequestSpace(sizeToTransfer, transferRequest, dapIndex);
+
+      // This request doesn't fit in the packet so send it.
+      if (size == 0) {
+        if (LOG_PACKET_BUILDS) {
+          LOGGER.log(Level.FINE, "write: send packet [size==0]");
+        }
+        this.sendPacket();
+        cmd = this.crntCmd;
+        continue;
+      }
+
+      byte[] data;
+      // Add request to packet.
+      if (transferData == null) {
+        data = null;
+      } else {
+        data = new byte[transDataPos + size];
+        System.arraycopy(transferData, 2, data, 0, data.length);
+      }
+      cmd.add(size, transferRequest, data, dapIndex);
+      sizeToTransfer -= size;
+      transDataPos += size;
+
+      // Packet has been filled so send it
+      if (cmd.getFull()) {
+        if (LOG_PACKET_BUILDS) {
+          LOGGER.log(Level.FINE, "write: send packet [full]");
+        }
+        this.sendPacket();
+        cmd = this.crntCmd;
+      }
+    }
+
+    if (!this.deferredTransfer) {
+      this.flush();
+    }
+
+    return transfer;
   }
 
   /*
