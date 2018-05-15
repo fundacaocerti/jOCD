@@ -25,7 +25,7 @@ public class Transfer {
 
   private Exception error;
   private int sizeBytes = 0;
-  private byte[] result;
+  private int[] result;
   private DapAccessCmsisDap dapLink;
   private byte dapIndex;
   private int transferCount;
@@ -64,12 +64,11 @@ public class Transfer {
   public void addResponse(byte[] data) {
     assert data.length == this.sizeBytes;
     int resultSize = this.sizeBytes / 4;
-    byte[] result = new byte[resultSize];
+    int[] result = new int[resultSize];
     int count = 0;
     for (int i = 0; i < this.sizeBytes; i += 4) {
-      byte word = (byte) (((data[0 + i] << 0) | (data[1 + i] << 8) | (data[2 + i] << 16) | (
-          data[3 + i]
-              << 24)));
+      int word = (((data[0 + i] << 0) | (data[1 + i] << 8) | (data[2 + i] << 16) | (
+          data[3 + i] << 24)));
       result[count] = word;
       count++;
     }
@@ -87,7 +86,7 @@ public class Transfer {
   /*
    * Get the result of this transfer.
    */
-  public byte[] getResult() throws Exception {
+  public int[] getResult() throws Exception {
     while (this.result == null) {
       if (this.dapLink.getCommandsToRead().size() > 0) {
         this.dapLink.readPacket();
