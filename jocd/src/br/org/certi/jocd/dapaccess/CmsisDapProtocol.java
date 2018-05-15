@@ -21,6 +21,7 @@ package br.org.certi.jocd.dapaccess;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.dapexceptions.CommandError;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
+import br.org.certi.jocd.util.Util;
 import java.util.EnumSet;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -234,14 +235,14 @@ public class CmsisDapProtocol {
     }
 
     // String values. They are sent as C strings with a terminating null char, so we strip it out.
-    int arraySize = response[1];
+    int responseSize = response[1];
     // The data starts at 2 and the last position is array size minus 1
-    byte lastCharacter = response[2 + arraySize - 1];
+    byte lastCharacter = response[2 + responseSize - 1];
     if (lastCharacter == '\0') {
-      arraySize -= 1;
+      responseSize -= 1;
     }
-    byte[] data = new byte[arraySize];
-    System.arraycopy(response, 2, data, 0, arraySize);
+
+    byte[] data = Util.getSubArray(response, 2, 2 + responseSize);
     String dataString = new String(data);
     return dataString;
   }
@@ -489,8 +490,6 @@ public class CmsisDapProtocol {
       throw new CommandError();
     }
 
-    byte[] ret = new byte[response.length - 2];
-    System.arraycopy(response, 2, ret, 0, ret.length);
-    return ret;
+    return Util.getSubArray(response, 2, null);
   }
 }
