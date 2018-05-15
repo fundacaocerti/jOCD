@@ -92,6 +92,36 @@ public class CmsisDapProtocol {
     }
   }
 
+  public static enum Pins {
+    NONE((byte) 0x00),
+    SWCLK_TCK((byte) (1 << 0)),
+    SWDIO_TMS((byte) (1 << 1)),
+    TDI((byte) (1 << 2)),
+    TDO((byte) (1 << 3)),
+    nTRST((byte) (1 << 5)),
+    nRESET((byte) (1 << 7));
+
+    public final byte value;
+
+    Pins(byte pin) {
+      this.value = pin;
+    }
+
+    public byte getValue() {
+      return value;
+    }
+
+    public static Pins getPin(byte value) {
+      for (Pins pin : Pins.values()) {
+        if (pin.getValue() == value) {
+          return pin;
+        }
+      }
+      return null;
+    }
+  }
+
+  // Physical access ports
   public static enum Port {
     DEFAULT((byte) 0x00),
     SWD((byte) 0x01),
@@ -111,6 +141,46 @@ public class CmsisDapProtocol {
       for (Port port : Port.values()) {
         if (port.getValue() == id) {
           return port;
+        }
+      }
+      return null;
+    }
+  }
+
+  // Register for DAP access functions
+  public static enum Reg {
+    DP_0x0((byte) 0),
+    DP_0x4((byte) 1),
+    DP_0x8((byte) 2),
+    DP_0xC((byte) 3),
+    AP_0x0((byte) 4),
+    AP_0x4((byte) 5),
+    AP_0x8((byte) 6),
+    AP_0xC((byte) 7);
+
+    public final byte value;
+
+    Reg(byte id) {
+      this.value = id;
+    }
+
+    public byte getValue() {
+      return value;
+    }
+
+    public static boolean containsReg(long addr) {
+      for (Reg reg : Reg.values()) {
+        if (reg.getValue() == addr) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    public static Reg getReg(long value) {
+      for (Reg reg : Reg.values()) {
+        if (reg.getValue() == value) {
+          return reg;
         }
       }
       return null;
@@ -282,7 +352,7 @@ public class CmsisDapProtocol {
 
   public byte setSWJClock(int clock) throws DeviceError, TimeoutException {
     byte[] cmd = new byte[5];
-    cmd[0] = (byte) CommandId.DAP_SWJ_CLOCK.getValue();
+    cmd[0] = CommandId.DAP_SWJ_CLOCK.getValue();
     cmd[1] = (byte) (clock & 0xff);
     cmd[2] = (byte) ((clock >> 8) & 0xff);
     cmd[3] = (byte) ((clock >> 16) & 0xff);
@@ -300,6 +370,37 @@ public class CmsisDapProtocol {
     }
 
     return response[1];
+  }
+
+  public byte setSWJPins(byte output, byte pin) throws TimeoutException, DeviceError {
+    return setSWJPins(output, pin, (byte) 0);
+  }
+
+  public Byte setSWJPins(byte output, byte pin, byte wait) throws TimeoutException, DeviceError {
+    byte[] cmd = new byte[7];
+    cmd[0] = CommandId.DAP_SWJ_PINS.getValue();
+    byte p;
+    try {
+      p = Pins.getPin(pin).getValue();
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, String.format("Cannot find %s pin", pin));
+      return null;
+    }
+    cmd[1] = (byte) (output & 0xff);
+    cmd[2] = p;
+    cmd[3] = (byte) (wait & 0xff);
+    cmd[4] = (byte) ((wait >> 8) & 0xff);
+    cmd[5] = (byte) ((wait >> 16) & 0xff);
+    cmd[6] = (byte) ((wait >> 24) & 0xff);
+    this.connectionInterface.write(cmd);
+
+    byte[] resp = this.connectionInterface.read();
+    if (resp[0] != CommandId.DAP_SWJ_PINS.getValue()) {
+      // Response is to a different command
+      throw new DeviceError();
+    }
+
+    return resp[1];
   }
 
   /*
