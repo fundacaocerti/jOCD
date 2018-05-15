@@ -126,13 +126,11 @@ public class Command {
       int maxCount = this.writeCount + this.readCount + size;
       int delta = maxCount - 255;
       size = Math.min(size - delta, size);
-      if (DapAccessCmsisDap.LOG_PACKET_BUILDS) {
-        LOGGER.log(Level.FINE, String.format(
-            "get_request_space(%d, %02x:%s)[wc=%d, rc=%d, ba=%d->%d] -> (sz=%d, free=%d, delta=%d)",
-            count, request, isRead ? 'r' : 'w', this.writeCount, this.readCount, this.blockAllowed,
-            blockAllowed, size, free, delta));
-      }
-    } else if (DapAccessCmsisDap.LOG_PACKET_BUILDS) {
+      LOGGER.log(Level.FINE, String.format(
+          "get_request_space(%d, %02x:%s)[wc=%d, rc=%d, ba=%d->%d] -> (sz=%d, free=%d, delta=%d)",
+          count, request, isRead ? 'r' : 'w', this.writeCount, this.readCount, this.blockAllowed,
+          blockAllowed, size, free, delta));
+    } else {
       LOGGER.log(Level.FINE, String
           .format("get_request_space(%d, %02x:%s)[wc=%d, rc=%d, ba=%d->%d] -> (sz=%d, free=%d)",
               count, request, isRead ? 'r' : 'w', this.writeCount, this.readCount,
@@ -182,12 +180,10 @@ public class Command {
 
     this.data.add(new DataTuple(count, request, data));
 
-    if (DapAccessCmsisDap.LOG_PACKET_BUILDS) {
-      LOGGER.log(Level.FINE, String
-          .format("add(%d, %02x:%s) -> [wc=%d, rc=%d, ba=%d]", count, request,
-              ((request & DapAccessCmsisDap.READ) != 0) ? 'r' : 'w', this.writeCount,
-              this.readCount, this.blockAllowed));
-    }
+    LOGGER.log(Level.FINE, String
+        .format("add(%d, %02x:%s) -> [wc=%d, rc=%d, ba=%d]", count, request,
+            ((request & DapAccessCmsisDap.READ) != 0) ? 'r' : 'w', this.writeCount, this.readCount,
+            this.blockAllowed));
   }
 
   /*
