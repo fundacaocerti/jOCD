@@ -110,9 +110,6 @@ public class DebugPort {
   private long dpVersion;
   private boolean isMindp;
 
-  // Set to True to enable logging of all DP and AP accesses.
-  public static boolean LOG_DAP = false;
-
   public DebugPort(DapAccessCmsisDap link) {
     this.link = link;
   }
@@ -275,10 +272,8 @@ public class DebugPort {
     // Skip writing DP SELECT register if its value is not changing
     if (addr == DP_REG.SELECT.getValue()) {
       if (data == this.dpSelect) {
-        if (LOG_DAP) {
-          LOGGER.log(Level.INFO,
-              String.format("writeDP:%06d cached (addr=0x%08x) = 0x%08x", num, addr, data));
-        }
+        LOGGER.log(Level.INFO,
+            String.format("writeDP:%06d cached (addr=0x%08x) = 0x%08x", num, addr, data));
         return false;
       }
       this.dpSelect = data;
@@ -286,10 +281,7 @@ public class DebugPort {
 
     // Write the DP register
     try {
-      if (LOG_DAP) {
-        LOGGER
-            .log(Level.INFO, String.format("writeDP:%06d (addr=0x%08x) = 0x%08x", num, addr, data));
-      }
+      LOGGER.log(Level.INFO, String.format("writeDP:%06d (addr=0x%08x) = 0x%08x", num, addr, data));
       this.link.writeReg(addr, data);
     } catch (Error error) {
       this.handleError(error, num);
@@ -308,10 +300,8 @@ public class DebugPort {
     // Don't need to write CSW if it's not changing value
     if (apRegaddr == AP_REG.CSW.getValue()) {
       if (this.csw.containsKey(apSel) && data == this.csw.get(apSel)) {
-        if (LOG_DAP) {
-          LOGGER.log(Level.INFO,
-              String.format("writeAP:%06d cached (addr=0x%08x) = 0x%08x", num, addr, data));
-        }
+        LOGGER.log(Level.INFO,
+            String.format("writeAP:%06d cached (addr=0x%08x) = 0x%08x", num, addr, data));
         return false;
       }
       this.csw.put(apSel, data);
@@ -323,10 +313,7 @@ public class DebugPort {
     // Perform the AP register write.
     long apReg = apAddrToReg((WRITE | AP_ACC | (addr & A32)));
     try {
-      if (LOG_DAP) {
-        LOGGER
-            .log(Level.INFO, String.format("writeAP:%06d (addr=0x%08x) = 0x%08x", num, addr, data));
-      }
+      LOGGER.log(Level.INFO, String.format("writeAP:%06d (addr=0x%08x) = 0x%08x", num, addr, data));
       this.link.writeReg(apReg, data);
     } catch (Error error) {
       this.handleError(error, num);
@@ -371,9 +358,7 @@ public class DebugPort {
   }
 
   public void handleError(Error error, int num) throws TransferError, TimeoutException {
-    if (LOG_DAP) {
-      LOGGER.log(Level.INFO, String.format("error:%06d %s", num, error));
-    }
+    LOGGER.log(Level.INFO, String.format("error:%06d %s", num, error));
     // Invalidate cached registers
     this.csw = new HashMap<>();
     this.dpSelect = -1;

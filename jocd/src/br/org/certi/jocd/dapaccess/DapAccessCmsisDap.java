@@ -47,9 +47,6 @@ public class DapAccessCmsisDap {
   public static final byte READ = 1 << 1;
   public static final byte WRITE = 0 << 1;
 
-  // Set to True to enable logging of packet filling logic.
-  public static boolean LOG_PACKET_BUILDS = false;
-
   public static final int FREQUENCY = 1000000; // 1MHz default clock
 
   private ConnectionInterface connectionInterface = null;
@@ -458,9 +455,7 @@ public class DapAccessCmsisDap {
 
       // This request doesn't fit in the packet so send it.
       if (size == 0) {
-        if (LOG_PACKET_BUILDS) {
-          LOGGER.log(Level.FINE, "write: send packet [size==0]");
-        }
+        LOGGER.log(Level.FINE, "write: send packet [size==0]");
         this.sendPacket();
         cmd = this.crntCmd;
         continue;
@@ -480,9 +475,7 @@ public class DapAccessCmsisDap {
 
       // Packet has been filled so send it
       if (cmd.getFull()) {
-        if (LOG_PACKET_BUILDS) {
-          LOGGER.log(Level.FINE, "write: send packet [full]");
-        }
+        LOGGER.log(Level.FINE, "write: send packet [full]");
         this.sendPacket();
         cmd = this.crntCmd;
       }
