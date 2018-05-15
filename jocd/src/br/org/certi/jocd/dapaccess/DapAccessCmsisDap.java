@@ -266,11 +266,11 @@ public class DapAccessCmsisDap {
     this.write(dapIndex, 1, request, transferData);
   }
 
-  public byte readRegNow(long regId) throws Exception {
+  public int readRegNow(long regId) throws Exception {
     return this.readRegNow(regId, (byte) 0);
   }
 
-  public byte readRegNow(long regId, byte dapIndex)
+  public int readRegNow(long regId, byte dapIndex)
       throws Exception {
     Transfer transfer = readReg(regId, dapIndex);
     return readRegAsync(transfer);
@@ -296,8 +296,8 @@ public class DapAccessCmsisDap {
     return transfer;
   }
 
-  public byte readRegAsync(Transfer transfer) throws Exception {
-    byte[] res = transfer.getResult();
+  public int readRegAsync(Transfer transfer) throws Exception {
+    int[] res = transfer.getResult();
     assert res.length == 1;
     return res[0];
   }
