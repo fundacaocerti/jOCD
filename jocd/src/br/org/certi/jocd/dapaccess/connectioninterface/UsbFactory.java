@@ -16,6 +16,8 @@
 package br.org.certi.jocd.dapaccess.connectioninterface;
 
 import br.org.certi.jocd.dapaccess.connectioninterface.android.AndroidUsbDevice;
+import br.org.certi.jocd.util.Util;
+import br.org.certi.jocd.util.Util.OperatingSystem;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,6 +32,21 @@ public class UsbFactory {
   }
 
   public static ConnectionInterface getUSBInterface(connectionInterfaceEnum intfEnum) {
+    if (intfEnum == null) {
+      // Try to guess the right interface for this os.
+      OperatingSystem os = Util.getOS();
+      if (os != null) {
+        switch (os) {
+          case Android:
+            intfEnum = connectionInterfaceEnum.androidUsbManager;
+            break;
+
+          default:
+            throw new InternalError("Not implemented");
+        }
+      }
+    }
+
     switch (intfEnum) {
       case androidUsbManager:
         return new AndroidUsbDevice();
