@@ -54,7 +54,7 @@ public class DebugPort {
     }
   }
 
-  private static enum AP_REG {
+  public static enum AP_REG {
     CSW((byte) 0x00),
     TAR((byte) 0x04),
     DRW((byte) 0x0C),
@@ -76,19 +76,19 @@ public class DebugPort {
   private static final long CTRLSTAT_STICKYCMP = 0x00000010;
   private static final long CTRLSTAT_STICKYERR = 0x00000020;
 
-  private static final byte IDCODE = 0 << 2;
-  private static final byte AP_ACC = 1 << 0;
-  private static final byte DP_ACC = 0 << 0;
-  private static final byte READ = 1 << 1;
-  private static final byte WRITE = 0 << 1;
-  private static final byte VALUE_MATCH = 1 << 4;
-  private static final byte MATCH_MASK = 1 << 5;
+  public static final byte IDCODE = 0 << 2;
+  public static final byte AP_ACC = 1 << 0;
+  public static final byte DP_ACC = 0 << 0;
+  public static final byte READ = 1 << 1;
+  public static final byte WRITE = 0 << 1;
+  public static final byte VALUE_MATCH = 1 << 4;
+  public static final byte MATCH_MASK = 1 << 5;
 
-  private static final byte A32 = (byte) 0x0c;
-  private static final int APSEL_SHIFT = 24;
-  private static final long APSEL = 0xff000000;
-  private static final long APBANKSEL = 0x000000f0;
-  private static final long APREG_MASK = 0x000000fc;
+  public static final byte A32 = (byte) 0x0c;
+  public static final int APSEL_SHIFT = 24;
+  public static final long APSEL = 0xff000000;
+  public static final long APBANKSEL = 0x000000f0;
+  public static final long APREG_MASK = 0x000000fc;
 
   private static final long DPIDR_MIN_MASK = 0x10000;
   private static final long DPIDR_VERSION_MASK = 0xf000;
@@ -114,7 +114,7 @@ public class DebugPort {
     this.link = link;
   }
 
-  private long apAddrToReg(long addr) {
+  public static long apAddrToReg(long addr) {
     CmsisDapProtocol.Reg reg = CmsisDapProtocol.Reg.getReg((4 + ((addr & A32) >> 2)));
     if (reg != null) {
       return reg.getValue();
@@ -123,9 +123,13 @@ public class DebugPort {
     }
   }
 
-  private int nextAccessNumber() {
+  public int nextAccessNumber() {
     this.accessNumber += 1;
     return this.accessNumber;
+  }
+
+  public DapAccessCmsisDap getLink() {
+    return link;
   }
 
   /*
@@ -233,7 +237,6 @@ public class DebugPort {
   }
 
   public long readDPNow(long addr) throws Exception {
-
     ArrayList<Object> result = readDPLater(addr);
     Transfer transfer = (Transfer) result.get(0);
     int num = (int) result.get(1);

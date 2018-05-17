@@ -24,22 +24,22 @@ package br.org.certi.jocd.dapaccess.dapexceptions;
  */
 public class TransferFaultError extends TransferError {
 
-  private Integer address;
+  private Long address;
 
   public TransferFaultError() {
     this("The host debugger reported failure for the given command", null);
   }
 
-  public TransferFaultError(String message, Integer faultAddress) {
+  public TransferFaultError(String message, Long faultAddress) {
     super(message);
     this.address = faultAddress;
   }
 
-  private Integer getFaultAddress() {
+  public Long getFaultAddress() {
     return this.address;
   }
 
-  private void setFaultAddress(Integer address) {
+  public void setFaultAddress(long address) {
     this.address = address;
   }
 
