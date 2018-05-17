@@ -17,9 +17,11 @@ package br.org.certi.jocd.flash;
 
 import br.org.certi.jocd.core.MemoryRegion;
 import br.org.certi.jocd.core.Target;
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -89,8 +91,8 @@ public class Flash {
     // TODO
   }
 
-  public int[] computeCrcs(List<Sectors> sectors) {
-    int[] data = new int[sectors.size()];
+  public long[] computeCrcs(List<Sectors> sectors) {
+    long[] words = new long[sectors.size()];
     int i = 0;
 
     // Convert address, size pairs into commands for the crc computation algorithm to preform.
@@ -105,27 +107,32 @@ public class Flash {
       assert (sector.address % sector.size) == 0;
 
       int val = (int) ((sizeVal << 0) | (addressVal << 16));
-      data[i] = val;
+      words[i] = val;
       i++;
     }
 
     // Update core register to execute the subroutine.
-    this.target.writeBlockMemoryAligned32(this.beginData, data);
+    this.target.writeBlockMemoryAligned32(this.beginData, words);
 
-    callFunctionAndWait(this.flashAlgo.analyzerAddress, this.beginData, (long) data.length, null,
-        null,
-        null);
+    callFunctionAndWait(this.flashAlgo.analyzerAddress, this.beginData, (long) words.length, null,
+        null, null);
 
     // Read back the CRCs for each section.
-    data = this.target.readBlockMemoryAligned32(this.beginData, data.length);
-    return data;
+    words = this.target.readBlockMemoryAligned32(this.beginData, words.length);
+    return words;
   }
 
   /*
    * Erase all the flash.
    */
   public void eraseAll() {
-    // TODO
+    // Update core register to execute the eraseAll subroutine.
+    int result = this.callFunctionAndWait(this.flashAlgo.pcEraseAll, null, null, null, null, null);
+
+    // Check the return code.
+    if (result != 0) {
+      LOGGER.log(Level.SEVERE, "eraseAll error: %i" + result);
+    }
   }
 
   /*
@@ -240,7 +247,8 @@ public class Flash {
    * Flash a block of data.
    */
   public ProgrammingInfo flashBlock(long address, byte[] data, Boolean smartFlash,
-      Boolean chipErase, ProgressUpdateInterface progressUpdate, Boolean fastVerify) {
+      Boolean chipErase, ProgressUpdateInterface progressUpdate, Boolean fastVerify)
+      throws TimeoutException, InterruptedException, Error {
     long flashStart = this.getFlashInfo().romStart;
     FlashBuilder flashBuilder = new FlashBuilder(this, flashStart);
     flashBuilder.addData(address, data);

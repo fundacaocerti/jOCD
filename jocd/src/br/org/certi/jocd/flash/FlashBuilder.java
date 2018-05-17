@@ -18,11 +18,13 @@ package br.org.certi.jocd.flash;
 import static br.org.certi.jocd.flash.FlashPage.PAGE_ESTIMATE_SIZE;
 import static java.lang.Math.min;
 
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
 import br.org.certi.jocd.util.Util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.CRC32;
@@ -131,9 +133,9 @@ public class FlashBuilder {
    * Determine fastest method of flashing and then run flash programming.
    * Data must have already been added with addData.
    */
-  // TODO
   public ProgrammingInfo program(Boolean chipErase, ProgressUpdateInterface progressUpdate,
-      boolean smartFlash, boolean fastVerify) throws InternalError {
+      boolean smartFlash, boolean fastVerify)
+      throws InterruptedException, TimeoutException, Error {
 
     // Assumptions
     // 1. Page erases must be on page boundaries ( page_erase_addr % page_size == 0 )
@@ -182,7 +184,7 @@ public class FlashBuilder {
         long pageDataEnd = currentPage.address + currentPage.data.length;
         if (flashAddress != pageDataEnd) {
           byte[] oldData = this.flash.target
-              .readBlockMemoryUnaligned8(pageDataEnd, flashAddress - pageDataEnd);
+              .readBlockMemoryUnaligned8(pageDataEnd, (int) (flashAddress - pageDataEnd));
           currentPage.data = Util.appendDataInArray(currentPage.data, oldData);
         }
 
@@ -403,7 +405,7 @@ public class FlashBuilder {
     int pageEraseCount = 0;
     double pageEraseWeight = 0;
     if (pageList.size() > 0) {
-      int[] crcs = this.flash.computeCrcs(sectorList);
+      long[] crcs = this.flash.computeCrcs(sectorList);
       for (int i = 0; i < pageList.size() && i < crcs.length; i++) {
         boolean pageSame = (pageList.get(i).crc == crcs[i]);
         if (assumeEstimateCorrect) {

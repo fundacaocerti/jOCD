@@ -15,7 +15,13 @@
  */
 package br.org.certi.jocd.coresight;
 
+import br.org.certi.jocd.core.MemoryMap;
 import br.org.certi.jocd.core.Target;
+import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
+import br.org.certi.jocd.debug.BreakpointManager;
+import br.org.certi.jocd.debug.breakpoints.SoftwareBreakpointProvider;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,11 +32,39 @@ import java.util.logging.Logger;
  *   - read/write core registers
  *   - set/remove hardware breakpoints
  */
-public class CortexM {
+public class CortexM extends Target {
 
   // Logging
   private final static String CLASS_NAME = CortexM.class.getName();
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
+
+  // CPUID PARTNO values
+  public enum CpuId {
+    ARM_CortexM0(0xC20),
+    ARM_CortexM1(0xC21),
+    ARM_CortexM3(0xC23),
+    ARM_CortexM4(0xC24),
+    ARM_CortexM0plus(0xC60);
+
+    public final int value;
+
+    CpuId(int id) {
+      this.value = id;
+    }
+
+    public int getValue() {
+      return value;
+    }
+
+    public static CpuId getCpuId(int value) {
+      for (CpuId cpuId : CpuId.values()) {
+        if (cpuId.getValue() == value) {
+          return cpuId;
+        }
+      }
+      return null;
+    }
+  }
 
   // Debug Fault Status Register
   public static final long DFSR = 0xE000ED30;
@@ -107,88 +141,190 @@ public class CortexM {
 
   private int runToken = 0;
 
+  public DebugPort dp;
+  public AccessPort ap;
+  public Fpb fpb;
+  public Dwt dwt;
+  public SoftwareBreakpointProvider swBp;
+  public BreakpointManager bpManager;
+  public boolean haltOnConnect = true;
+  public long arch;
+  public CpuId coreType;
+  public boolean hasFpu = false;
+
+  /*
+   * Constructor.
+   */
+  public CortexM(DebugPort dp, AccessPort ap) {
+    this.dp = dp;
+    this.ap = ap;
+
+    // Set up breakpoints manager.
+    this.fpb = new Fpb(this.ap);
+    this.dwt = new Dwt(this.ap);
+    this.swBp = new SoftwareBreakpointProvider(this);
+    this.bpManager = new BreakpointManager(this);
+  }
+
+  /*
+   * Must be called right after constructor.
+   * Overload for protected method setup.
+   */
+  @Override
+  public void setup(DapAccessCmsisDap link) {
+    this.setup(link, null);
+  }
+
+  /*
+   * Must be called right after constructor.
+   */
+  @Override
+  protected void setup(DapAccessCmsisDap link, MemoryMap memoryMap) {
+    super.setup(link, memoryMap);
+  }
+
+  /*
+   * Cortex M initialization. The bus must be accessible when this method is called.
+   */
+  @Override
+  public void init() throws TimeoutException, Error {
+    // TODO
+
+    if (this.haltOnConnect) {
+      this.halt();
+    }
+    this.readCoreType();
+    this.checkForFpu();
+    //this.buildTargetXML();
+    this.fpb.init();
+    this.dwt.init();
+    this.swBp.init();
+  }
+
+  /*
+   * Read the CPUID register and determine core type.
+   */
+  public void readCoreType() {
+    // Read CPUID register
+    long cpuid = read32(CortexM.CPUID);
+
+    long implementer = (cpuid & CortexM.CPUID_IMPLEMENTER_MASK) >> CortexM.CPUID_IMPLEMENTER_POS;
+    if (implementer != CortexM.CPUID_IMPLEMENTER_ARM) {
+      LOGGER.log(Level.FINE,"CPU implementer is not ARM!");
+    }
+
+    this.arch = (cpuid & CortexM.CPUID_ARCHITECTURE_MASK) >> CortexM.CPUID_ARCHITECTURE_POS;
+    int coreType = (int)((cpuid & CortexM.CPUID_PARTNO_MASK) >> CortexM.CPUID_PARTNO_POS);
+    this.coreType = CpuId.getCpuId(coreType);
+    LOGGER.log(Level.FINE,"CPU core is " + this.coreType.toString());
+  }
+
+  /*
+   * Determine if a Cortex-M4 has an FPU.
+   * The core type must have been identified prior to calling this function.
+   */
+  public void checkForFpu() {
+    if (this.coreType != CpuId.ARM_CortexM4) {
+      this.hasFpu = false;
+      return;
+    }
+
+    long originalCpacr = read32(CortexM.CPACR);
+    long cpacr = originalCpacr | CortexM.CPACR_CP10_CP11_MASK;
+    write32(CortexM.CPACR, cpacr);
+
+    cpacr = read32(CortexM.CPACR);
+    this.hasFpu = (cpacr & CortexM.CPACR_CP10_CP11_MASK) != 0;
+
+    // Restore previous value.
+    write32(CortexM.CPACR, originalCpacr);
+
+    if (this.hasFpu) {
+      LOGGER.log(Level.INFO, "FPU present.");
+    }
+  }
+
   /*
    * Write a memory location.
      By default the transfer size is a word
    */
+  @Override
   public void writeMemory(long address, long value, Integer transferSize) {
     // Load default value if null.
     if (transferSize == null) {
       transferSize = 32;
     }
 
-    // TODO
-    //this.ap.writeMemory(address, int value, transferSize);
+    this.ap.writeMemory(address, value, transferSize);
   }
 
   /*
    * Read a memory location. By default, a word will be read.
    */
-  public int readMemory(long address, Integer transferSize) {
+  @Override
+  public long readMemoryNow(long address, Integer transferSize) {
     // Load default value if null.
     if (transferSize == null) {
       transferSize = 32;
     }
 
-    // TODO
-    //int result = this.ap.readMemory(address, transferSize, false);
-    return 0;
+    long result = this.ap.readMemoryNow(address, transferSize);
+    return this.bpManager.filterMemory(address, transferSize, result);
   }
 
   /*
    * Read a memory location. By default, a word will be read.
    */
-  public int readMemoryNow(long address, Integer transferSize) {
+  @Override
+  public void readMemoryLater(long address, Integer transferSize) {
     // Load default value if null.
     if (transferSize == null) {
       transferSize = 32;
     }
 
-    // TODO
-    //int result = this.ap.readMemory(address, transferSize, true);
-    //return this.bpManager.filterMemory(address, transferSize, result);
-    return 0;
+    this.ap.readMemoryLater(address, transferSize);
   }
 
   /*
    * Read a block of unaligned bytes in memory. Returns an array of byte values.
    */
-  public byte[] readBlockMemoryUnaligned8(long address, long size) {
-    // TODO
-    //byte[] data = this.selected_core.readBlockMemoryAligned32(address, size);
-    //return this.bp_manager.filterMemoryUnaligned8(address, size, data);
-    return new byte[]{};
+  @Override
+  public byte[] readBlockMemoryUnaligned8(long address, int size) {
+    byte[] data = this.ap.readBlockMemoryUnaligned8(address, size);
+    return this.bpManager.filterMemoryUnaligned8(address, size, data);
   }
 
   /*
    * Read a block of aligned words in memory. Returns an array of word values.
    */
-  public int[] readBlockMemoryAligned32(long address, long size) {
-    // TODO
-    //return this.selected_core.readBlockMemoryAligned32(address, size);
-    return new int[]{};
+  @Override
+  public long[] readBlockMemoryAligned32(long address, int size) {
+    long[] words = this.ap.readBlockMemoryAligned32(address, size);
+    return this.bpManager.filterMemoryAligned32(address, size, words);
   }
 
   /*
    * Write a block of unaligned bytes in memory.
    */
+  @Override
   public void writeBlockMemoryUnaligned8(long address, byte[] data) {
-    // TODO
-    //this.ap.writeBlockMemoryUnaligned8(address, data)
+    this.ap.writeBlockMemoryUnaligned8(address, data);
   }
 
   /*
    * Write a block of aligned words in memory.
    */
-  public void writeBlockMemoryAligned32(long address, int[] data) {
-    // TODO
-    //this.ap.writeBlockMemoryAligned32(address, data)
+  @Override
+  public void writeBlockMemoryAligned32(long address, long[] words) {
+    this.ap.writeBlockMemoryAligned32(address, words);
   }
 
   /*
    * Reset a core. After a call to this function, the core is running.
    */
-  public void reset(Boolean softwareReset) {
+  @Override
+  public void reset(Boolean softwareReset)
+      throws InterruptedException, TimeoutException, Error {
     if (softwareReset == null) {
       // Set default value to software reset if nothing is specified.
       softwareReset = true;
@@ -201,26 +337,41 @@ public class CortexM {
       this.writeMemory(CortexM.NVIC_AIRCR,
           CortexM.NVIC_AIRCR_VECTKEY | CortexM.NVIC_AIRCR_SYSRESETREQ, null);
     } else {
-      // TODO
-      //this.dp.reset();
+      this.dp.reset();
     }
 
-    // TODO
+    // Now wait for the system to come out of reset. Keep reading the DHCSR until we get a good
+    // response with S_RESET_ST cleared, or we time out.
+    long startTime = System.currentTimeMillis();
+    long timeoutMs = 2000;
+    while ((System.currentTimeMillis() - startTime) < timeoutMs) {
+      try {
+        int dhcsr = (int)read32(CortexM.DHCSR);
+        if ((dhcsr & CortexM.S_RESET_ST) == 0) {
+          break;
+        }
+      } catch (Exception e) {
+        this.dp.flush();
+        Thread.sleep(10);
+      }
+    }
   }
 
   /*
    * Halt the core.
    */
-  public void halt() {
+  @Override
+  public void halt() throws TimeoutException, Error {
     this.writeMemory(CortexM.DHCSR, CortexM.DBGKEY | CortexM.C_DEBUGEN | CortexM.C_HALT, null);
-    // TODO
-    // this.dp.flush();
+    this.dp.flush();
   }
 
   /*
    * Perform a reset and stop the core on the reset handler.
    */
-  public void resetStopOnReset(Boolean softwareReset) {
+  @Override
+  public void resetStopOnReset(Boolean softwareReset)
+      throws InterruptedException, TimeoutException, Error {
     if (softwareReset == null) {
       // Set default value to software reset if nothing is specified.
       softwareReset = true;
@@ -232,7 +383,7 @@ public class CortexM {
     halt();
 
     // Save CortexM.DEMCR.
-    int demcr = readMemory(CortexM.DEMCR, null);
+    int demcr = (int) readMemoryNow(CortexM.DEMCR, null);
 
     // Enable the vector catch.
     writeMemory(CortexM.DEMCR, demcr | CortexM.DEMCR_VC_CORERESET, null);
@@ -251,14 +402,15 @@ public class CortexM {
     writeMemory(CortexM.DEMCR, demcr, null);
   }
 
+  @Override
   public int getState() {
-    int dhcsr = readMemory(CortexM.DHCSR, null);
+    int dhcsr = (int) readMemoryNow(CortexM.DHCSR, null);
 
     if ((dhcsr & CortexM.S_RESET_ST) != 0) {
       // Reset is a special case because the bit is sticky and really means "core was reset since
       // last read of DHCSR".We have to re - read the DHCSR, check if S_RESET_ST is still set and
       // make sure no instructions were executed by checking S_RETIRE_ST.
-      int newDhcsr = readMemory(CortexM.DHCSR, null);
+      int newDhcsr = (int) readMemoryNow(CortexM.DHCSR, null);
       if ((newDhcsr & CortexM.S_RESET_ST) != 0 && (newDhcsr & CortexM.S_RETIRE_ST) == 0) {
         return Target.TARGET_RESET;
       }
@@ -274,10 +426,12 @@ public class CortexM {
     }
   }
 
+  @Override
   public boolean isRunning() {
     return (getState() == Target.TARGET_RUNNING);
   }
 
+  @Override
   public boolean isHalted() {
     return (getState() == Target.TARGET_HALTED);
   }

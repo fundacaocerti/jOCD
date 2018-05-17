@@ -20,9 +20,7 @@ import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Port;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Reg;
 import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
 import br.org.certi.jocd.dapaccess.Transfer;
-import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
-import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferFaultError;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +35,7 @@ public class DebugPort {
   private final static String CLASS_NAME = DebugPort.class.getName();
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
-  private static enum DP_REG {
+  public static enum DP_REG {
     IDCODE(Reg.DP_0x0.getValue()),
     ABORT(Reg.DP_0x0.getValue()),
     CTRL_STAT(Reg.DP_0x4.getValue()),
@@ -131,7 +129,7 @@ public class DebugPort {
   /*
    * Connect to the target
    */
-  public void init() throws Exception {
+  public void init() throws TimeoutException, Error {
     this.link.connect();
     this.link.swjSequence();
     this.readIdCode();
@@ -141,7 +139,7 @@ public class DebugPort {
   /*
    * Read ID register and get DP version
    */
-  public long readIdCode() throws Exception {
+  public long readIdCode() throws TimeoutException, Error {
     this.dpidr = this.readRegNow(DP_REG.IDCODE.getValue());
     this.dpVersion = ((this.dpidr & DPIDR_VERSION_MASK) >> DPIDR_VERSION_SHIFT);
     this.isMindp = (this.dpidr & DPIDR_MIN_MASK) != 0;
@@ -160,19 +158,19 @@ public class DebugPort {
     }
   }
 
-  public long readRegNow(long addr) throws Exception {
+  public long readRegNow(long addr) throws TimeoutException, Error {
     return this.readDPNow(addr);
   }
 
-  public void readRegLater(long addr) throws Exception {
+  public void readRegLater(long addr) throws TimeoutException, Error {
     this.readDPLater(addr);
   }
 
-  public void writeReg(long addr, long data) throws TimeoutException, Error {
-    this.writeDP(addr, data);
+  public void writeReg(long addr, long word) throws TimeoutException, Error {
+    this.writeDP(addr, word);
   }
 
-  public void powerUpDebug() throws Exception {
+  public void powerUpDebug() throws TimeoutException, Error {
     // Select bank 0 (to access DRW and TAR)
     this.writeReg(DP_REG.SELECT.getValue(), 0);
     this.writeReg(DP_REG.CTRL_STAT.getValue(), (CSYSPWRUPREQ | CDBGPWRUPREQ));
@@ -195,7 +193,7 @@ public class DebugPort {
     this.writeReg(DP_REG.CTRL_STAT.getValue(), 0);
   }
 
-  public void reset() throws InterruptedException, TimeoutException, DeviceError {
+  public void reset() throws InterruptedException, TimeoutException, Error {
     try {
       this.link.reset();
     } finally {
@@ -204,13 +202,13 @@ public class DebugPort {
     }
   }
 
-  public void assertReset(boolean asserted) throws TimeoutException, DeviceError {
+  public void assertReset(boolean asserted) throws TimeoutException, Error {
     this.link.assertReset(asserted);
     this.csw = new HashMap<>();
     this.dpSelect = -1;
   }
 
-  public void setClock(int frequency) throws TimeoutException, DeviceError {
+  public void setClock(int frequency) throws TimeoutException, Error {
     this.link.setClock(frequency);
   }
 
@@ -232,7 +230,7 @@ public class DebugPort {
     }
   }
 
-  public long readDPNow(long addr) throws Exception {
+  public long readDPNow(long addr) throws TimeoutException, Error {
 
     ArrayList<Object> result = readDPLater(addr);
     Transfer transfer = (Transfer) result.get(0);
@@ -240,7 +238,7 @@ public class DebugPort {
     return readDPAsync(transfer, num);
   }
 
-  public ArrayList<Object> readDPLater(long addr) throws Exception {
+  public ArrayList<Object> readDPLater(long addr) throws TimeoutException, Error {
     assert Reg.containsReg(addr);
     int num = this.nextAccessNumber();
 
@@ -255,7 +253,7 @@ public class DebugPort {
   }
 
   // Read callback returned for async reads.
-  public long readDPAsync(Transfer transfer, int num) throws Exception {
+  public long readDPAsync(Transfer transfer, int num) throws TimeoutException, Error {
     try {
       long result = this.link.readRegAsync(transfer);
       return result;
@@ -265,24 +263,24 @@ public class DebugPort {
     }
   }
 
-  public boolean writeDP(long addr, long data) throws Error, TimeoutException {
+  public boolean writeDP(long addr, long word) throws Error, TimeoutException {
     assert Reg.containsReg(addr);
     int num = this.nextAccessNumber();
 
     // Skip writing DP SELECT register if its value is not changing
     if (addr == DP_REG.SELECT.getValue()) {
-      if (data == this.dpSelect) {
+      if (word == this.dpSelect) {
         LOGGER.log(Level.INFO,
-            String.format("writeDP:%06d cached (addr=0x%08x) = 0x%08x", num, addr, data));
+            String.format("writeDP:%06d cached (addr=0x%08x) = 0x%08x", num, addr, word));
         return false;
       }
-      this.dpSelect = data;
+      this.dpSelect = word;
     }
 
     // Write the DP register
     try {
-      LOGGER.log(Level.INFO, String.format("writeDP:%06d (addr=0x%08x) = 0x%08x", num, addr, data));
-      this.link.writeReg(addr, data);
+      LOGGER.log(Level.INFO, String.format("writeDP:%06d (addr=0x%08x) = 0x%08x", num, addr, word));
+      this.link.writeReg(addr, word);
     } catch (Error error) {
       this.handleError(error, num);
       throw error;
@@ -291,7 +289,7 @@ public class DebugPort {
     return true;
   }
 
-  public boolean writeAP(long addr, Long data) throws TimeoutException, Error {
+  public boolean writeAP(long addr, Long word) throws TimeoutException, Error {
     int num = this.nextAccessNumber();
     long apSel = (addr & APSEL);
     long bankSel = (addr & APBANKSEL);
@@ -299,12 +297,12 @@ public class DebugPort {
 
     // Don't need to write CSW if it's not changing value
     if (apRegaddr == AP_REG.CSW.getValue()) {
-      if (this.csw.containsKey(apSel) && data == this.csw.get(apSel)) {
+      if (this.csw.containsKey(apSel) && word == this.csw.get(apSel)) {
         LOGGER.log(Level.INFO,
-            String.format("writeAP:%06d cached (addr=0x%08x) = 0x%08x", num, addr, data));
+            String.format("writeAP:%06d cached (addr=0x%08x) = 0x%08x", num, addr, word));
         return false;
       }
-      this.csw.put(apSel, data);
+      this.csw.put(apSel, word);
     }
 
     // Select the AP and bank.
@@ -313,8 +311,8 @@ public class DebugPort {
     // Perform the AP register write.
     long apReg = apAddrToReg((WRITE | AP_ACC | (addr & A32)));
     try {
-      LOGGER.log(Level.INFO, String.format("writeAP:%06d (addr=0x%08x) = 0x%08x", num, addr, data));
-      this.link.writeReg(apReg, data);
+      LOGGER.log(Level.INFO, String.format("writeAP:%06d (addr=0x%08x) = 0x%08x", num, addr, word));
+      this.link.writeReg(apReg, word);
     } catch (Error error) {
       this.handleError(error, num);
       throw error;
@@ -323,14 +321,14 @@ public class DebugPort {
     return true;
   }
 
-  public long readAPNow(long addr) throws Exception {
+  public long readAPNow(long addr) throws TimeoutException, Error {
     ArrayList<Object> result = this.readAP(addr);
     Transfer transfer = (Transfer) result.get(0);
     int num = (int) result.get(1);
     return readAPAsync(transfer, num);
   }
 
-  public ArrayList<Object> readAP(long addr) throws Exception {
+  public ArrayList<Object> readAP(long addr) throws TimeoutException, Error {
     int num = this.nextAccessNumber();
     long apReg = apAddrToReg((READ | AP_ACC | (addr & A32)));
 
@@ -347,7 +345,7 @@ public class DebugPort {
     }
   }
 
-  public long readAPAsync(Transfer transfer, int num) throws Exception {
+  public long readAPAsync(Transfer transfer, int num) throws TimeoutException, Error {
     try {
       long result = this.link.readRegAsync(transfer);
       return result;
@@ -357,7 +355,7 @@ public class DebugPort {
     }
   }
 
-  public void handleError(Error error, int num) throws TransferError, TimeoutException {
+  public void handleError(Error error, int num) throws TimeoutException, Error {
     LOGGER.log(Level.INFO, String.format("error:%06d %s", num, error));
     // Invalidate cached registers
     this.csw = new HashMap<>();
@@ -368,7 +366,7 @@ public class DebugPort {
     }
   }
 
-  public void clearStickyErr() throws TransferError, TimeoutException {
+  public void clearStickyErr() throws TimeoutException, Error {
     Port mode = this.link.getSwjMode();
     if (mode.getValue() == Port.SWD.getValue()) {
       this.link.writeReg(DP_REG.CTRL_STAT.getValue(), CTRLSTAT_STICKYERR);
