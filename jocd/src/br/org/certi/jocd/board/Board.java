@@ -17,9 +17,11 @@ package br.org.certi.jocd.board;
 
 import br.org.certi.jocd.core.Target;
 import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.flash.Flash;
 import br.org.certi.jocd.target.TargetFactory;
 import br.org.certi.jocd.target.TargetFactory.targetEnum;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,7 +47,7 @@ public class Board {
    */
   public void setup(DapAccessCmsisDap link, targetEnum target, int frequency) {
     this.dapAccessLink = link;
-    this.target = TargetFactory.getTarget(target);
+    this.target = TargetFactory.getTarget(target, link);
     this.flash = this.target.getFlash();
     if (frequency > 0) {
       this.frequency = frequency;
@@ -56,12 +58,13 @@ public class Board {
     // target.setFlash
   }
 
-
   /*
    * Initialize the board.
    */
-  public void init() {
+  public void init() throws TimeoutException, Error {
     LOGGER.log(Level.FINE, "init board");
-    // TODO
+    this.dapAccessLink.setClock(this.frequency);
+    this.dapAccessLink.setDeferredTransfer(true);
+    this.target.init();
   }
 }

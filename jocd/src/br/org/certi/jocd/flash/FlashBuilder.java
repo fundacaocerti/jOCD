@@ -18,11 +18,13 @@ package br.org.certi.jocd.flash;
 import static br.org.certi.jocd.flash.FlashPage.PAGE_ESTIMATE_SIZE;
 import static java.lang.Math.min;
 
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
 import br.org.certi.jocd.util.Util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.CRC32;
@@ -131,9 +133,9 @@ public class FlashBuilder {
    * Determine fastest method of flashing and then run flash programming.
    * Data must have already been added with addData.
    */
-  // TODO
   public ProgrammingInfo program(Boolean chipErase, ProgressUpdateInterface progressUpdate,
-      boolean smartFlash, boolean fastVerify) throws InternalError {
+      boolean smartFlash, boolean fastVerify)
+      throws InterruptedException, TimeoutException, Error {
 
     // Assumptions
     // 1. Page erases must be on page boundaries ( page_erase_addr % page_size == 0 )
@@ -182,7 +184,7 @@ public class FlashBuilder {
         long pageDataEnd = currentPage.address + currentPage.data.length;
         if (flashAddress != pageDataEnd) {
           byte[] oldData = this.flash.target
-              .readBlockMemoryUnaligned8(pageDataEnd, flashAddress - pageDataEnd);
+              .readBlockMemoryUnaligned8(pageDataEnd, (int) (flashAddress - pageDataEnd));
           currentPage.data = Util.appendDataInArray(currentPage.data, oldData);
         }
 
@@ -298,7 +300,7 @@ public class FlashBuilder {
    * so it is recommended to call this before beginning programming This is done automatically by
    * smart_program.
    */
-  private void computePageErasePagesAndWeightSectorRead() {
+  private void computePageErasePagesAndWeightSectorRead() throws TimeoutException, Error {
     // Quickly estimate how many pages are the same.
     int pageEraseCount = 0;
     double pageEraseWeight = 0;
@@ -374,7 +376,8 @@ public class FlashBuilder {
    * will be marked as the same.  There is a small chance that the CRCs match even though the
    * data is different, but the odds of this happing are low: ~1/(2^32) = ~2.33*10^-8%.
    */
-  private void computePageErasePagesAndWeightCrc32(Boolean assumeEstimateCorrect) {
+  private void computePageErasePagesAndWeightCrc32(Boolean assumeEstimateCorrect)
+      throws TimeoutException, Error {
     // Set the default value, if null.
     if (assumeEstimateCorrect == null) {
       assumeEstimateCorrect = false;
@@ -403,7 +406,7 @@ public class FlashBuilder {
     int pageEraseCount = 0;
     double pageEraseWeight = 0;
     if (pageList.size() > 0) {
-      int[] crcs = this.flash.computeCrcs(sectorList);
+      long[] crcs = this.flash.computeCrcs(sectorList);
       for (int i = 0; i < pageList.size() && i < crcs.length; i++) {
         boolean pageSame = (pageList.get(i).crc == crcs[i]);
         if (assumeEstimateCorrect) {
@@ -435,7 +438,8 @@ public class FlashBuilder {
   /*
    * Program by first performing a chip erase.
    */
-  private int chipEraseProgram(ProgressUpdateInterface progressUpdate) {
+  private int chipEraseProgram(ProgressUpdateInterface progressUpdate)
+      throws TimeoutException, Error {
     LOGGER.log(Level.FINE, "Smart chip erase");
     LOGGER.log(Level.FINE,
         (this.pageList.size() - this.chipEraseCount) + " of " + this.pageList.size()
@@ -475,7 +479,8 @@ public class FlashBuilder {
   /*
    * Program by first performing a chip erase.
    */
-  private int chipEraseProgramDoubleBuffer(ProgressUpdateInterface progressUpdate) {
+  private int chipEraseProgramDoubleBuffer(ProgressUpdateInterface progressUpdate)
+      throws TimeoutException, Error {
     LOGGER.log(Level.FINE, "Smart chip erase");
     LOGGER.log(Level.FINE,
         (this.pageList.size() - this.chipEraseCount) + " of " + this.pageList.size()
@@ -546,7 +551,8 @@ public class FlashBuilder {
   /*
    * Program by performing sector erases.
    */
-  private int pageEraseProgram(ProgressUpdateInterface progressUpdate) {
+  private int pageEraseProgram(ProgressUpdateInterface progressUpdate)
+      throws TimeoutException, Error {
     int actualPageEraseCount = 0;
     double actualPageEraseWeight = 0;
     double progress = 0;
@@ -590,7 +596,8 @@ public class FlashBuilder {
   /*
    * Program by performing sector erases.
    */
-  private double scanPagesForSame(ProgressUpdateInterface progressUpdate) {
+  private double scanPagesForSame(ProgressUpdateInterface progressUpdate)
+      throws TimeoutException, Error {
     double progress = 0;
     int count = 0;
     int sameCount = 0;
@@ -630,7 +637,8 @@ public class FlashBuilder {
   /*
    * Program by performing sector erases.
    */
-  public int pageEraseProgramDoubleBuffer(ProgressUpdateInterface progressUpdate) {
+  public int pageEraseProgramDoubleBuffer(ProgressUpdateInterface progressUpdate)
+      throws TimeoutException, Error {
     int actualPageEraseCount = 0;
     double actualPageEraseWeight = 0;
     double progress = 0;

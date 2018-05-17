@@ -15,62 +15,151 @@
  */
 package br.org.certi.jocd.core;
 
+import br.org.certi.jocd.coresight.AccessPort;
+import br.org.certi.jocd.coresight.AhbAp;
+import br.org.certi.jocd.coresight.CortexM;
+import br.org.certi.jocd.coresight.DebugPort;
+import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class CoreSightTarget extends Target {
+
+  // Logging
+  private final static String CLASS_NAME = CoreSightTarget.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
+
+
+  public List<AccessPort> apList = new ArrayList<AccessPort>();
+  public DebugPort dp;
+
+  private List<Target> coreList = new ArrayList<Target>();
+  private int selectedCore = 0;
+
+  /*
+   * Must be called right after constructor.
+   * Overload for protected method setup.
+   */
+  @Override
+  public void setup(DapAccessCmsisDap link) {
+    this.setup(link, null);
+
+    this.dp = new DebugPort(link);
+  }
 
   /*
    * Must be called right after constructor.
    */
-  public void setup(MemoryMap memoryMap) {
-    super.setup(memoryMap);
+  @Override
+  protected void setup(DapAccessCmsisDap link, MemoryMap memoryMap) {
+    super.setup(link, memoryMap);
+  }
+
+  public Target getSelectedCore() {
+    if (selectedCore >= this.coreList.size()) {
+      LOGGER.log(Level.SEVERE, "getSelectedCore: unexpected core index: " + selectedCore);
+      return null;
+    }
+
+    return this.coreList.get(selectedCore);
+  }
+
+  public void selectCore(int coreIndex) {
+    if (selectedCore >= this.coreList.size()) {
+      LOGGER.log(Level.SEVERE, "selectCore: unexpected core index: " + selectedCore);
+      return;
+    }
+
+    this.selectedCore = coreIndex;
+  }
+
+  public void addAp(AccessPort ap) {
+    this.apList.add(ap);
+  }
+
+  public void addCore(Target core) {
+    this.coreList.add(core);
+  }
+
+  /*
+   * Overload for protected init(Boolean busAccessible).
+   */
+  @Override
+  public void init() throws TimeoutException, Error {
+    this.init(true);
+  }
+
+  /*
+   * Protected init. This will be called from public method init or from child classes.
+   */
+  protected void init(Boolean busAccessible) throws TimeoutException, Error {
+    // Set default value if null.
+    if (busAccessible == null) {
+      busAccessible = true;
+    }
+
+    // Create the DP and turn on debug.
+    this.dp.init();
+    this.dp.powerUpDebug();
+
+    // Create an AHB-AP for the CPU.
+    AccessPort ap0 = new AhbAp(this.dp, 0);
+    ap0.init(busAccessible);
+    this.addAp(ap0);
+
+    // Create CortexM core.
+    Target core0 = new CortexM(this.dp, this.apList.get(0));
+    core0.setup(this.link, this.memoryMap);
+    if (busAccessible) {
+      core0.init();
+      this.addCore(core0);
+    }
   }
 
   @Override
-  public void writeMemory(long address, long value) {
+  public void writeMemory(long address, long value) throws TimeoutException, Error {
     // 32 is the default transfer size.
     writeMemory(address, value, 32);
   }
 
   @Override
-  public void writeMemory(long address, long value, int transferSize) {
-    // TODO
-    //this.selectedCore.writeMemory(address, value, transfer_size);
+  public void writeMemory(long address, long value, Integer transferSize)
+      throws TimeoutException, Error {
+    this.getSelectedCore().writeMemory(address, value, transferSize);
   }
 
   @Override
-  public byte[] readBlockMemoryUnaligned8(long address, long size) {
-    // TODO
-    // return this.selectedCore.readBlockMemoryUnaligned8(address, size);
-    return new byte[]{};
+  public byte[] readBlockMemoryUnaligned8(long address, int size) throws TimeoutException, Error {
+    return this.getSelectedCore().readBlockMemoryUnaligned8(address, size);
   }
 
   @Override
-  public int[] readBlockMemoryAligned32(long address, long size) {
-    // TODO
-    // return this.selectedCore.readBlockMemoryAligned32(address, size);
-    return new int[]{};
+  public long[] readBlockMemoryAligned32(long address, int size) throws TimeoutException, Error {
+    return this.getSelectedCore().readBlockMemoryAligned32(address, size);
   }
 
   @Override
-  public void writeBlockMemoryUnaligned8(long address, byte[] data) {
-    // TODO
-    //this.ap.writeBlockMemoryUnaligned8(address, data)
+  public void writeBlockMemoryUnaligned8(long address, byte[] data) throws TimeoutException, Error {
+    this.getSelectedCore().writeBlockMemoryUnaligned8(address, data);
   }
 
   @Override
-  public void writeBlockMemoryAligned32(long address, int[] data) {
-    // TODO
-    //this.selectedCore.writeBlockMemoryAligned32(address, data);
+  public void writeBlockMemoryAligned32(long address, long[] words) throws TimeoutException, Error {
+    this.getSelectedCore().writeBlockMemoryAligned32(address, words);
   }
 
   @Override
-  public void reset(Boolean softwareReset) {
-    // TODO
-    //this.selected_core.reset(software_reset=software_reset)
+  public void reset(Boolean softwareReset) throws InterruptedException, TimeoutException, Error {
+    this.getSelectedCore().reset(softwareReset);
   }
 
   @Override
-  public void resetStopOnReset(Boolean softwareReset) {
-    // TODO
-    //this.selectedCore.resetStopOnReset(software_reset)
+  public void resetStopOnReset(Boolean softwareReset)
+      throws InterruptedException, TimeoutException, Error {
+    this.getSelectedCore().resetStopOnReset(softwareReset);
   }
 }

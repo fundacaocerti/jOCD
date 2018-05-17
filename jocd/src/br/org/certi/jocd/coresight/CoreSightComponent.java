@@ -15,8 +15,10 @@
  */
 package br.org.certi.jocd.coresight;
 
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -112,7 +114,7 @@ public class CoreSightComponent {
     this.topAddress = topAddress;
   }
 
-  public void readIdRegisters() throws Exception {
+  public void readIdRegisters() throws TimeoutException, Error {
     // Read Component ID and Peripheral ID registers. This is done as a single block
     // read for performance reasons.
     long[] regs = this.ap.readBlockMemoryAligned32(this.topAddress + PIDR4, IDR_COUNT);

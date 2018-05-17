@@ -18,7 +18,6 @@ package br.org.certi.jocd.coresight;
 import br.org.certi.jocd.coresight.DebugPort.AP_REG;
 import br.org.certi.jocd.dapaccess.Transfer;
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
-import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferFaultError;
 import br.org.certi.jocd.util.Conversion;
 import br.org.certi.jocd.util.Util;
@@ -38,13 +37,12 @@ public class MemAp extends AccessPort {
   // the extra address writes, but will not create any read/write errors.
   private Long autoIncrementPageSize = 0x400L;
 
-
   public MemAp(DebugPort dp, int apNum) {
     super(dp, apNum);
   }
 
   @Override
-  public void init(Boolean busAccessible) throws Exception {
+  public void init(Boolean busAccessible) throws TimeoutException, Error {
     super.init(busAccessible);
 
     // Look up the page size based on AP ID.
@@ -64,7 +62,12 @@ public class MemAp extends AccessPort {
    * By default the transfer size is a word
    */
   @Override
-  public void writeMemory(long addr, long data, int transferSize) throws Error, TimeoutException {
+  public void writeMemory(long addr, long data, Integer transferSize)
+      throws Error, TimeoutException {
+    // Set default value if null.
+    if (transferSize == null) {
+      transferSize = 32;
+    }
     int num = this.dp.nextAccessNumber();
     LOGGER.log(Level.INFO, String
         .format("writeMem:%06d (addr=0x%08x, size=%d) = 0x%08x {", num, addr, transferSize, data));
@@ -91,7 +94,7 @@ public class MemAp extends AccessPort {
   }
 
   @Override
-  public long readMemory(long address, Integer transferSize) throws Exception {
+  public long readMemory(long address, Integer transferSize) throws TimeoutException, Error {
     return this.readMemoryNow(address, transferSize);
   }
 
@@ -99,7 +102,11 @@ public class MemAp extends AccessPort {
    * Read a memory location.
    * By default, a word will be read.
    */
-  public long readMemoryNow(long addr, Integer transferSize) throws Exception {
+  public long readMemoryNow(long addr, Integer transferSize) throws TimeoutException, Error {
+    // Set default value if null.
+    if (transferSize == null) {
+      transferSize = 32;
+    }
     ArrayList<Object> result = this.readMemoryLater(addr, transferSize);
     Transfer transfer = (Transfer) result.get(0);
     int numDp = (int) result.get(1);
@@ -112,7 +119,12 @@ public class MemAp extends AccessPort {
    * By default, a word will be read.
    */
   @Override
-  public ArrayList<Object> readMemoryLater(long addr, Integer transferSize) throws Exception {
+  public ArrayList<Object> readMemoryLater(long addr, Integer transferSize)
+      throws TimeoutException, Error {
+    // Set default value if null.
+    if (transferSize == null) {
+      transferSize = 32;
+    }
     int num = this.dp.nextAccessNumber();
     LOGGER.log(Level.INFO,
         String.format("readMem:%06d (addr=0x%08x, size=%d) {", num, addr, transferSize));
@@ -138,8 +150,7 @@ public class MemAp extends AccessPort {
 
   @Override
   public long readMemoryAsync(Transfer transfer, int numDp, long addr, Integer transferSize,
-      int num)
-      throws Exception {
+      int num) throws TimeoutException, Error {
     long res = 0;
     try {
       this.dp.readAPAsync(transfer, numDp);
@@ -191,7 +202,7 @@ public class MemAp extends AccessPort {
    * Read aligned word (the size is in words)
    */
   @Override
-  public long[] readBlock32(long addr, int size) throws Exception {
+  public long[] readBlock32(long addr, int size) throws TimeoutException, Error {
     int num = this.dp.nextAccessNumber();
     LOGGER.log(Level.INFO,
         String.format("_readBlock32:%06d (addr=0x%08x, size=%d) {", num, addr, size));
@@ -220,7 +231,7 @@ public class MemAp extends AccessPort {
   }
 
   /*
-    * Shorthand to write a 32-bit word.
+   * Shorthand to write a 32-bit word.
    */
   @Override
   public void write32(long addr, long value) throws TimeoutException, Error {
@@ -247,7 +258,7 @@ public class MemAp extends AccessPort {
    * Shorthand to read a 32-bit word.
    */
   @Override
-  public long read32(long addr) throws Exception {
+  public long read32(long addr) throws TimeoutException, Error {
     return this.readMemory(addr, 32);
   }
 
@@ -255,7 +266,7 @@ public class MemAp extends AccessPort {
    * Shorthand to read a 16-bit halfword.
    */
   @Override
-  public int read16(long addr) throws Exception {
+  public int read16(long addr) throws TimeoutException, Error {
     return (int) this.readMemory(addr, 16);
   }
 
@@ -263,7 +274,7 @@ public class MemAp extends AccessPort {
    * Shorthand to read a byte.
    */
   @Override
-  public byte read8(long addr) throws Exception {
+  public byte read8(long addr) throws TimeoutException, Error {
     return (byte) this.readMemory(addr, 8);
   }
 
@@ -272,7 +283,7 @@ public class MemAp extends AccessPort {
    * @return an array of byte values
    */
   @Override
-  public byte[] readBlockMemoryUnaligned8(long addr, int size) throws Exception {
+  public byte[] readBlockMemoryUnaligned8(long addr, int size) throws TimeoutException, Error {
     byte[] res = new byte[0];
 
     // Try to read 8bits data
@@ -389,7 +400,7 @@ public class MemAp extends AccessPort {
    * @return An array of word values
    */
   @Override
-  public long[] readBlockMemoryAligned32(long addr, int size) throws Exception {
+  public long[] readBlockMemoryAligned32(long addr, int size) throws TimeoutException, Error {
     long[] resp = new long[0];
     while (size > 0) {
       long n = this.autoIncrementPageSize - (addr & (this.autoIncrementPageSize - 1));
@@ -404,7 +415,7 @@ public class MemAp extends AccessPort {
   }
 
   @Override
-  public void handleError(Error error, int num) throws TransferError, TimeoutException {
+  public void handleError(Error error, int num) throws Error, TimeoutException {
     this.dp.handleError(error, num);
   }
 }

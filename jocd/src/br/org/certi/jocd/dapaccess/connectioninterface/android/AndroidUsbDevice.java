@@ -23,6 +23,7 @@ import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import br.org.certi.jocd.util.Util;
 import java.util.ArrayDeque;
@@ -171,14 +172,14 @@ public class AndroidUsbDevice implements ConnectionInterface {
    * Overload to write(data, timeout).
    * Use 20ms as the default timeout.
    */
-  public void write(byte[] data) {
+  public void write(byte[] data) throws Error {
     write(data, 20);
   }
 
   /*
    * Write data on the OUT endpoint associated to the HID interface.
    */
-  public void write(byte[] data, int timeout) {
+  public void write(byte[] data, int timeout) throws Error {
     if (device == null || usbInterface == null) {
       LOGGER.log(Level.SEVERE, "Internal Error on write. The device/usbInterface is null");
       return;

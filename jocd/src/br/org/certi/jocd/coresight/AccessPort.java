@@ -101,7 +101,7 @@ public class AccessPort {
     this.link = dp.getLink();
   }
 
-  public void init(Boolean busAccessible) throws Exception {
+  public void init(Boolean busAccessible) throws TimeoutException, Error {
     if (!this.initedPrimary) {
       this.idr = this.readRegNow(AP_REG.IDR.getValue());
 
@@ -120,16 +120,16 @@ public class AccessPort {
     }
   }
 
-  public void initRomTable() throws Exception {
+  public void initRomTable() throws TimeoutException, Error {
     this.romTable = new RomTable(this);
     this.romTable.init();
   }
 
-  public long readRegNow(long addr) throws Exception {
+  public long readRegNow(long addr) throws TimeoutException, Error {
     return this.dp.readAPNow(((this.apNum << DebugPort.APSEL_SHIFT) | addr));
   }
 
-  public ArrayList<Object> readRegLater(long addr) throws Exception {
+  public ArrayList<Object> readRegLater(long addr) throws TimeoutException, Error {
     return this.dp.readAP(((this.apNum << DebugPort.APSEL_SHIFT) | addr));
   }
 
@@ -141,19 +141,21 @@ public class AccessPort {
     throw new InternalError("Not implemented");
   }
 
-  public void writeMemory(long addr, long data, int transferSize) throws Error, TimeoutException {
+  public void writeMemory(long addr, long data, Integer transferSize)
+      throws Error, TimeoutException {
     throw new InternalError("Not implemented");
   }
 
-  public long readMemory(long address, Integer transferSize) throws Exception {
+  public long readMemory(long address, Integer transferSize) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
-  public long readMemoryNow(long addr, Integer transferSize) throws Exception {
+  public long readMemoryNow(long addr, Integer transferSize) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
-  public ArrayList<Object> readMemoryLater(long addr, Integer transferSize) throws Exception {
+  public ArrayList<Object> readMemoryLater(long addr, Integer transferSize)
+      throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
@@ -167,7 +169,7 @@ public class AccessPort {
     throw new InternalError("Not implemented");
   }
 
-  public long[] readBlock32(long addr, int size) throws Exception {
+  public long[] readBlock32(long addr, int size) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
@@ -183,19 +185,19 @@ public class AccessPort {
     throw new InternalError("Not implemented");
   }
 
-  public long read32(long addr) throws Exception {
+  public long read32(long addr) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
-  public int read16(long addr) throws Exception {
+  public int read16(long addr) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
-  public byte read8(long addr) throws Exception {
+  public byte read8(long addr) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
-  public byte[] readBlockMemoryUnaligned8(long addr, int size) throws Exception {
+  public byte[] readBlockMemoryUnaligned8(long addr, int size) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
@@ -207,11 +209,11 @@ public class AccessPort {
     throw new InternalError("Not implemented");
   }
 
-  public long[] readBlockMemoryAligned32(long addr, int size) throws Exception {
+  public long[] readBlockMemoryAligned32(long addr, int size) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
-  public void handleError(Error error, int num) throws TransferError, TimeoutException {
+  public void handleError(Error error, int num) throws Error, TimeoutException {
     throw new InternalError("Not implemented");
   }
 }
