@@ -23,7 +23,6 @@ public class AhbAp extends MemAp {
     super(dp, apNum);
   }
 
-
   @Override
   public void initRomTable() throws Exception {
     // Turn on DEMCR.TRCENA before reading the ROM table. Some ROM table entries will come back as garbage if TRCENA is not set.
@@ -38,5 +37,4 @@ public class AhbAp extends MemAp {
     //Invoke superclass
     super.initRomTable();
   }
-
 }
