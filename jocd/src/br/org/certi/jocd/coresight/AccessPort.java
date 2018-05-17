@@ -27,7 +27,7 @@ import java.util.concurrent.TimeoutException;
 
 public class AccessPort {
 
-  public static final byte AP_ROM_TABLE_ADDR_REG = (byte) 0xf8;
+  public static final byte AP_ROM_TABLE_ADDR_REG = (byte) 0xF8;
   public static final byte AP_ROM_TABLE_FORMAT_MASK = 0x2;
   public static final byte AP_ROM_TABLE_ENTRY_PRESENT_MASK = 0x1;
 

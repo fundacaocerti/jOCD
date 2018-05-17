@@ -39,10 +39,10 @@ public class Conversion {
   public static byte[] u32leListToByteList(long[] words) {
     byte[] res = new byte[4 * words.length];
     for (long d : words) {
-      res[0] = (byte) ((d >> 0) & 0xff);
-      res[1] = (byte) ((d >> 8) & 0xff);
-      res[2] = (byte) ((d >> 16) & 0xff);
-      res[3] = (byte) ((d >> 24) & 0xff);
+      res[0] = (byte) ((d >> 0) & 0xFF);
+      res[1] = (byte) ((d >> 8) & 0xFF);
+      res[2] = (byte) ((d >> 16) & 0xFF);
+      res[3] = (byte) ((d >> 24) & 0xFF);
     }
     return res;
   }

@@ -55,7 +55,7 @@ public class CoreSightComponent {
 
   // 2's complement offset to debug component from ROM table base address.
   public static final long ROM_TABLE_ADDR_OFFSET_NEG_MASK = 0x80000000;
-  public static final long ROM_TABLE_ADDR_OFFSET_MASK = 0xfffff000;
+  public static final long ROM_TABLE_ADDR_OFFSET_MASK = 0xFFFFF000;
   public static final long ROM_TABLE_ADDR_OFFSET_SHIFT = 12;
 
   // 9 entries is enough entries to cover the standard Cortex-M4 ROM table for devices with ETM.
@@ -67,24 +67,24 @@ public class CoreSightComponent {
 
   static {
     PID_TABLE = new HashMap<Long, String>();
-    PID_TABLE.put(0x4001bb932L, "MTB-M0+");
-    PID_TABLE.put(0x00008e000L, "MTBDWT");
-    PID_TABLE.put(0x4000bb9a6L, "CTI");
-    PID_TABLE.put(0x4000bb4c0L, "ROM");
-    PID_TABLE.put(0x4000bb008L, "SCS-M0+");
-    PID_TABLE.put(0x4000bb00aL, "DWT-M0+");
-    PID_TABLE.put(0x4000bb00bL, "BPU");
-    PID_TABLE.put(0x4000bb00cL, "SCS-M4");
-    PID_TABLE.put(0x4003bb002L, "DWT");
-    PID_TABLE.put(0x4002bb003L, "FPB");
-    PID_TABLE.put(0x4003bb001L, "ITM");
-    PID_TABLE.put(0x4000bb9a1L, "TPIU-M4");
-    PID_TABLE.put(0x4000bb925L, "ETM-M4");
-    PID_TABLE.put(0x4003bb907L, "ETB");
-    PID_TABLE.put(0x4001bb908L, "CSTF");
-    PID_TABLE.put(0x4000bb000L, "SCS-M3");
-    PID_TABLE.put(0x4003bb923L, "TPIU-M3");
-    PID_TABLE.put(0x4003bb924L, "ETM-M3");
+    PID_TABLE.put(0x4001BB932L, "MTB-M0+");
+    PID_TABLE.put(0x00008E000L, "MTBDWT");
+    PID_TABLE.put(0x4000BB9A6L, "CTI");
+    PID_TABLE.put(0x4000BB4C0L, "ROM");
+    PID_TABLE.put(0x4000BB008L, "SCS-M0+");
+    PID_TABLE.put(0x4000BB00AL, "DWT-M0+");
+    PID_TABLE.put(0x4000BB00BL, "BPU");
+    PID_TABLE.put(0x4000BB00CL, "SCS-M4");
+    PID_TABLE.put(0x4003BB002L, "DWT");
+    PID_TABLE.put(0x4002BB003L, "FPB");
+    PID_TABLE.put(0x4003BB001L, "ITM");
+    PID_TABLE.put(0x4000BB9A1L, "TPIU-M4");
+    PID_TABLE.put(0x4000BB925L, "ETM-M4");
+    PID_TABLE.put(0x4003BB907L, "ETB");
+    PID_TABLE.put(0x4001BB908L, "CSTF");
+    PID_TABLE.put(0x4000BB000L, "SCS-M3");
+    PID_TABLE.put(0x4003BB923L, "TPIU-M3");
+    PID_TABLE.put(0x4003BB924L, "ETM-M3");
   }
 
   public AccessPort ap;
