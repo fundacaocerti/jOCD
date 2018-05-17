@@ -23,6 +23,6 @@ public class Mask {
    * Return the 32-bit inverted value of the argument.
    */
   public static long invert32(long value) {
-    return 0xffffffff & ~value;
+    return 0xFFFFFFFF & ~value;
   }
 }

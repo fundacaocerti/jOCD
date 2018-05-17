@@ -84,14 +84,14 @@ public class DebugPort {
   public static final byte VALUE_MATCH = 1 << 4;
   public static final byte MATCH_MASK = 1 << 5;
 
-  public static final byte A32 = (byte) 0x0c;
+  public static final byte A32 = (byte) 0x0C;
   public static final int APSEL_SHIFT = 24;
-  public static final long APSEL = 0xff000000;
-  public static final long APBANKSEL = 0x000000f0;
-  public static final long APREG_MASK = 0x000000fc;
+  public static final long APSEL = 0xFF000000;
+  public static final long APBANKSEL = 0x000000F0;
+  public static final long APREG_MASK = 0x000000FC;
 
   private static final long DPIDR_MIN_MASK = 0x10000;
-  private static final long DPIDR_VERSION_MASK = 0xf000;
+  private static final long DPIDR_VERSION_MASK = 0xF000;
   private static final int DPIDR_VERSION_SHIFT = 12;
 
   private static final long CSYSPWRUPACK = 0x80000000;
@@ -100,7 +100,7 @@ public class DebugPort {
   private static final long CDBGPWRUPREQ = 0x10000000;
 
   private static final long TRNNORMAL = 0x00000000;
-  private static final long MASKLANE = 0x00000f00;
+  private static final long MASKLANE = 0x00000F00;
 
   private DapAccessCmsisDap link;
   private HashMap<Long, Long> csw = new HashMap<>();

@@ -362,15 +362,15 @@ public class DapAccessCmsisDap {
    */
   private void jtagToSwd() throws DeviceError, TimeoutException {
     byte[] data;
-    data = new byte[]{(byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
-        (byte) 0xff};
+    data = new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
+        (byte) 0xFF};
     this.protocol.swjSequence(data);
 
-    data = new byte[]{(byte) 0x9e, (byte) 0xe7};
+    data = new byte[]{(byte) 0x9E, (byte) 0xE7};
     this.protocol.swjSequence(data);
 
-    data = new byte[]{(byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
-        (byte) 0xff};
+    data = new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
+        (byte) 0xFF};
     this.protocol.swjSequence(data);
 
     data = new byte[]{(byte) 0x00};
