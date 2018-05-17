@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import br.org.certi.jocd.tools.AsyncResponse;
 import java.util.List;
@@ -112,6 +113,9 @@ public class TestsActivity extends AppCompatActivity implements AsyncResponse.Li
       Toast.makeText(this, "ERROR: DeviceError exception", Toast.LENGTH_LONG).show();
     } catch (TimeoutException e) {
       Toast.makeText(this, "ERROR: Timeout exception", Toast.LENGTH_LONG).show();
+    } catch (Error e) {
+      Toast.makeText(this, "ERROR: Error while communication with device", Toast.LENGTH_LONG)
+          .show();
     }
     Toast.makeText(this, "Passed!", Toast.LENGTH_LONG).show();
 

@@ -16,6 +16,7 @@
 package br.org.certi.jocd.coresight;
 
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
+import java.util.concurrent.TimeoutException;
 
 public class AhbAp extends MemAp {
 
@@ -24,7 +25,7 @@ public class AhbAp extends MemAp {
   }
 
   @Override
-  public void initRomTable() throws Exception {
+  public void initRomTable() throws TimeoutException, Error {
     // Turn on DEMCR.TRCENA before reading the ROM table. Some ROM table entries will come back as garbage if TRCENA is not set.
     try {
       long demcr = this.read32(DEMCR);

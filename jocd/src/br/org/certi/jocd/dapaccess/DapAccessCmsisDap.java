@@ -22,7 +22,7 @@ import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Reg;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
-import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import br.org.certi.jocd.util.Util;
 import java.util.ArrayDeque;
@@ -122,7 +122,7 @@ public class DapAccessCmsisDap {
     return allDAPLinks;
   }
 
-  public void open() throws DeviceError, TimeoutException, InsufficientPermissions {
+  public void open() throws TimeoutException, Error {
     if (connectionInterface == null) {
       List<ConnectionInterface> allDevices = this.getDevices();
       for (ConnectionInterface device : allDevices) {
@@ -160,7 +160,7 @@ public class DapAccessCmsisDap {
     this.initDeferredBuffers();
   }
 
-  public void close() throws TransferError, TimeoutException {
+  public void close() throws TimeoutException, Error {
     if (connectionInterface == null) {
       return;
     }
@@ -177,15 +177,15 @@ public class DapAccessCmsisDap {
     return uniqueId;
   }
 
-  public void reset() throws InterruptedException, DeviceError, TimeoutException {
+  public void reset() throws InterruptedException, DeviceError, TimeoutException, Error {
     this.flush();
     this.protocol.setSWJPins((byte) 0, Pins.nRESET.getValue());
-    Thread.sleep(1000);
+    Thread.sleep(100);
     this.protocol.setSWJPins((byte) 0x80, Pins.nRESET.getValue());
-    Thread.sleep(1000);
+    Thread.sleep(100);
   }
 
-  public void assertReset(boolean asserted) throws DeviceError, TimeoutException {
+  public void assertReset(boolean asserted) throws DeviceError, TimeoutException, Error {
     this.flush();
     if (asserted) {
       this.protocol.setSWJPins((byte) 0, Pins.nRESET.getValue());
@@ -198,7 +198,7 @@ public class DapAccessCmsisDap {
     return this.dapPort;
   }
 
-  public void flush() throws TransferError, TimeoutException {
+  public void flush() throws TimeoutException, Error {
     // Send current packet
     this.sendPacket();
     // Read all backlogged
@@ -210,11 +210,11 @@ public class DapAccessCmsisDap {
   /*
    * Overload for connect(port), using default value: Port.Default.
    */
-  public void connect() throws DeviceError, TimeoutException {
+  public void connect() throws DeviceError, TimeoutException, Error {
     connect(Port.DEFAULT);
   }
 
-  public void connect(Port port) throws DeviceError, TimeoutException {
+  public void connect(Port port) throws TimeoutException, Error {
     this.dapPort = this.protocol.connect(port);
 
     // Set clock frequency.
@@ -224,12 +224,12 @@ public class DapAccessCmsisDap {
     this.protocol.transferConfigure();
   }
 
-  public void disconnect() throws DeviceError, TimeoutException {
+  public void disconnect() throws DeviceError, TimeoutException, Error {
     this.flush();
     this.protocol.disconnect();
   }
 
-  public void swjSequence() throws DeviceError, TimeoutException {
+  public void swjSequence() throws TimeoutException, Error {
     if (this.dapPort == Port.SWD) {
       // Configure swd protocol.
       this.protocol.swdConfigure();
@@ -245,12 +245,12 @@ public class DapAccessCmsisDap {
     }
   }
 
-  public void writeReg(long regId, long value) throws TransferError, TimeoutException {
+  public void writeReg(long regId, long value) throws TimeoutException, Error {
     this.writeReg(regId, value, (byte) 0);
   }
 
   public void writeReg(long regId, long value, byte dapIndex)
-      throws TransferError, TimeoutException {
+      throws TimeoutException, Error {
     assert Reg.containsReg(regId);
 
     byte request = WRITE;
@@ -265,22 +265,22 @@ public class DapAccessCmsisDap {
     this.write(dapIndex, 1, request, transferData);
   }
 
-  public long readRegNow(long regId) throws Exception {
+  public long readRegNow(long regId) throws TimeoutException, Error {
     return this.readRegNow(regId, (byte) 0);
   }
 
   public long readRegNow(long regId, byte dapIndex)
-      throws Exception {
+      throws TimeoutException, Error {
     Transfer transfer = readReg(regId, dapIndex);
     return readRegAsync(transfer);
   }
 
-  public Transfer readReg(long regId) throws TransferError, TimeoutException {
+  public Transfer readReg(long regId) throws TimeoutException, Error {
     return this.readReg(regId, (byte) 0);
   }
 
   public Transfer readReg(long regId, byte dapIndex)
-      throws TransferError, TimeoutException {
+      throws TimeoutException, Error {
     assert Reg.containsReg(regId);
 
     byte request = READ;
@@ -295,14 +295,14 @@ public class DapAccessCmsisDap {
     return transfer;
   }
 
-  public long readRegAsync(Transfer transfer) throws Exception {
+  public long readRegAsync(Transfer transfer) throws TimeoutException, Error {
     long[] res = transfer.getResult();
     assert res.length == 1;
     return res[0];
   }
 
   public void regWriteRepeat(int numRepeats, long regId, long[] dataArray, Byte dapIndex)
-      throws TransferError, TimeoutException {
+      throws Error, TimeoutException {
     assert numRepeats == dataArray.length;
     assert Reg.containsReg(regId);
     if (dapIndex == null) {
@@ -321,18 +321,18 @@ public class DapAccessCmsisDap {
   }
 
   public long[] regReadRepeat(int numRepeats, long regId, Byte dapIndex)
-      throws Exception {
+      throws TimeoutException, Error {
     return this.regReadRepeatNow(numRepeats, regId, dapIndex);
   }
 
   public long[] regReadRepeatNow(int numRepeats, long regId, Byte dapIndex)
-      throws Exception {
+      throws TimeoutException, Error {
     Transfer transfer = this.regReadRepeatLater(numRepeats, regId, dapIndex);
     return this.regReadRepeatAsync(transfer, numRepeats);
   }
 
   public Transfer regReadRepeatLater(int numRepeats, long regId, Byte dapIndex)
-      throws TransferError, TimeoutException {
+      throws Error, TimeoutException {
     assert Reg.containsReg(regId);
     if (dapIndex == null) {
       dapIndex = 0;
@@ -351,7 +351,8 @@ public class DapAccessCmsisDap {
     return transfer;
   }
 
-  public long[] regReadRepeatAsync(Transfer transfer, int numRepeats) throws Exception {
+  public long[] regReadRepeatAsync(Transfer transfer, int numRepeats)
+      throws TimeoutException, Error {
     long[] res = transfer.getResult();
     assert res.length == numRepeats;
     return res;
@@ -360,7 +361,7 @@ public class DapAccessCmsisDap {
   /*
    * Send the command to switch from SWD to jtag.
    */
-  private void jtagToSwd() throws DeviceError, TimeoutException {
+  private void jtagToSwd() throws TimeoutException, Error {
     byte[] data;
     data = new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
         (byte) 0xFF};
@@ -382,10 +383,38 @@ public class DapAccessCmsisDap {
     // Not implemented. We don't support WS.
   }
 
-  public void setClock(int frequency) throws DeviceError, TimeoutException {
+  public void setClock(int frequency) throws TimeoutException, Error {
     this.flush();
     this.protocol.setSWJClock(frequency);
     this.frequency = frequency;
+  }
+
+  /*
+   * Allow transfers to be delayed and buffered
+   *
+   * By default deferred transfers are turned off.  All reads and
+   * writes will be completed by the time the function returns.
+   *
+   * When enabled packets are buffered and sent all at once, which
+   * increases speed.  When memory is written to, the transfer
+   * might take place immediately, or might take place on a future
+   * memory write.  This means that an invalid write could cause an
+   * exception to occur on a later, unrelated write.  To guarantee
+   * that previous writes are complete call the flush() function.
+   *
+   * The behaviour of read operations is determined by the modes
+   * READ_START, READ_NOW and READ_END.  The option READ_NOW is the
+   * default and will cause the read to flush all previous writes,
+   * and read the data immediately.  To improve performance, multiple
+   * reads can be made using READ_START and finished later with READ_NOW.
+   * This allows the reads to be buffered and sent at once.  Note - All
+   * READ_ENDs must be called before a call using READ_NOW can be made.
+   */
+  public void setDeferredTransfer(boolean enabled) throws TimeoutException, Error {
+    if (this.deferredTransfer & !enabled) {
+      this.flush();
+    }
+    this.deferredTransfer = enabled;
   }
 
   /*
@@ -408,14 +437,14 @@ public class DapAccessCmsisDap {
    * Reads and decodes a single packet
    * Reads a single packet from the device and  stores the data from it in the current Command object
    */
-  public void readPacket() throws TransferError, TimeoutException {
+  public void readPacket() throws TimeoutException, Error {
     // Grab command, send it and decode response
     Command command = (Command) this.commandsToRead.poll();
     byte[] decodedData;
     try {
       byte[] rawData = this.connectionInterface.read();
       decodedData = command.decodeData(rawData);
-    } catch (Exception exception) {
+    } catch (Error exception) {
       this.abortAllTransfers(exception);
       throw exception;
     }
@@ -454,7 +483,7 @@ public class DapAccessCmsisDap {
    * (the number of packets written but not read) does not exceed the number supported by
    * the given device.
    */
-  private void sendPacket() throws TransferError, TimeoutException {
+  private void sendPacket() throws TimeoutException, Error {
     Command command = this.crntCmd;
     if (command.getEmpty()) {
       return;
@@ -467,7 +496,7 @@ public class DapAccessCmsisDap {
     byte[] data = command.encodeData();
     try {
       this.connectionInterface.write(data);
-    } catch (Exception exception) {
+    } catch (Error exception) {
       this.abortAllTransfers(exception);
       throw exception;
     }
@@ -480,7 +509,7 @@ public class DapAccessCmsisDap {
    */
   private Transfer write(byte dapIndex, int transferCount, byte transferRequest,
       long[] transferData)
-      throws TransferError, TimeoutException {
+      throws TimeoutException, Error {
     assert dapIndex == 0;
     assert transferData == null || transferData.length != 0;
 
@@ -508,14 +537,14 @@ public class DapAccessCmsisDap {
         continue;
       }
 
-      long[] data;
+      long[] words;
       // Add request to packet.
       if (transferData == null) {
-        data = null;
+        words = null;
       } else {
-        data = Util.getSubArray(transferData, transDataPos, transDataPos + size);
+        words = Util.getSubArray(transferData, transDataPos, transDataPos + size);
       }
-      cmd.add(size, transferRequest, data, dapIndex);
+      cmd.add(size, transferRequest, words, dapIndex);
       sizeToTransfer -= size;
       transDataPos += size;
 
@@ -537,7 +566,7 @@ public class DapAccessCmsisDap {
   /*
    * Abort any ongoing transfers and clear all buffers
    */
-  private void abortAllTransfers(Exception exception) {
+  private void abortAllTransfers(Error exception) {
     int pendingReads = this.commandsToRead.size();
     // Invalidate transferList
     for (Transfer transfer : this.transferList) {

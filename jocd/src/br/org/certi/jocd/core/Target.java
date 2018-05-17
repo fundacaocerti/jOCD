@@ -15,7 +15,11 @@
  */
 package br.org.certi.jocd.core;
 
+import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
+import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import br.org.certi.jocd.flash.Flash;
+import java.util.concurrent.TimeoutException;
 
 public class Target {
 
@@ -27,15 +31,39 @@ public class Target {
 
   // Types of breakpoints.
   //
-  // Auto will select the best type given the
-  // address and available breakpoints.
-  public static final int BREAKPOINT_HW = 1;
-  public static final int BREAKPOINT_SW = 2;
-  public static final int BREAKPOINT_AUTO = 3;
+  // Auto will select the best type given the address and available breakpoints.
+  public enum BreakpointTypes {
+    HW((byte) 0),
+    SW((byte) 1),
+    AUTO((byte) 2);
 
-  public static final int WATCHPOINT_READ = 1;
-  public static final int WATCHPOINT_WRITE = 2;
-  public static final int WATCHPOINT_READ_WRITE = 3;
+    public final byte value;
+
+    BreakpointTypes(byte id) {
+      this.value = id;
+    }
+
+    public byte getValue() {
+      return value;
+    }
+  }
+
+  // Types of watchpoints.
+  public enum WatchpointTypes {
+    READ((byte) 0),
+    WRITE((byte) 1),
+    READ_WRITE((byte) 2);
+
+    public final byte value;
+
+    WatchpointTypes(byte id) {
+      this.value = id;
+    }
+
+    public byte getValue() {
+      return value;
+    }
+  }
 
   // Vector catch option masks.
   public static final int CATCH_NONE = 0;
@@ -52,55 +80,165 @@ public class Target {
       | CATCH_CORE_RESET);
 
   public MemoryMap memoryMap;
+  public DapAccessCmsisDap link;
+  public Flash flash;
+
+  /*
+   * Must be called right after constructor.
+   * Overload for protected method setup.
+   */
+  public void setup(DapAccessCmsisDap link) {
+    this.setup(link, null);
+  }
 
   /*
    * Must be called right after constructor.
    */
-  public void setup(MemoryMap memoryMap) {
-    this.memoryMap = memoryMap;
+  protected void setup(DapAccessCmsisDap link, MemoryMap memoryMap) {
+    this.link = link;
+    this.memoryMap = (memoryMap == null) ? new MemoryMap(null) : memoryMap;
+  }
+
+  public void init() throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public void setFlash(Flash flash) {
+    this.flash = flash;
+  }
+
+  public void flush() throws TimeoutException, Error {
+    this.link.flush();
+  }
+
+  public void halt() throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public void step(Boolean disableInterrupts) {
+    throw new InternalError("Not implemented");
+  }
+
+  public void resume() {
+    throw new InternalError("Not implemented");
+  }
+
+  public boolean massErase() {
+    throw new InternalError("Not implemented");
+  }
+
+  public void writeMemory(long address, long value) throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public void writeMemory(long address, long value, Integer transferSize)
+      throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public void write32(long address, long value) throws TimeoutException, Error {
+    writeMemory(address, value, 32);
+  }
+
+  public void write16(long address, int value) throws TimeoutException, Error {
+    writeMemory(address, value, 16);
+  }
+
+  public void write8(long address, int value) throws TimeoutException, Error {
+    writeMemory(address, value, 8);
+  }
+
+  public long readMemory(long address, Integer transferSize) throws TimeoutException, Error {
+    return readMemoryNow(address, transferSize);
+  }
+
+  public long readMemoryNow(long address, Integer transferSize) throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public void readMemoryLater(long address, Integer transferSize) throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public long read32(long address) throws TimeoutException, Error {
+    return read32Now(address);
+  }
+
+  public long read32Now(long address) throws TimeoutException, Error {
+    return readMemoryNow(address, 32);
+  }
+
+  public void read32Later(long address) throws TimeoutException, Error {
+    readMemoryLater(address, 32);
+  }
+
+  public long read16(long address) throws TimeoutException, Error {
+    return read16Now(address);
+  }
+
+  public long read16Now(long address) throws TimeoutException, Error {
+    return readMemoryNow(address, 16);
+  }
+
+  public void read1Later(long address) throws TimeoutException, Error {
+    readMemoryLater(address, 16);
+  }
+
+  public long read8(long address) throws TimeoutException, Error {
+    return read8Now(address);
+  }
+
+  public long read8Now(long address) throws TimeoutException, Error {
+    return readMemoryNow(address, 8);
+  }
+
+  public void read8Later(long address) throws TimeoutException, Error {
+    readMemoryLater(address, 8);
+  }
+
+  public byte[] readBlockMemoryUnaligned8(long address, int size) throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public long[] readBlockMemoryAligned32(long address, int size) throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public void writeBlockMemoryUnaligned8(long address, byte[] data) throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public void writeBlockMemoryAligned32(long address, long[] words) throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public void reset(Boolean softwareReset)
+      throws InterruptedException, TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public void resetStopOnReset(Boolean softwareReset)
+      throws InterruptedException, TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public int getState() throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public boolean isRunning() throws TimeoutException, Error {
+    return getState() == Target.TARGET_RUNNING;
+  }
+
+  public boolean isHalted() throws TimeoutException, Error {
+    return getState() == Target.TARGET_HALTED;
   }
 
   public MemoryMap getMemoryMap() {
     return memoryMap;
   }
 
-  public void writeMemory(long address, long value) {
-    throw new InternalError("Not implemented");
-  }
-
-  public void writeMemory(long address, long value, int transferSize) {
-    throw new InternalError("Not implemented");
-  }
-
-  public byte[] readBlockMemoryUnaligned8(long address, long size) {
-    throw new InternalError("Not implemented");
-  }
-
-  public int[] readBlockMemoryAligned32(long address, long size) {
-    throw new InternalError("Not implemented");
-  }
-
-  public void writeBlockMemoryUnaligned8(long address, byte[] data) {
-    throw new InternalError("Not implemented");
-  }
-
-  public void writeBlockMemoryAligned32(long address, int[] data) {
-    throw new InternalError("Not implemented");
-  }
-
-  public void reset(Boolean softwareReset) {
-    throw new InternalError("Not implemented");
-  }
-
-  public void resetStopOnReset(Boolean softwareReset) {
-    throw new InternalError("Not implemented");
-  }
-
   public Flash getFlash() {
-    throw new InternalError("Not implemented");
-  }
-
-  public boolean massErase() {
     throw new InternalError("Not implemented");
   }
 

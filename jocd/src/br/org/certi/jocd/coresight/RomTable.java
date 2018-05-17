@@ -15,8 +15,10 @@
  */
 package br.org.certi.jocd.coresight;
 
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.util.Mask;
 import java.util.ArrayList;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -53,7 +55,7 @@ public class RomTable extends CoreSightComponent {
     this.number = this.parent != null ? (this.parent.number + 1) : 0;
   }
 
-  public void init() throws Exception {
+  public void init() throws TimeoutException, Error {
     this.readIdRegisters();
     if (!this.isRomTable) {
       LOGGER.log(Level.WARNING, String
@@ -69,7 +71,7 @@ public class RomTable extends CoreSightComponent {
     this.readTable();
   }
 
-  public void readTable() throws Exception {
+  public void readTable() throws TimeoutException, Error {
     LOGGER.log(Level.INFO, String
         .format("ROM table #%d @ 0x%08x cidr=%x pidr=%x", this.number, this.address, this.cidr,
             this.pidr));
@@ -116,7 +118,7 @@ public class RomTable extends CoreSightComponent {
     }
   }
 
-  public void readTable8() throws Exception {
+  public void readTable8() throws TimeoutException, Error {
     long entryAddress = this.address;
 
     while (true) {
@@ -136,7 +138,7 @@ public class RomTable extends CoreSightComponent {
     }
   }
 
-  public void handleTableEntry(long entry) throws Exception {
+  public void handleTableEntry(long entry) throws TimeoutException, Error {
     // Nonzero entries can still be disabled, so check the present bit before handling.
     if ((entry & ROM_TABLE_ENTRY_PRESENT_MASK) != 0) {
       return;

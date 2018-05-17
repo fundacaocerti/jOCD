@@ -159,7 +159,7 @@ public class Command {
   /*
    * Add a single or block register transfer operation to this command
    */
-  public void add(int count, byte request, long[] data, Byte dapIndex) {
+  public void add(int count, byte request, long[] words, Byte dapIndex) {
     assert this.dataEncoded == false;
     if (this.dapIndex == null) {
       this.dapIndex = dapIndex;
@@ -179,7 +179,7 @@ public class Command {
       this.writeCount += count;
     }
 
-    this.data.add(new DataTuple(count, request, data));
+    this.data.add(new DataTuple(count, request, words));
 
     LOGGER.log(Level.FINE, String
         .format("add(%d, %02x:%s) -> [wc=%d, rc=%d, ba=%d]", count, request,
