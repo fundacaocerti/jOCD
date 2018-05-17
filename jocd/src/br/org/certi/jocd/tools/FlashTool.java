@@ -17,6 +17,7 @@ package br.org.certi.jocd.tools;
 
 import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import br.org.certi.jocd.flash.FlashBuilder;
 import br.org.certi.jocd.flash.PageInfo;
@@ -58,7 +59,15 @@ public class FlashTool {
 
   public String listConnectedBoards()
       throws DeviceError, TimeoutException, InsufficientPermissions {
-    List<MbedBoard> boards = MbedBoard.getAllConnectedBoards();
+    List<MbedBoard> boards = null;
+
+    try {
+      boards = MbedBoard.getAllConnectedBoards();
+    } catch (Error exception) {
+      LOGGER.log(Level.SEVERE,
+          "Error while trying to get all connected boards. Exception: " + exception.getMessage());
+      return "[Error]";
+    }
 
     String resp = "";
     int i = 0;
@@ -117,8 +126,7 @@ public class FlashTool {
       Integer frequency    // Set the SWD clock frequency in Hz."
   )
       throws MbedBoard.NoBoardConnectedException, MbedBoard.UniqueIDNotFoundException,
-      MbedBoard.UnspecifiedBoardIDException, InternalError, DeviceError, TimeoutException,
-      InsufficientPermissions {
+      MbedBoard.UnspecifiedBoardIDException, InternalError, TimeoutException {
 
     // Select default values.
     if (count == null) {
@@ -128,7 +136,14 @@ public class FlashTool {
       skip = 1;
     }
 
-    MbedBoard selectedBoard = MbedBoard.chooseBoard();
+    MbedBoard selectedBoard = null;
+    try {
+      selectedBoard = MbedBoard.chooseBoard();
+    } catch (Error e) {
+      LOGGER.log(Level.SEVERE,
+          "Error exception when trying to select board. Exception: " + e.getMessage());
+      return false;
+    }
 
     // As we throw exceptions when MbedBoard.chooseBoard
     // can't find the board, we should never get here with
@@ -240,6 +255,12 @@ public class FlashTool {
         LOGGER.log(Level.SEVERE, "IOException while trying program using IntelHex.");
       } catch (IntelHexException e) {
         LOGGER.log(Level.SEVERE, "IntelHexException while trying to parse IntelHex.");
+      } catch (InterruptedException e) {
+        LOGGER.log(Level.WARNING,
+            "InterruptedException while trying to parse IntelHex. Exception: " + e.getMessage());
+      } catch (Error e) {
+        LOGGER.log(Level.SEVERE,
+            "Error exception while trying to parse IntelHex. Exception: " + e.getMessage());
       }
 
     }

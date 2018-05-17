@@ -16,8 +16,7 @@
 package br.org.certi.jocd.board;
 
 import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
-import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
-import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.target.TargetFactory;
 import br.org.certi.jocd.target.TargetFactory.targetEnum;
 import java.util.ArrayList;
@@ -80,7 +79,7 @@ public class MbedBoard extends Board {
    * Overload for getAllConnectedBoards using default values.
    */
   public static List<MbedBoard> getAllConnectedBoards()
-      throws DeviceError, TimeoutException, InsufficientPermissions {
+      throws TimeoutException, Error {
     return getAllConnectedBoards(false, true, null, 0);
   }
 
@@ -89,7 +88,7 @@ public class MbedBoard extends Board {
    */
   public static List<MbedBoard> getAllConnectedBoards(boolean close, boolean blocking,
       targetEnum targetOverride, int frequency)
-      throws DeviceError, TimeoutException, InsufficientPermissions {
+      throws TimeoutException, Error {
     List<MbedBoard> mbedList = new ArrayList<MbedBoard>();
 
     while (true) {
@@ -139,7 +138,7 @@ public class MbedBoard extends Board {
    */
   public static MbedBoard chooseBoard()
       throws NoBoardConnectedException, UniqueIDNotFoundException, UnspecifiedBoardIDException,
-      DeviceError, TimeoutException, InsufficientPermissions {
+      TimeoutException, Error {
     return chooseBoard(true, false, null, null, 0, true);
   }
 
@@ -149,7 +148,7 @@ public class MbedBoard extends Board {
   public static MbedBoard chooseBoard(boolean blocking, boolean returnFirst,
       String boardId, String targetOverride, int frequency, boolean initBoard)
       throws NoBoardConnectedException, UniqueIDNotFoundException, UnspecifiedBoardIDException,
-      DeviceError, TimeoutException, InsufficientPermissions {
+      TimeoutException, Error {
 
     // Get all connected boards.
     List<MbedBoard> allBoards = MbedBoard.getAllConnectedBoards();
