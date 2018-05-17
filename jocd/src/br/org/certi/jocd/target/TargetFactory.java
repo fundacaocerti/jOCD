@@ -15,7 +15,9 @@
  */
 package br.org.certi.jocd.target;
 
+import br.org.certi.jocd.core.CoreSightTarget;
 import br.org.certi.jocd.core.Target;
+import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
 import br.org.certi.jocd.target.nrf51822.Nrf51;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,7 +29,7 @@ public class TargetFactory {
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   public static enum targetEnum {
-    cortex_m,    // Not implemented.
+    cortex_m,
     kinetis,     // Not implemented.
     ke15z7,      // Not implemented.
     ke18f16,     // Not implemented.
@@ -73,13 +75,20 @@ public class TargetFactory {
     rtl8195am    // Not implemented.
   }
 
-  public static Target getTarget(targetEnum target) {
-    switch (target) {
+  public static Target getTarget(targetEnum targetEnum, DapAccessCmsisDap link) {
+    Target target;
+    switch (targetEnum) {
+      case cortex_m:
+        target = new CoreSightTarget();
+        target.setup(link);
+        return target;
       case nrf51:
-        return new Nrf51();
+        target = new Nrf51();
+        target.setup(link);
+        return target;
       default:
         LOGGER.log(Level.SEVERE,
-            "Default case on switch GetTarget. " + "Unexpected interface: " + target.toString());
+            "Default case on switch GetTarget. " + "Unexpected interface: " + targetEnum.toString());
     }
     return null;
   }

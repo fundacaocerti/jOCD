@@ -16,14 +16,15 @@
 package br.org.certi.jocd.dapaccess;
 
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
+import java.util.concurrent.TimeoutException;
 
 /*
-* A wrapper object representing a command invoked by the layer above.
-* The transfer class contains a logical register read or a block of reads to the same register.
-*/
+ * A wrapper object representing a command invoked by the layer above.
+ * The transfer class contains a logical register read or a block of reads to the same register.
+ */
 public class Transfer {
 
-  private Exception error;
+  private Error error;
   private int sizeBytes = 0;
   private long[] result;
   private DapAccessCmsisDap dapLink;
@@ -78,7 +79,7 @@ public class Transfer {
   /*
    * Attach an exception to this transfer rather than data.
    */
-  public void addError(Exception error) {
+  public void addError(Error error) {
     assert error instanceof Error;
     this.error = error;
   }
@@ -86,7 +87,7 @@ public class Transfer {
   /*
    * Get the result of this transfer.
    */
-  public long[] getResult() throws Exception {
+  public long[] getResult() throws TimeoutException, Error {
     while (this.result == null) {
       if (this.dapLink.getCommandsToRead().size() > 0) {
         this.dapLink.readPacket();

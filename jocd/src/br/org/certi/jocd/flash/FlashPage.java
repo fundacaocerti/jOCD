@@ -15,8 +15,6 @@
  */
 package br.org.certi.jocd.flash;
 
-import java.util.zip.CRC32;
-
 public class FlashPage {
 
   final long address;

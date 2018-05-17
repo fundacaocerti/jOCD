@@ -22,12 +22,12 @@ public class DataTuple {
 
   private int count;
   private byte request;
-  private long[] data;
+  private long[] words;
 
-  public DataTuple(int count, byte request, long[] data) {
+  public DataTuple(int count, byte request, long[] words) {
     this.count = count;
     this.request = request;
-    this.data = data;
+    this.words = words;
   }
 
   public int getCount() {
@@ -39,6 +39,6 @@ public class DataTuple {
   }
 
   public long[] getData() {
-    return data;
+    return words;
   }
 }

@@ -15,7 +15,7 @@
  */
 package br.org.certi.jocd.core;
 
-import cz.jaybee.intelhex.Region;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MemoryMap {
@@ -31,7 +31,7 @@ public class MemoryMap {
   final List<MemoryRegion> memoryRegions;
 
   public MemoryMap(List<MemoryRegion> memoryRegions) {
-    this.memoryRegions = memoryRegions;
+    this.memoryRegions = (memoryRegions == null) ? new ArrayList<MemoryRegion>() : memoryRegions;
   }
 
   public MemoryRegion getBootMemory() {
