@@ -286,8 +286,8 @@ public class MemAp extends AccessPort {
     // Try to read 16bits data
     if ((size > 1) && (addr & 0x02) != 0) {
       int mem = this.read16(addr);
-      res = Util.appendDataInArray(res, (byte) (mem & 0xff));
-      res = Util.appendDataInArray(res, (byte) ((mem >> 8) & 0xff));
+      res = Util.appendDataInArray(res, (byte) (mem & 0xFF));
+      res = Util.appendDataInArray(res, (byte) ((mem >> 8) & 0xFF));
       size -= 2;
       addr += 2;
     }
@@ -302,8 +302,8 @@ public class MemAp extends AccessPort {
 
     if (size > 1) {
       int mem = this.read16(addr);
-      res = Util.appendDataInArray(res, (byte) (mem & 0xff));
-      res = Util.appendDataInArray(res, (byte) ((mem >> 8) & 0xff));
+      res = Util.appendDataInArray(res, (byte) (mem & 0xFF));
+      res = Util.appendDataInArray(res, (byte) ((mem >> 8) & 0xFF));
       size -= 2;
       addr += 2;
     }
@@ -375,7 +375,7 @@ public class MemAp extends AccessPort {
     while (size > 0) {
       long n = this.autoIncrementPageSize - (addr & (this.autoIncrementPageSize - 1));
       if (size * 4 < n) {
-        n = (size * 4) & 0xfffffffc;
+        n = (size * 4) & 0xFFFFFFFC;
       }
       this.writeBlock32(addr, Util.getSubArray(data, 0, (int) (n / 4)));
       Util.getSubArray(data, (int) (n / 4), null);
@@ -394,7 +394,7 @@ public class MemAp extends AccessPort {
     while (size > 0) {
       long n = this.autoIncrementPageSize - (addr & (this.autoIncrementPageSize - 1));
       if (size * 4 < n) {
-        n = (size * 4) & 0xfffffffc;
+        n = (size * 4) & 0xFFFFFFFC;
       }
       resp = Util.appendDataInArray(resp, this.readBlock32(addr, (int) n / 4));
       size -= n / 4;
