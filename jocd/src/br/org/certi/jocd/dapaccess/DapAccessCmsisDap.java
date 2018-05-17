@@ -265,11 +265,11 @@ public class DapAccessCmsisDap {
     this.write(dapIndex, 1, request, transferData);
   }
 
-  public int readRegNow(long regId) throws Exception {
+  public long readRegNow(long regId) throws Exception {
     return this.readRegNow(regId, (byte) 0);
   }
 
-  public int readRegNow(long regId, byte dapIndex)
+  public long readRegNow(long regId, byte dapIndex)
       throws Exception {
     Transfer transfer = readReg(regId, dapIndex);
     return readRegAsync(transfer);
@@ -295,10 +295,66 @@ public class DapAccessCmsisDap {
     return transfer;
   }
 
-  public int readRegAsync(Transfer transfer) throws Exception {
-    int[] res = transfer.getResult();
+  public long readRegAsync(Transfer transfer) throws Exception {
+    long[] res = transfer.getResult();
     assert res.length == 1;
     return res[0];
+  }
+
+  public void regWriteRepeat(int numRepeats, long regId, long[] dataArray, Byte dapIndex)
+      throws TransferError, TimeoutException {
+    assert numRepeats == dataArray.length;
+    assert Reg.containsReg(regId);
+    if (dapIndex == null) {
+      dapIndex = 0;
+    }
+
+    byte request = WRITE;
+    if (regId < 4) {
+      request |= DP_ACC;
+    } else {
+      request |= AP_ACC;
+    }
+
+    request |= (regId % 4) * 4;
+    this.write(dapIndex, numRepeats, request, dataArray);
+  }
+
+  public long[] regReadRepeat(int numRepeats, long regId, Byte dapIndex)
+      throws Exception {
+    return this.regReadRepeatNow(numRepeats, regId, dapIndex);
+  }
+
+  public long[] regReadRepeatNow(int numRepeats, long regId, Byte dapIndex)
+      throws Exception {
+    Transfer transfer = this.regReadRepeatLater(numRepeats, regId, dapIndex);
+    return this.regReadRepeatAsync(transfer, numRepeats);
+  }
+
+  public Transfer regReadRepeatLater(int numRepeats, long regId, Byte dapIndex)
+      throws TransferError, TimeoutException {
+    assert Reg.containsReg(regId);
+    if (dapIndex == null) {
+      dapIndex = 0;
+    }
+
+    byte request = READ;
+    if (regId < 4) {
+      request |= DP_ACC;
+    } else {
+      request |= AP_ACC;
+    }
+    request |= (regId % 4) * 4;
+    Transfer transfer = this.write(dapIndex, numRepeats, request, null);
+    assert transfer != null;
+
+    return transfer;
+  }
+
+  public long[] regReadRepeatAsync(Transfer transfer, int numRepeats) throws Exception {
+    long[] res = transfer.getResult();
+    assert res.length == numRepeats;
+    return res;
   }
 
   /*

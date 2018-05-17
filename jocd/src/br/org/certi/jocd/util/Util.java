@@ -126,6 +126,69 @@ public class Util {
   }
 
   /*
+   * Extend an existing array with another array and return this new concatenated array.
+   *
+   * As we can not expand the size of an array in Java, we need
+   * to create a new one, and concatenate both arrays.
+   */
+  public static long[] appendDataInArray(long[] src, long[] append) {
+
+    // Create a new array to extend its size.
+    long[] newArray = new long[src.length + append.length];
+
+    // Copy currentPage data to the new array.
+    System.arraycopy(src, 0, newArray, 0, src.length);
+
+    // Copy oldData to the new array.
+    System.arraycopy(append, 0, newArray, src.length, append.length);
+
+    // Return the appended array.
+    return newArray;
+  }
+
+  /*
+   * Extend an existing array with a new element and return this new concatenated array.
+   *
+   * As we can not expand the size of an array in Java, we need
+   * to create a new one, and concatenate both arrays.
+   */
+  public static long[] appendDataInArray(long[] src, long append) {
+
+    // Create a new array to extend its size.
+    long[] newArray = new long[src.length + 1];
+
+    // Copy currentPage data to the new array.
+    System.arraycopy(src, 0, newArray, 0, src.length);
+
+    // Add data to the new array
+    newArray[newArray.length - 1] = append;
+
+    // Return the appended array.
+    return newArray;
+  }
+
+  /*
+   * Extend an existing byte array with a new element and return this new concatenated array.
+   *
+   * As we can not expand the size of an array in Java, we need
+   * to create a new one, and concatenate both arrays.
+   */
+  public static byte[] appendDataInArray(byte[] src, byte append) {
+
+    // Create a new array to extend its size.
+    byte[] newArray = new byte[src.length + 1];
+
+    // Copy currentPage data to the new array.
+    System.arraycopy(src, 0, newArray, 0, src.length);
+
+    // Add data to the new array
+    newArray[newArray.length - 1] = append;
+
+    // Return the appended array.
+    return newArray;
+  }
+
+  /*
    * Fill and existing byte array with a value up to "size".
    *
    * As we can not expand the size of an array in Java, we need
