@@ -17,6 +17,7 @@ package br.org.certi.jocd.flash;
 
 import br.org.certi.jocd.core.MemoryRegion;
 import br.org.certi.jocd.core.Target;
+import br.org.certi.jocd.core.Target.State;
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
 import java.util.ArrayList;
@@ -87,8 +88,9 @@ public class Flash {
   /*
    * Download the flash algorithm in RAM.
    */
-  public void init() {
-    // TODO
+  public void init() throws InterruptedException, TimeoutException, Error {
+    this.target.halt();
+    this.target.setTargetState(State.PROGRAM);
   }
 
   public long[] computeCrcs(List<Sectors> sectors) throws TimeoutException, Error {

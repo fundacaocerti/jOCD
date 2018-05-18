@@ -161,7 +161,7 @@ public class AccessPort {
 
   public long readMemoryAsync(Transfer transfer, int numDp, long addr, Integer transferSize,
       int num)
-      throws Exception {
+      throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
