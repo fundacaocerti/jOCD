@@ -85,7 +85,7 @@ public class FlashTool {
   public boolean flashBoard(ProgressUpdateInterface progressUpdate)
       throws MbedBoard.NoBoardConnectedException, MbedBoard.UniqueIDNotFoundException,
       MbedBoard.UnspecifiedBoardIDException, InternalError, DeviceError, TimeoutException,
-      InsufficientPermissions {
+      InsufficientPermissions, InterruptedException, Error {
 
     // TODO - change this a to path with the correct file.
     String file = "microbit.hex";
@@ -126,7 +126,8 @@ public class FlashTool {
       Integer frequency    // Set the SWD clock frequency in Hz."
   )
       throws MbedBoard.NoBoardConnectedException, MbedBoard.UniqueIDNotFoundException,
-      MbedBoard.UnspecifiedBoardIDException, InternalError, TimeoutException {
+      MbedBoard.UnspecifiedBoardIDException, InternalError, TimeoutException, InterruptedException,
+      Error {
 
     // Select default values.
     if (count == null) {

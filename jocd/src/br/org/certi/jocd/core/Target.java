@@ -16,18 +16,28 @@
 package br.org.certi.jocd.core;
 
 import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
+import br.org.certi.jocd.dapaccess.Transfer;
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
-import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import br.org.certi.jocd.flash.Flash;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 public class Target {
 
-  public static final int TARGET_RUNNING = 1;   // Core is executing code.
-  public static final int TARGET_HALTED = 2;    // Core is halted in debug mode.
-  public static final int TARGET_RESET = 3;     // Core is being held in reset.
-  public static final int TARGET_SLEEPING = 4;  // Core is sleeping due to a wfi or wfe instruction.
-  public static final int TARGET_LOCKUP = 5;    // Core is locked up.
+  public interface CoreRegisters {
+
+    public int getValue();
+  }
+
+  public enum State {
+    TARGET_RUNNING,  // Core is executing code.
+    TARGET_HALTED,   // Core is halted in debug mode.
+    TARGET_RESET,    // Core is being held in reset.
+    TARGET_SLEEPING, // Core is sleeping due to a wfi or wfe instruction.
+    TARGET_LOCKUP,    // Core is locked up.
+    PROGRAM
+  }
 
   // Types of breakpoints.
   //
@@ -156,7 +166,12 @@ public class Target {
     throw new InternalError("Not implemented");
   }
 
-  public void readMemoryLater(long address, Integer transferSize) throws TimeoutException, Error {
+  public ArrayList<Object> readMemoryLater(long address, Integer transferSize) throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public long readMemoryAsync(Transfer transfer, int numDp, long addr, Integer transferSize,
+      int num) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
@@ -222,25 +237,52 @@ public class Target {
     throw new InternalError("Not implemented");
   }
 
-  public int getState() throws TimeoutException, Error {
+  public void setTargetState(State state) throws InterruptedException, TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public State getState() throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
   public boolean isRunning() throws TimeoutException, Error {
-    return getState() == Target.TARGET_RUNNING;
+    return getState() == Target.State.TARGET_RUNNING;
   }
 
   public boolean isHalted() throws TimeoutException, Error {
-    return getState() == Target.TARGET_HALTED;
+    return getState() == Target.State.TARGET_HALTED;
+  }
+
+  public long readCoreRegister(CoreRegisters reg) {
+    throw new InternalError("Not implemented");
+  }
+
+  public long[] readCoreRegisterRaw(CoreRegisters reg) {
+    throw new InternalError("Not implemented");
+  }
+
+  public void writeCoreRegister(CoreRegisters reg, long word) throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public void writeCoreRegisterRaw(CoreRegisters reg, long word) throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public void writeCoreRegisterRaw(List<CoreRegisters> regList, long[] words)
+      throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
   }
 
   public MemoryMap getMemoryMap() {
     return memoryMap;
   }
 
-  public Flash getFlash() {
+  public String getTargetXml() {
     throw new InternalError("Not implemented");
   }
 
-
+  public Flash getFlash() {
+    throw new InternalError("Not implemented");
+  }
 }
