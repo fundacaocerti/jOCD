@@ -364,7 +364,8 @@ public class CortexM extends Target {
    * Read a memory location. By default, a word will be read.
    */
   @Override
-  public ArrayList<Object> readMemoryLater(long address, Integer transferSize) throws TimeoutException, Error {
+  public ArrayList<Object> readMemoryLater(long address, Integer transferSize)
+      throws TimeoutException, Error {
     // Load default value if null.
     if (transferSize == null) {
       transferSize = 32;
@@ -547,13 +548,106 @@ public class CortexM extends Target {
     return (getState() == Target.State.TARGET_HALTED);
   }
 
+  private long mapToVectorCatchMask(long mask) {
+    long result = 0;
+
+    if ((mask & Target.CATCH_HARD_FAULT) != 0) {
+      result |= CortexM.DEMCR_VC_HARDERR;
+    }
+    if ((mask & Target.CATCH_BUS_FAULT) != 0) {
+      result |= CortexM.DEMCR_VC_BUSERR;
+    }
+    if ((mask & Target.CATCH_MEM_FAULT) != 0) {
+      result |= CortexM.DEMCR_VC_MMERR;
+    }
+    if ((mask & Target.CATCH_INTERRUPT_ERR) != 0) {
+      result |= CortexM.DEMCR_VC_INTERR;
+    }
+    if ((mask & Target.CATCH_STATE_ERR) != 0) {
+      result |= CortexM.DEMCR_VC_STATERR;
+    }
+    if ((mask & Target.CATCH_CHECK_ERR) != 0) {
+      result |= CortexM.DEMCR_VC_CHKERR;
+    }
+    if ((mask & Target.CATCH_COPROCESSOR_ERR) != 0) {
+      result |= CortexM.DEMCR_VC_NOCPERR;
+    }
+    if ((mask & Target.CATCH_CORE_RESET) != 0) {
+      result |= CortexM.DEMCR_VC_CORERESET;
+    }
+    return result;
+  }
+
+  private long mapFromVectorCatchMask(long mask) {
+    long result = 0;
+
+    if ((mask & CortexM.DEMCR_VC_HARDERR) != 0) {
+      result |= Target.CATCH_HARD_FAULT;
+    }
+    if ((mask & CortexM.DEMCR_VC_BUSERR) != 0) {
+      result |= Target.CATCH_BUS_FAULT;
+    }
+    if ((mask & CortexM.DEMCR_VC_MMERR) != 0) {
+      result |= Target.CATCH_MEM_FAULT;
+    }
+    if ((mask & CortexM.DEMCR_VC_INTERR) != 0) {
+      result |= Target.CATCH_INTERRUPT_ERR;
+    }
+    if ((mask & CortexM.DEMCR_VC_STATERR) != 0) {
+      result |= Target.CATCH_STATE_ERR;
+    }
+    if ((mask & CortexM.DEMCR_VC_CHKERR) != 0) {
+      result |= Target.CATCH_CHECK_ERR;
+    }
+    if ((mask & CortexM.DEMCR_VC_NOCPERR) != 0) {
+      result |= Target.CATCH_COPROCESSOR_ERR;
+    }
+    if ((mask & CortexM.DEMCR_VC_CORERESET) != 0) {
+      result |= Target.CATCH_CORE_RESET;
+    }
+    return result;
+  }
+
+  @Override
+  public void setVectorCatch(long enableMask) throws TimeoutException, Error {
+    long demcr = this.readMemory(CortexM.DEMCR, null);
+    demcr |= this.mapToVectorCatchMask(enableMask);
+    demcr &= ~this.mapToVectorCatchMask(~enableMask);
+    this.writeMemory(CortexM.DEMCR, demcr);
+  }
+
+  @Override
+  public long getVectorCatch() throws TimeoutException, Error {
+    long demcr = this.readMemory(CortexM.DEMCR, null);
+    return this.mapFromVectorCatchMask(demcr);
+  }
+
+  /*
+   * Read CPU register
+   * Unpack floating point register values.
+   */
   @Override
   public long readCoreRegister(CoreRegister reg) {
+
+    long regValue = this.readCoreRegisterRaw(reg);
+    // Convert int to float.
+    if (regValue >= 0x40) {
+      regValue = Conversion.u32BEToFloat32BE(regValue);
+    }
+
+    return regValue;
+  }
+
+  /*
+   * Read a core register (r0 .. r16).
+   */
+  @Override
+  public long readCoreRegisterRaw(CoreRegister reg) {
     throw new InternalError("Not implemented");
   }
 
   @Override
-  public long[] readCoreRegisterRaw(CoreRegister reg) {
+  public long[] readCoreRegisterRaw(List<CoreRegister> regList) {
     throw new InternalError("Not implemented");
   }
 

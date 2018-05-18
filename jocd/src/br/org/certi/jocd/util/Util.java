@@ -15,6 +15,7 @@
  */
 package br.org.certi.jocd.util;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -278,6 +279,17 @@ public class Util {
     System.arraycopy(src, startPos, newArray, 0, newSize);
 
     // Return the shrunk array.
+    return newArray;
+  }
+
+  /*
+   * Convert a List of Long into a array of long.
+   */
+  public static long[] getArrayFromList(List<Long> src) {
+    long[] newArray = new long[src.size()];
+    for (int i = 0; i < newArray.length; i++) {
+      newArray[i] = src.get(i);
+    }
     return newArray;
   }
 

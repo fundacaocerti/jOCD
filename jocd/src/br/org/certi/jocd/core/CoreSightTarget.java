@@ -59,6 +59,7 @@ public class CoreSightTarget extends Target {
     super.setup(link, memoryMap);
   }
 
+  @Override
   public Target getSelectedCore() {
     if (selectedCore >= this.coreList.size()) {
       LOGGER.log(Level.SEVERE, "getSelectedCore: unexpected core index: " + selectedCore);
@@ -161,5 +162,15 @@ public class CoreSightTarget extends Target {
   public void resetStopOnReset(Boolean softwareReset)
       throws InterruptedException, TimeoutException, Error {
     this.getSelectedCore().resetStopOnReset(softwareReset);
+  }
+
+  @Override
+  public void setVectorCatch(long enableMask) throws TimeoutException, Error {
+    this.getSelectedCore().setVectorCatch(enableMask);
+  }
+
+  @Override
+  public long getVectorCatch() throws TimeoutException, Error {
+    return this.getSelectedCore().getVectorCatch();
   }
 }

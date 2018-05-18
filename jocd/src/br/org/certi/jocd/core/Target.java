@@ -166,7 +166,8 @@ public class Target {
     throw new InternalError("Not implemented");
   }
 
-  public ArrayList<Object> readMemoryLater(long address, Integer transferSize) throws TimeoutException, Error {
+  public ArrayList<Object> readMemoryLater(long address, Integer transferSize)
+      throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
@@ -257,7 +258,11 @@ public class Target {
     throw new InternalError("Not implemented");
   }
 
-  public long[] readCoreRegisterRaw(CoreRegister reg) {
+  public long readCoreRegisterRaw(CoreRegister reg) {
+    throw new InternalError("Not implemented");
+  }
+
+  public long[] readCoreRegisterRaw(List<CoreRegister> regList) {
     throw new InternalError("Not implemented");
   }
 
@@ -278,11 +283,23 @@ public class Target {
     return memoryMap;
   }
 
+  public void setVectorCatch(long enableMask) throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
+  public long getVectorCatch() throws TimeoutException, Error {
+    throw new InternalError("Not implemented");
+  }
+
   public String getTargetXml() {
     throw new InternalError("Not implemented");
   }
 
   public Flash getFlash() {
+    throw new InternalError("Not implemented");
+  }
+
+  public Target getSelectedCore() {
     throw new InternalError("Not implemented");
   }
 }
