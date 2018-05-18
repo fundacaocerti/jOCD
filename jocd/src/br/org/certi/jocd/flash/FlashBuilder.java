@@ -37,9 +37,9 @@ public class FlashBuilder {
 
   final Flash flash;
   final long flashStart;
-  ProgrammingInfo perf;
+  ProgrammingInfo perf = new ProgrammingInfo();
 
-  boolean enableDoubleBuffering;
+  boolean enableDoubleBuffering = true;
   int maxErrors = 10;
   int chipEraseCount;
   double chipEraseWeight;
@@ -61,14 +61,9 @@ public class FlashBuilder {
 
   List<FlashPage> pageList = new ArrayList<FlashPage>();
 
-  // TODO
   public FlashBuilder(Flash flash, long baseAddress) {
     this.flash = flash;
     this.flashStart = baseAddress;
-
-    this.perf = new ProgrammingInfo();
-    this.enableDoubleBuffering = true;
-    // TODO
   }
 
   private boolean same(byte[] d1, byte[] d2, int size) {
@@ -377,7 +372,7 @@ public class FlashBuilder {
    * data is different, but the odds of this happing are low: ~1/(2^32) = ~2.33*10^-8%.
    */
   private void computePageErasePagesAndWeightCrc32(Boolean assumeEstimateCorrect)
-      throws TimeoutException, Error {
+      throws InterruptedException, TimeoutException, Error {
     // Set the default value, if null.
     if (assumeEstimateCorrect == null) {
       assumeEstimateCorrect = false;
@@ -439,7 +434,7 @@ public class FlashBuilder {
    * Program by first performing a chip erase.
    */
   private int chipEraseProgram(ProgressUpdateInterface progressUpdate)
-      throws TimeoutException, Error {
+      throws InterruptedException, TimeoutException, Error {
     LOGGER.log(Level.FINE, "Smart chip erase");
     LOGGER.log(Level.FINE,
         (this.pageList.size() - this.chipEraseCount) + " of " + this.pageList.size()
@@ -480,7 +475,7 @@ public class FlashBuilder {
    * Program by first performing a chip erase.
    */
   private int chipEraseProgramDoubleBuffer(ProgressUpdateInterface progressUpdate)
-      throws TimeoutException, Error {
+      throws InterruptedException, TimeoutException, Error {
     LOGGER.log(Level.FINE, "Smart chip erase");
     LOGGER.log(Level.FINE,
         (this.pageList.size() - this.chipEraseCount) + " of " + this.pageList.size()
@@ -521,7 +516,7 @@ public class FlashBuilder {
       }
 
       // Wait for the program to complete.
-      int result = this.flash.waitForCompletion();
+      long result = this.flash.waitForCompletion();
 
       // Check the return code.
       if (result != 0) {
@@ -552,7 +547,7 @@ public class FlashBuilder {
    * Program by performing sector erases.
    */
   private int pageEraseProgram(ProgressUpdateInterface progressUpdate)
-      throws TimeoutException, Error {
+      throws InterruptedException, TimeoutException, Error {
     int actualPageEraseCount = 0;
     double actualPageEraseWeight = 0;
     double progress = 0;
@@ -638,7 +633,7 @@ public class FlashBuilder {
    * Program by performing sector erases.
    */
   public int pageEraseProgramDoubleBuffer(ProgressUpdateInterface progressUpdate)
-      throws TimeoutException, Error {
+      throws InterruptedException, TimeoutException, Error {
     int actualPageEraseCount = 0;
     double actualPageEraseWeight = 0;
     double progress = 0;
@@ -683,7 +678,7 @@ public class FlashBuilder {
         }
 
         // Wait for the program to complete.
-        int result = this.flash.waitForCompletion();
+        long result = this.flash.waitForCompletion();
 
         // Check the return code.
         if (result != 0) {

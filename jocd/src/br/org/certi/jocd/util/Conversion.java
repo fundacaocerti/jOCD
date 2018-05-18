@@ -53,4 +53,11 @@ public class Conversion {
   public static long float32beToU32be(long word) {
     throw new InternalError("Not implemented");
   }
+
+  /*
+   * Convert a 32-bit int to an IEEE754 float.
+   */
+  public static long u32BEToFloat32BE(long word) {
+    throw new InternalError("Not implemented");
+  }
 }

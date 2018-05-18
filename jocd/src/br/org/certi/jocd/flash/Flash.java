@@ -17,10 +17,15 @@ package br.org.certi.jocd.flash;
 
 import br.org.certi.jocd.core.MemoryRegion;
 import br.org.certi.jocd.core.Target;
+import br.org.certi.jocd.core.Target.CoreRegister;
 import br.org.certi.jocd.core.Target.State;
+import br.org.certi.jocd.coresight.CortexM;
+import br.org.certi.jocd.coresight.CortexM.CortexMRegister;
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
+import br.org.certi.jocd.util.Util;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -35,6 +40,21 @@ public class Flash {
   private final static String CLASS_NAME = Flash.class.getName();
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
+  // Program to compute the CRC of sectors.  This works on cortex-m processors.
+  // Code is relocatable and only needs to be on a 4 byte boundary.
+  // 200 bytes of executable data below + 1024 byte crc table = 1224 bytes
+  // Usage requirements:
+  // -In memory reserve 0x600 for code & table
+  // -Make sure data buffer is big enough to hold 4 bytes for each page that could be checked (ie.  >= num pages * 4)
+  long[] analyzer = new long[]{0x2180468CL, 0x2600B5F0L, 0x4F2C2501L, 0x447F4C2CL, 0x1C2B0049L,
+      0x425B4033L, 0x40230872L, 0x085A4053L, 0x425B402BL, 0x40534023L, 0x402B085AL, 0x4023425BL,
+      0x085A4053L, 0x425B402BL, 0x40534023L, 0x402B085AL, 0x4023425BL, 0x085A4053L, 0x425B402BL,
+      0x40534023L, 0x402B085AL, 0x4023425BL, 0x085A4053L, 0x425B402BL, 0x40534023L, 0xC7083601L,
+      0xD1D2428EL, 0x2B004663L, 0x4663D01FL, 0x46B4009EL, 0x24FF2701L, 0x44844D11L, 0x1C3A447DL,
+      0x88418803L, 0x4351409AL, 0xD0122A00L, 0x22011856L, 0x780B4252L, 0x40533101L, 0x009B4023L,
+      0x0A12595BL, 0x42B1405AL, 0x43D2D1F5L, 0x4560C004L, 0x2000D1E7L, 0x2200BDF0L, 0x46C0E7F8L,
+      0x000000B6L, 0xEDB88320L, 0x00000044L};
+
   FlashAlgo flashAlgo;
   Target target;
 
@@ -45,6 +65,7 @@ public class Flash {
   Long staticBase;
   int minProgramLength;
   List<Long> pageBuffers;
+  long savedVectorCatch;
 
   Boolean doubleBufferSupported;
 
@@ -60,7 +81,6 @@ public class Flash {
   public void setup(Target target, FlashAlgo flashAlgo) {
     this.target = target;
     this.flashAlgo = flashAlgo;
-    this.flashAlgoDebug = false;
 
     if (flashAlgo != null) {
       this.beginStack = flashAlgo.beginStack;
@@ -93,7 +113,8 @@ public class Flash {
     this.target.setTargetState(State.PROGRAM);
   }
 
-  public long[] computeCrcs(List<Sectors> sectors) throws TimeoutException, Error {
+  public long[] computeCrcs(List<Sectors> sectors)
+      throws InterruptedException, TimeoutException, Error {
     long[] words = new long[sectors.size()];
     int i = 0;
 
@@ -127,9 +148,9 @@ public class Flash {
   /*
    * Erase all the flash.
    */
-  public void eraseAll() {
+  public void eraseAll() throws InterruptedException, TimeoutException, Error {
     // Update core register to execute the eraseAll subroutine.
-    int result = this.callFunctionAndWait(this.flashAlgo.pcEraseAll, null, null, null, null, null);
+    long result = this.callFunctionAndWait(this.flashAlgo.pcEraseAll, null, null, null, null, null);
 
     // Check the return code.
     if (result != 0) {
@@ -140,9 +161,9 @@ public class Flash {
   /*
    * Erase one page.
    */
-  public void erasePage(long flashPtr) {
+  public void erasePage(long flashPtr) throws InterruptedException, TimeoutException, Error {
     // Update core register to execute the erasePage subroutine.
-    int result = this
+    long result = this
         .callFunctionAndWait(this.flashAlgo.pcEraseSector, flashPtr, null, null, null, null);
 
     // Check the return code
@@ -159,7 +180,7 @@ public class Flash {
   /*
    * Flash one page.
    */
-  public void programPage(long flashPtr, byte[] data) throws TimeoutException, Error {
+  public void programPage(long flashPtr, byte[] data) throws InterruptedException, TimeoutException, Error {
     // Prevent security settings from locking the device.
     data = overrideSecurityBits(flashPtr, data);
 
@@ -170,7 +191,7 @@ public class Flash {
     PageInfo pageInfo = this.getPageInfo(flashPtr);
 
     // Update core register to execute the program_page subroutine.
-    int result = this
+    long result = this
         .callFunctionAndWait(this.flashAlgo.pcProgramPage, flashPtr, (long) data.length,
             this.beginData, null, null);
 
@@ -183,7 +204,8 @@ public class Flash {
   /*
    * Flash one page.
    */
-  public void startProgramPageWithBuffer(int bufferNumber, long flashPtr) {
+  public void startProgramPageWithBuffer(int bufferNumber, long flashPtr)
+      throws TimeoutException, Error {
     if (bufferNumber >= this.pageBuffers.size()) {
       LOGGER.log(Level.SEVERE, "Invalid buffer number.");
       return;
@@ -260,26 +282,143 @@ public class Flash {
     return programmingInfo;
   }
 
-  public void callFunction(long pc, Long r0, Long r1, Long r2, Long r3, Boolean init) {
-    // TODO
+  public void callFunction(long pc, Long r0, Long r1, Long r2, Long r3, Boolean init)
+      throws TimeoutException, Error {
+
+    List<CoreRegister> regList = new ArrayList<CoreRegister>();
+    List<Long> dataList = new ArrayList<Long>();
+
+    if (this.flashAlgoDebug) {
+      // Save vector catch state for use in waitForCompletion().
+      this.savedVectorCatch = this.target.getVectorCatch();
+      this.target.setVectorCatch(Target.CATCH_ALL);
+    }
+
+    if (init) {
+      // Download flash algo in RAM.
+      this.target
+          .writeBlockMemoryAligned32(this.flashAlgo.loadAddress, this.flashAlgo.instructions);
+      if (this.flashAlgo.analyzerSupported) {
+        this.target.writeBlockMemoryAligned32(this.flashAlgo.analyzerAddress, analyzer);
+      }
+    }
+
+    // We want to write registers from Cortex-M.
+    // If our selected core isn't a Cortex-M, than something is wrong or it's not implemented yet.
+    if (!(this.target.getSelectedCore() instanceof CortexM)) {
+      throw new InternalError(
+          "callFunction: Unexpected core. " + this.target.getSelectedCore().toString());
+    }
+    regList.add(CortexMRegister.PC);
+    dataList.add(pc);
+
+    if (r0 != null) {
+      regList.add(CortexMRegister.R0);
+      dataList.add(r0);
+    }
+
+    if (r1 != null) {
+      regList.add(CortexMRegister.R1);
+      dataList.add(r1);
+    }
+
+    if (r2 != null) {
+      regList.add(CortexMRegister.R2);
+      dataList.add(r2);
+    }
+
+    if (r3 != null) {
+      regList.add(CortexMRegister.R3);
+      dataList.add(r3);
+    }
+
+    if (init) {
+      regList.add(CortexMRegister.R9);
+      dataList.add(this.staticBase);
+      regList.add(CortexMRegister.SP);
+      dataList.add(this.beginStack);
+    }
+
+    regList.add(CortexMRegister.LR);
+    dataList.add(this.flashAlgo.loadAddress + 1);
+    this.target.writeCoreRegisterRaw(regList, Util.getArrayFromList(dataList));
+
+    // Resume target.
+    this.target.resume();
   }
 
-  public int waitForCompletion() {
-    // TODO
-    return 0;
+  /*
+   * Wait until the breakpoint is hit.
+   */
+  public long waitForCompletion() throws InterruptedException, TimeoutException, Error {
+    while (this.target.getState() == Target.State.TARGET_RUNNING) {
+      Thread.sleep(10);
+    }
+
+    if (this.flashAlgoDebug) {
+
+      // Frame pointer.
+      long expectedFp = this.flashAlgo.staticBase;
+      // Stack pointer.
+      long expectedSp = this.flashAlgo.beginStack;
+      // PC
+      long expectedPc = this.flashAlgo.loadAddress;
+      long[] expectedFlashAlgo = this.flashAlgo.instructions;
+      long[] expectedAnalyzer = null;
+
+      if (this.flashAlgo.analyzerSupported) {
+        expectedAnalyzer = this.analyzer;
+      }
+
+      // We want to write registers from Cortex-M.
+      // If our selected core isn't a Cortex-M, than something is wrong or it's not implemented yet.
+      if (!(this.target.getSelectedCore() instanceof CortexM)) {
+        throw new InternalError(
+            "waitForCompletion: Unexpected core. " + this.target.getSelectedCore().toString());
+      }
+      long finalFp = this.target.readCoreRegister(CortexMRegister.R9);
+      long finalSp = this.target.readCoreRegister(CortexMRegister.S9);
+      long finalPc = this.target.readCoreRegister(CortexMRegister.PC);
+
+      boolean error = false;
+      if (finalFp != expectedFp) {
+        // Frame pointer should not change.
+        LOGGER.log(Level.SEVERE,
+            String.format("Frame pointer should be 0x%08X but is 0x%08X", expectedFp, finalFp));
+        error = true;
+      }
+      if (finalSp != expectedSp) {
+        // Stack pointer should return to original value after function call
+        LOGGER.log(Level.SEVERE,
+            String.format("Stack pointer should be 0x%08X but is 0x%08X", expectedSp, finalSp));
+        error = true;
+      }
+      if (finalPc != expectedPc) {
+        // Stack pointer should return to original value after function call
+        LOGGER.log(Level.SEVERE,
+            String.format("PC should be 0x%08X but is 0x%08X", expectedPc, finalPc));
+        error = true;
+      }
+
+      if (error) {
+        throw new Error("Error while reading readCoreRegister. Unexpected values.");
+      }
+
+      this.target.setVectorCatch(this.savedVectorCatch);
+    }
+
+    return this.target.readCoreRegister(CortexMRegister.R0);
   }
 
-  public int callFunctionAndWait(long pc, Long r0, Long r1, Long r2, Long r3, Boolean init) {
+  public long callFunctionAndWait(long pc, Long r0, Long r1, Long r2, Long r3, Boolean init)
+      throws InterruptedException, TimeoutException, Error {
     // Use default value if null.
     if (init == null) {
       init = false;
     }
 
-    // TODO
-    // def callFunction(pc, r0, r1, r2, r3, init):
-
-    // Return no errors.
-    return 0;
+    this.callFunction(pc, r0, r1, r2, r3, init);
+    return this.waitForCompletion();
   }
 
   private byte[] overrideSecurityBits(long flashPtr, byte[] data) {
