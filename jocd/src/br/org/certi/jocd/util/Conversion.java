@@ -46,4 +46,11 @@ public class Conversion {
     }
     return res;
   }
+
+  /*
+   * Convert an IEEE754 float to a 32-bit int.
+   */
+  public static long float32beToU32be(long word) {
+    throw new InternalError("Not implemented");
+  }
 }

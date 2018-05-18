@@ -32,6 +32,4 @@ public class FlashAlgo {
   public int minProgramLength;
   public boolean analyzerSupported;
   public long analyzerAddress;
-
-  // TODO
 }

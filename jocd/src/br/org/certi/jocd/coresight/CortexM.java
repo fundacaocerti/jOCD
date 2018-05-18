@@ -18,9 +18,13 @@ package br.org.certi.jocd.coresight;
 import br.org.certi.jocd.core.MemoryMap;
 import br.org.certi.jocd.core.Target;
 import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
+import br.org.certi.jocd.dapaccess.Transfer;
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.debug.BreakpointManager;
 import br.org.certi.jocd.debug.breakpoints.SoftwareBreakpointProvider;
+import br.org.certi.jocd.util.Conversion;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,6 +41,86 @@ public class CortexM extends Target {
   // Logging
   private final static String CLASS_NAME = CortexM.class.getName();
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
+
+  // Map from register name to DCRSR register index.
+  // The CONTROL, FAULTMASK, BASEPRI, and PRIMASK registers are special in that they share the
+  // same DCRSR register index and are returned as a single value. In this dict, these registers
+  // have negative values to signal to the register read/write functions that special handling
+  // is necessary. The values are the byte number containing the register value, plus 1 and then
+  // negated. So -1 means a mask of 0xff, -2 is 0xff00, and so on. The actual DCRSR register index
+  // for these combined registers has the key of 'cfbp'.
+  public enum CortexMRegisters implements Target.CoreRegisters {
+    R0(0),
+    R1(1),
+    R2(2),
+    R3(3),
+    R4(4),
+    R5(5),
+    R6(6),
+    R7(7),
+    R8(8),
+    R9(9),
+    R10(10),
+    R11(11),
+    R12(12),
+    SP(13),
+    R13(13),
+    LR(14),
+    R14(14),
+    PC(15),
+    R15(15),
+    XPSR(16),
+    MSP(17),
+    PSP(18),
+    CFBP(20),
+    CONTROL(4),
+    FAULTMASK(3),
+    BASEPRI(2),
+    PRIMASK(1),
+    FPSCR(33),
+    S0(0x40),
+    S1(0x41),
+    S2(0x42),
+    S3(0x43),
+    S4(0x44),
+    S5(0x45),
+    S6(0x46),
+    S7(0x47),
+    S8(0x48),
+    S9(0x49),
+    S10(0x4a),
+    S11(0x4b),
+    S12(0x4c),
+    S13(0x4d),
+    S14(0x4e),
+    S15(0x4f),
+    S16(0x50),
+    S17(0x51),
+    S18(0x52),
+    S19(0x53),
+    S20(0x54),
+    S21(0x55),
+    S22(0x56),
+    S23(0x57),
+    S24(0x58),
+    S25(0x59),
+    S26(0x5a),
+    S27(0x5b),
+    S28(0x5c),
+    S29(0x5d),
+    S30(0x5e),
+    S31(0x5f);
+
+    public final int value;
+
+    CortexMRegisters(int id) {
+      this.value = id;
+    }
+
+    public int getValue() {
+      return value;
+    }
+  }
 
   // CPUID PARTNO values
   public enum CpuId {
@@ -188,17 +272,20 @@ public class CortexM extends Target {
    */
   @Override
   public void init() throws TimeoutException, Error {
-    // TODO
-
     if (this.haltOnConnect) {
       this.halt();
     }
     this.readCoreType();
     this.checkForFpu();
-    //this.buildTargetXML();
+    this.buildTargetXml();
     this.fpb.init();
     this.dwt.init();
     this.swBp.init();
+  }
+
+  public void buildTargetXml() {
+    // Not implemented.
+    // Will throw exception if someone try to get TargetXML (by accessing target.getTargetXml()).
   }
 
   /*
@@ -277,13 +364,27 @@ public class CortexM extends Target {
    * Read a memory location. By default, a word will be read.
    */
   @Override
-  public void readMemoryLater(long address, Integer transferSize) throws TimeoutException, Error {
+  public ArrayList<Object> readMemoryLater(long address, Integer transferSize) throws TimeoutException, Error {
     // Load default value if null.
     if (transferSize == null) {
       transferSize = 32;
     }
 
-    this.ap.readMemoryLater(address, transferSize);
+    return this.ap.readMemoryLater(address, transferSize);
+  }
+
+  /*
+   * Read a memory location. By default, a word will be read.
+   */
+  @Override
+  public long readMemoryAsync(Transfer transfer, int numDp, long addr, Integer transferSize,
+      int num) throws TimeoutException, Error {
+    // Load default value if null.
+    if (transferSize == null) {
+      transferSize = 32;
+    }
+
+    return this.ap.readMemoryAsync(transfer, numDp, addr, transferSize, num);
   }
 
   /*
@@ -404,7 +505,16 @@ public class CortexM extends Target {
   }
 
   @Override
-  public int getState() throws TimeoutException, Error {
+  public void setTargetState(State state) throws InterruptedException, TimeoutException, Error {
+    if (state == State.PROGRAM) {
+      this.resetStopOnReset(true);
+      // Write the thumb bit in case the reset handler points to an ARM address.
+      this.writeCoreRegister(CortexMRegisters.XPSR, 0x1000000);
+    }
+  }
+
+  @Override
+  public State getState() throws TimeoutException, Error {
     int dhcsr = (int) readMemoryNow(CortexM.DHCSR, null);
 
     if ((dhcsr & CortexM.S_RESET_ST) != 0) {
@@ -413,27 +523,126 @@ public class CortexM extends Target {
       // make sure no instructions were executed by checking S_RETIRE_ST.
       int newDhcsr = (int) readMemoryNow(CortexM.DHCSR, null);
       if ((newDhcsr & CortexM.S_RESET_ST) != 0 && (newDhcsr & CortexM.S_RETIRE_ST) == 0) {
-        return Target.TARGET_RESET;
+        return Target.State.TARGET_RESET;
       }
     }
     if ((dhcsr & CortexM.S_LOCKUP) != 0) {
-      return Target.TARGET_LOCKUP;
+      return Target.State.TARGET_LOCKUP;
     } else if ((dhcsr & CortexM.S_SLEEP) != 0) {
-      return Target.TARGET_SLEEPING;
+      return Target.State.TARGET_SLEEPING;
     } else if ((dhcsr & CortexM.S_HALT) != 0) {
-      return Target.TARGET_HALTED;
+      return Target.State.TARGET_HALTED;
     } else {
-      return Target.TARGET_RUNNING;
+      return Target.State.TARGET_RUNNING;
     }
   }
 
   @Override
   public boolean isRunning() throws TimeoutException, Error {
-    return (getState() == Target.TARGET_RUNNING);
+    return (getState() == Target.State.TARGET_RUNNING);
   }
 
   @Override
   public boolean isHalted() throws TimeoutException, Error {
-    return (getState() == Target.TARGET_HALTED);
+    return (getState() == Target.State.TARGET_HALTED);
+  }
+
+  @Override
+  public long readCoreRegister(CoreRegisters reg) {
+    throw new InternalError("Not implemented");
+  }
+
+  @Override
+  public long[] readCoreRegisterRaw(CoreRegisters reg) {
+    throw new InternalError("Not implemented");
+  }
+
+  /*
+   * write a CPU register.
+   * Will need to pack floating point register values before writing.
+   */
+  @Override
+  public void writeCoreRegister(CoreRegisters reg, long word) throws TimeoutException, Error {
+    // Convert float to int.
+    if (reg.getValue() >= 0x40) {
+      word = Conversion.float32beToU32be(word);
+    }
+    this.writeCoreRegisterRaw(reg, word);
+  }
+
+  /*
+   *  Write a core register (r0 .. r16).
+   */
+  @Override
+  public void writeCoreRegisterRaw(CoreRegisters reg, long word) throws TimeoutException, Error {
+    List<CoreRegisters> regList = new ArrayList<CoreRegisters>();
+    regList.add(reg);
+    long[] words = new long[1];
+    words[0] = word;
+
+    this.writeCoreRegisterRaw(regList, words);
+  }
+
+  /*
+   *  Write one or more core registers
+   *
+   *  Write core registers in reg_list with the associated value in data_list.  If any register in
+   *  reg_list is a string, find the number associated to this register in the lookup table
+   *  CORE_REGISTER.
+   */
+  @Override
+  public void writeCoreRegisterRaw(List<CoreRegisters> regList, long[] words)
+      throws TimeoutException, Error {
+    if (regList.size() != words.length) {
+      throw new InternalError("writeCoreRegisterRaw: regList.size() != words.length");
+    }
+
+    // Sanity check register values.
+    for (CoreRegisters reg : regList) {
+      if ((reg.getValue() >= 0x40 || reg.getValue() == 33) && (this.hasFpu == false)) {
+        throw new InternalError("attempt to write FPU register without FPU");
+      }
+    }
+
+    // Each result will return a list of 3 objects.
+    // Then, we need a list to store each result: a list of lists.
+    List<List<Object>> results = new ArrayList<List<Object>>();
+    for (int i = 0; i < regList.size(); i++) {
+      CoreRegisters reg = regList.get(i);
+      long word = words[i];
+
+      // Read special register if it is present in the list.
+      if ((reg.getValue() < 0) && (reg.getValue() >= -4)) {
+        long specialRegValue = this.readCoreRegister(CortexMRegisters.CFBP);
+
+        // Mask in the new special register value so we don't modify the other register values that
+        // share the same DCRSR number.
+        int shift = (-(reg.getValue()) - 1) * 8;
+        long mask = 0xffffffff ^ (0xff << shift);
+        word = (specialRegValue & mask) | ((word & 0xff) << shift);
+        // Update special register for other writes that might be in the list.
+        specialRegValue = word;
+        reg = CortexMRegisters.CFBP;
+      }
+
+      // Write DCRDR.
+      this.writeMemory(CortexM.DCRDR, word);
+
+      // Write id in DCRSR and flag to start write transfer.
+      this.writeMemory(CortexM.DCRSR, reg.getValue() | CortexM.DCRSR_REGWnR);
+
+      // Technically, we need to poll S_REGRDY in DHCSR here to ensure the register write has
+      // completed.
+      // Read it and assert that S_REGRDY is set.
+      results.add(this.readMemoryLater(CortexM.DHCSR, null));
+    }
+
+    // Make sure S_REGRDY was set for all register writes.
+    for (List<Object> result : results) {
+      Transfer transfer = (Transfer) result.get(0);
+      int numDp = (int) result.get(1);
+      int num = (int) result.get(2);
+      long read = this.readMemoryAsync(transfer, numDp, CortexM.DHCSR, null, num);
+    }
   }
 }
