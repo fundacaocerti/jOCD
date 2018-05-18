@@ -25,7 +25,7 @@ import java.util.concurrent.TimeoutException;
 
 public class Target {
 
-  public interface CoreRegisters {
+  public interface CoreRegister {
 
     public int getValue();
   }
@@ -253,23 +253,23 @@ public class Target {
     return getState() == Target.State.TARGET_HALTED;
   }
 
-  public long readCoreRegister(CoreRegisters reg) {
+  public long readCoreRegister(CoreRegister reg) {
     throw new InternalError("Not implemented");
   }
 
-  public long[] readCoreRegisterRaw(CoreRegisters reg) {
+  public long[] readCoreRegisterRaw(CoreRegister reg) {
     throw new InternalError("Not implemented");
   }
 
-  public void writeCoreRegister(CoreRegisters reg, long word) throws TimeoutException, Error {
+  public void writeCoreRegister(CoreRegister reg, long word) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
-  public void writeCoreRegisterRaw(CoreRegisters reg, long word) throws TimeoutException, Error {
+  public void writeCoreRegisterRaw(CoreRegister reg, long word) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
-  public void writeCoreRegisterRaw(List<CoreRegisters> regList, long[] words)
+  public void writeCoreRegisterRaw(List<CoreRegister> regList, long[] words)
       throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
