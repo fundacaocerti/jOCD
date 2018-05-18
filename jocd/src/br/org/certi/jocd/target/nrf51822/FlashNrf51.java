@@ -30,23 +30,15 @@ public class FlashNrf51 extends Flash {
   public FlashNrf51(Target target) {
     this.flashAlgo = new FlashAlgo();
     this.flashAlgo.loadAddress = 0x20000000;
-    this.flashAlgo.instructions = Arrays
-        .asList(
-            (long) 0xE00ABE00, (long) 0x062D780D, (long) 0x24084068, (long) 0xD3000040,
-            (long) 0x1E644058, (long) 0x1C49D1FA, (long) 0x2A001E52, (long) 0x4770D1F2,
-            (long) 0x47702000, (long) 0x47702000, (long) 0x4c26b570, (long) 0x60602002,
-            (long) 0x60e02001, (long) 0x68284d24, (long) 0xd00207c0, (long) 0x60602000,
-            (long) 0xf000bd70, (long) 0xe7f6f82c, (long) 0x4c1eb570, (long) 0x60612102,
-            (long) 0x4288491e, (long) 0x2001d302, (long) 0xe0006160, (long) 0x4d1a60a0,
-            (long) 0xf81df000, (long) 0x07c06828, (long) 0x2000d0fa, (long) 0xbd706060,
-            (long) 0x4605b5f8, (long) 0x4813088e, (long) 0x46142101, (long) 0x4f126041,
-            (long) 0xc501cc01, (long) 0x07c06838, (long) 0x1e76d006, (long) 0x480dd1f8,
-            (long) 0x60412100, (long) 0xbdf84608, (long) 0xf801f000, (long) 0x480ce7f2,
-            (long) 0x06006840, (long) 0xd00b0e00, (long) 0x6849490a, (long) 0xd0072900,
-            (long) 0x4a0a4909, (long) 0xd00007c3, (long) 0x1d09600a, (long) 0xd1f90840,
-            (long) 0x00004770, (long) 0x4001e500, (long) 0x4001e400, (long) 0x10001000,
-            (long) 0x40010400, (long) 0x40010500, (long) 0x40010600, (long) 0x6e524635,
-            (long) 0x00000000);
+    this.flashAlgo.instructions = new long[]{0xE00ABE00L, 0x062D780DL, 0x24084068L, 0xD3000040L,
+        0x1E644058L, 0x1C49D1FAL, 0x2A001E52L, 0x4770D1F2L, 0x47702000L, 0x47702000L, 0x4C26B570L,
+        0x60602002L, 0x60E02001L, 0x68284D24L, 0xD00207C0L, 0x60602000L, 0xF000BD70L, 0xE7F6F82CL,
+        0x4C1EB570L, 0x60612102L, 0x4288491EL, 0x2001D302L, 0xE0006160L, 0x4D1A60A0L, 0xF81DF000L,
+        0x07C06828L, 0x2000D0FAL, 0xBD706060L, 0x4605B5F8L, 0x4813088EL, 0x46142101L, 0x4F126041L,
+        0xC501CC01L, 0x07C06838L, 0x1E76D006L, 0x480DD1F8L, 0x60412100L, 0xBDF84608L, 0xF801F000L,
+        0x480CE7F2L, 0x06006840L, 0xD00B0E00L, 0x6849490AL, 0xD0072900L, 0x4A0A4909L, 0xD00007C3L,
+        0x1D09600AL, 0xD1F90840L, 0x00004770L, 0x4001E500L, 0x4001E400L, 0x10001000L, 0x40010400L,
+        0x40010500L, 0x40010600L, 0x6E524635L, 0x00000000L};
     this.flashAlgo.pcInit = 0x20000021;
     this.flashAlgo.pcEraseAll = 0x20000029;
     this.flashAlgo.pcEraseSector = 0x20000049;

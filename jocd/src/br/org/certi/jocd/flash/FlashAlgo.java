@@ -20,7 +20,7 @@ import java.util.List;
 public class FlashAlgo {
 
   public long loadAddress;
-  public List<Long> instructions;
+  public long[] instructions;
   public long pcInit;
   public long pcEraseAll;
   public long pcEraseSector;
