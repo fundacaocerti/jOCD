@@ -49,7 +49,7 @@ public class CortexM extends Target {
   // is necessary. The values are the byte number containing the register value, plus 1 and then
   // negated. So -1 means a mask of 0xff, -2 is 0xff00, and so on. The actual DCRSR register index
   // for these combined registers has the key of 'cfbp'.
-  public enum CortexMRegisters implements Target.CoreRegisters {
+  public enum CortexMRegister implements CoreRegister {
     R0(0),
     R1(1),
     R2(2),
@@ -113,7 +113,7 @@ public class CortexM extends Target {
 
     public final int value;
 
-    CortexMRegisters(int id) {
+    CortexMRegister(int id) {
       this.value = id;
     }
 
@@ -509,7 +509,7 @@ public class CortexM extends Target {
     if (state == State.PROGRAM) {
       this.resetStopOnReset(true);
       // Write the thumb bit in case the reset handler points to an ARM address.
-      this.writeCoreRegister(CortexMRegisters.XPSR, 0x1000000);
+      this.writeCoreRegister(CortexMRegister.XPSR, 0x1000000);
     }
   }
 
@@ -548,12 +548,12 @@ public class CortexM extends Target {
   }
 
   @Override
-  public long readCoreRegister(CoreRegisters reg) {
+  public long readCoreRegister(CoreRegister reg) {
     throw new InternalError("Not implemented");
   }
 
   @Override
-  public long[] readCoreRegisterRaw(CoreRegisters reg) {
+  public long[] readCoreRegisterRaw(CoreRegister reg) {
     throw new InternalError("Not implemented");
   }
 
@@ -562,7 +562,7 @@ public class CortexM extends Target {
    * Will need to pack floating point register values before writing.
    */
   @Override
-  public void writeCoreRegister(CoreRegisters reg, long word) throws TimeoutException, Error {
+  public void writeCoreRegister(CoreRegister reg, long word) throws TimeoutException, Error {
     // Convert float to int.
     if (reg.getValue() >= 0x40) {
       word = Conversion.float32beToU32be(word);
@@ -574,8 +574,8 @@ public class CortexM extends Target {
    *  Write a core register (r0 .. r16).
    */
   @Override
-  public void writeCoreRegisterRaw(CoreRegisters reg, long word) throws TimeoutException, Error {
-    List<CoreRegisters> regList = new ArrayList<CoreRegisters>();
+  public void writeCoreRegisterRaw(CoreRegister reg, long word) throws TimeoutException, Error {
+    List<CoreRegister> regList = new ArrayList<CoreRegister>();
     regList.add(reg);
     long[] words = new long[1];
     words[0] = word;
@@ -591,14 +591,14 @@ public class CortexM extends Target {
    *  CORE_REGISTER.
    */
   @Override
-  public void writeCoreRegisterRaw(List<CoreRegisters> regList, long[] words)
+  public void writeCoreRegisterRaw(List<CoreRegister> regList, long[] words)
       throws TimeoutException, Error {
     if (regList.size() != words.length) {
       throw new InternalError("writeCoreRegisterRaw: regList.size() != words.length");
     }
 
     // Sanity check register values.
-    for (CoreRegisters reg : regList) {
+    for (CoreRegister reg : regList) {
       if ((reg.getValue() >= 0x40 || reg.getValue() == 33) && (this.hasFpu == false)) {
         throw new InternalError("attempt to write FPU register without FPU");
       }
@@ -608,12 +608,12 @@ public class CortexM extends Target {
     // Then, we need a list to store each result: a list of lists.
     List<List<Object>> results = new ArrayList<List<Object>>();
     for (int i = 0; i < regList.size(); i++) {
-      CoreRegisters reg = regList.get(i);
+      CoreRegister reg = regList.get(i);
       long word = words[i];
 
       // Read special register if it is present in the list.
       if ((reg.getValue() < 0) && (reg.getValue() >= -4)) {
-        long specialRegValue = this.readCoreRegister(CortexMRegisters.CFBP);
+        long specialRegValue = this.readCoreRegister(CortexMRegister.CFBP);
 
         // Mask in the new special register value so we don't modify the other register values that
         // share the same DCRSR number.
@@ -622,7 +622,7 @@ public class CortexM extends Target {
         word = (specialRegValue & mask) | ((word & 0xff) << shift);
         // Update special register for other writes that might be in the list.
         specialRegValue = word;
-        reg = CortexMRegisters.CFBP;
+        reg = CortexMRegister.CFBP;
       }
 
       // Write DCRDR.
