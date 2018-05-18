@@ -20,6 +20,7 @@ import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferFaultError;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferTimeoutError;
 import br.org.certi.jocd.util.Util;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,7 +46,7 @@ public class Command {
   private int writeCount = 0;
   private boolean blockAllowed = true;
   private Byte blockRequest;
-  private List<DataTuple> data;
+  private List<DataTuple> data = new ArrayList<DataTuple>();
   private Byte dapIndex;
   private boolean dataEncoded = false;
 
@@ -128,12 +129,12 @@ public class Command {
       int delta = maxCount - 255;
       size = Math.min(size - delta, size);
       LOGGER.log(Level.FINE, String.format(
-          "get_request_space(%d, %02x:%s)[wc=%d, rc=%d, ba=%d->%d] -> (sz=%d, free=%d, delta=%d)",
+          "get_request_space(%d, %02x:%s)[wc=%d, rc=%d, ba=%b->%b] -> (sz=%d, free=%d, delta=%d)",
           count, request, isRead ? 'r' : 'w', this.writeCount, this.readCount, this.blockAllowed,
           blockAllowed, size, free, delta));
     } else {
       LOGGER.log(Level.FINE, String
-          .format("get_request_space(%d, %02x:%s)[wc=%d, rc=%d, ba=%d->%d] -> (sz=%d, free=%d)",
+          .format("get_request_space(%d, %02x:%s)[wc=%d, rc=%d, ba=%b->%b] -> (sz=%d, free=%d)",
               count, request, isRead ? 'r' : 'w', this.writeCount, this.readCount,
               this.blockAllowed, blockAllowed, size, free));
     }
@@ -182,7 +183,7 @@ public class Command {
     this.data.add(new DataTuple(count, request, words));
 
     LOGGER.log(Level.FINE, String
-        .format("add(%d, %02x:%s) -> [wc=%d, rc=%d, ba=%d]", count, request,
+        .format("add(%d, %02x:%s) -> [wc=%d, rc=%d, ba=%b]", count, request,
             ((request & DapAccessCmsisDap.READ) != 0) ? 'r' : 'w', this.writeCount, this.readCount,
             this.blockAllowed));
   }

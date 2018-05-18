@@ -177,7 +177,7 @@ public class DapAccessCmsisDap {
     return uniqueId;
   }
 
-  public void reset() throws InterruptedException, DeviceError, TimeoutException, Error {
+  public void reset() throws InterruptedException, TimeoutException, Error {
     this.flush();
     this.protocol.setSWJPins((byte) 0, Pins.nRESET.getValue());
     Thread.sleep(100);
@@ -185,7 +185,7 @@ public class DapAccessCmsisDap {
     Thread.sleep(100);
   }
 
-  public void assertReset(boolean asserted) throws DeviceError, TimeoutException, Error {
+  public void assertReset(boolean asserted) throws TimeoutException, Error {
     this.flush();
     if (asserted) {
       this.protocol.setSWJPins((byte) 0, Pins.nRESET.getValue());
@@ -210,7 +210,7 @@ public class DapAccessCmsisDap {
   /*
    * Overload for connect(port), using default value: Port.Default.
    */
-  public void connect() throws DeviceError, TimeoutException, Error {
+  public void connect() throws TimeoutException, Error {
     connect(Port.DEFAULT);
   }
 
@@ -224,7 +224,7 @@ public class DapAccessCmsisDap {
     this.protocol.transferConfigure();
   }
 
-  public void disconnect() throws DeviceError, TimeoutException, Error {
+  public void disconnect() throws TimeoutException, Error {
     this.flush();
     this.protocol.disconnect();
   }
