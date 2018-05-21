@@ -210,10 +210,10 @@ public class Command {
       long[] writeList = dt.getData();
       assert writeList == null || writeList.length <= count;
       int writePos = 0;
-      for (int i = 0; i <= count; i++) {
+      for (int i = 0; i < count; i++) {
         buf[pos] = (byte) request;
         pos += 1;
-        if ((request & DapAccessCmsisDap.READ) != 0) {
+        if ((request & DapAccessCmsisDap.READ) == 0) {
           buf[pos] = (byte) ((writeList[writePos] >> (8 * 0)) & 0xff);
           pos += 1;
           buf[pos] = (byte) ((writeList[writePos] >> (8 * 1)) & 0xff);
@@ -288,8 +288,8 @@ public class Command {
       assert writeList == null || writeList.length <= count;
       assert request == this.blockRequest;
       int writePos = 0;
-      if ((request & DapAccessCmsisDap.READ) != 0) {
-        for (int i = 0; i <= count; i++) {
+      if ((request & DapAccessCmsisDap.READ) == 0) {
+        for (int i = 0; i < count; i++) {
           buf[pos] = (byte) ((writeList[writePos] >> (8 * 0)) & 0xff);
           pos += 1;
           buf[pos] = (byte) ((writeList[writePos] >> (8 * 1)) & 0xff);
