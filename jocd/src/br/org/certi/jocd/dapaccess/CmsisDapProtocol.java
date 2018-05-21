@@ -50,7 +50,7 @@ public class CmsisDapProtocol {
     DAP_TRANSFER_ABORT((byte) 0x07),
     DAP_WRITE_ABORT((byte) 0x08),
     DAP_DELAY((byte) 0x09),
-    DAP_RESET_TARGET((byte) 0x0a),
+    DAP_RESET_TARGET((byte) 0x0A),
     DAP_SWJ_PINS((byte) 0x10),
     DAP_SWJ_CLOCK((byte) 0x11),
     DAP_SWJ_SEQUENCE((byte) 0x12),
@@ -78,10 +78,10 @@ public class CmsisDapProtocol {
     CMSIS_DAP_FW_VERSION((byte) 0x04),
     TARGET_DEVICE_VENDOR((byte) 0x05),
     TARGET_DEVICE_NAME((byte) 0x06),
-    CAPABILITIES((byte) 0xf0),
-    SWO_BUFFER_SIZE((byte) 0xfd),
-    PACKET_COUNT((byte) 0xfe),
-    PACKET_SIZE((byte) 0xff);
+    CAPABILITIES((byte) 0xF0),
+    SWO_BUFFER_SIZE((byte) 0xFD),
+    PACKET_COUNT((byte) 0xFE),
+    PACKET_SIZE((byte) 0xFF);
 
     public final byte value;
 
