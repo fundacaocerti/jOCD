@@ -15,14 +15,19 @@
  */
 package br.org.certi.flashtooltest;
 
+import android.Manifest;
+import android.Manifest.permission;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -82,6 +87,8 @@ public class MainActivity extends AppCompatActivity implements
 
     // Update the list of devices.
     listDevices();
+
+    checkFileReadPermission();
   }
 
   public void onClickListDevices(View view) {
@@ -99,6 +106,13 @@ public class MainActivity extends AppCompatActivity implements
 
   public void onClickFlashDevice(View view) {
     Log.d("CLICK", "Button flash device clicked.");
+
+    // We will need to access the file system. Check if we have permission.
+    if (!checkFileReadPermission()) {
+      Log.d("CLICK", "We don't have enough permission to access the file.");
+      return;
+    }
+
     this.fsm = Fsm.CLICKED_FLASH_DEVICE;
     flashDevice();
   }
@@ -211,5 +225,37 @@ public class MainActivity extends AppCompatActivity implements
       // Create a new async task to list all connected devices.
       flashDevice();
     }
+  }
+
+
+  /*
+   * Check if we have the necessary permissions to access the file system.
+   */
+  private boolean checkFileReadPermission() {
+    // We need to ask for permission on Android 6.0 (Marshmallow) and later. Before that, only the
+    // manifest was required.
+    if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.LOLLIPOP) {
+      return true;
+    }
+
+    // Since we got here, means that this is has LOLLIPOP or newer Android API. We need to
+    // explicitly request permission.
+    // - First check if we already have.
+    int result = ContextCompat
+        .checkSelfPermission(getApplicationContext(), permission.READ_EXTERNAL_STORAGE);
+    if (result == PackageManager.PERMISSION_GRANTED) {
+      // Yes, we already have permission. There is nothing else to do.
+      return true;
+    }
+
+    // No, We do not have permission. Ask for...
+    // If the user give permission, next time we won't get here again.
+    requestPermission();
+    return false;
+  }
+
+  private void requestPermission() {
+    ActivityCompat
+        .requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
   }
 }

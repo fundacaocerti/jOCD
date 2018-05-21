@@ -15,6 +15,7 @@
  */
 package br.org.certi.jocd.tools;
 
+import android.os.Environment;
 import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
@@ -24,7 +25,9 @@ import br.org.certi.jocd.flash.PageInfo;
 import br.org.certi.jocd.target.TargetFactory.targetEnum;
 import cz.jaybee.intelhex.IntelHexException;
 import cz.jaybee.intelhex.Parser;
+import cz.jaybee.intelhex.listeners.BinWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -88,7 +91,7 @@ public class FlashTool {
       InsufficientPermissions, InterruptedException, Error {
 
     // TODO - change this a to path with the correct file.
-    String file = "microbit.hex";
+    String file = Environment.getExternalStorageDirectory() + "/Download/microbit.hex";
     return flashBoard(
         progressUpdate,
         file,
@@ -212,7 +215,7 @@ public class FlashTool {
     }
 
     // If it is a binary file.
-    if (format.equals("bin")) {
+    if (format.equals(".bin")) {
       // If no address is specified use the start of rom.
       if (address == null) {
         address = selectedBoard.flash.getFlashInfo().romStart;
@@ -220,7 +223,7 @@ public class FlashTool {
 
       // Open the file.
       try {
-        InputStream is = new FileInputStream(file);
+        InputStream is = new FileInputStream(new File(file));
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // TODO flashBlock (....???????...)
         //selectedBoard.flash.flashBlock(address);
@@ -229,10 +232,10 @@ public class FlashTool {
       }
     }
     // Intel Hex format.
-    else if (format.equals("hex")) {
+    else if (format.equals(".hex")) {
       try {
         // Create input stream of some IntelHex data.
-        InputStream is = new FileInputStream(file);
+        InputStream is = new FileInputStream(new File(file));
 
         // Create IntelHexParserObject.
         Parser intelhexParser = new Parser(is);
@@ -243,7 +246,7 @@ public class FlashTool {
         // Register parser listener.
         intelhexParser.setDataListener(listener);
 
-        // IntelHexToFlash hava a callback for each region data, and will
+        // IntelHexToFlash have a callback for each region data, and will
         // create Flash Builder after parsing...
         // TODO verify how it works on Python...
         intelhexParser.parse();
