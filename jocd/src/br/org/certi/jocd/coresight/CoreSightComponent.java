@@ -28,37 +28,37 @@ public class CoreSightComponent {
   private final static String CLASS_NAME = CoreSightComponent.class.getName();
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
-  public static final long PIDR4 = 0xFD0;
-  public static final long PIDR0 = 0xFE0;
-  public static final long CIDR0 = 0xFF0;
-  public static final long DEVTYPE = 0xFCC;
-  public static final long DEVID = 0xFC8;
+  public static final long PIDR4 = 0xFD0L;
+  public static final long PIDR0 = 0xFE0L;
+  public static final long CIDR0 = 0xFF0L;
+  public static final long DEVTYPE = 0xFCCL;
+  public static final long DEVID = 0xFC8L;
   public static final int IDR_COUNT = 12;
   public static final int PIDR4_OFFSET = 0;
   public static final int PIDR0_OFFSET = 4;
   public static final int CIDR0_OFFSET = 8;
 
-  public static final long CIDR_PREAMBLE_MASK = 0xFFFF0FFF;
-  public static final long CIDR_PREAMBLE_VALUE = 0xB105000D;
+  public static final long CIDR_PREAMBLE_MASK = 0xFFFF0FFFL;
+  public static final long CIDR_PREAMBLE_VALUE = 0xB105000DL;
 
-  public static final long CIDR_COMPONENT_CLASS_MASK = 0xF000;
-  public static final long CIDR_COMPONENT_CLASS_SHIFT = 12;
+  public static final long CIDR_COMPONENT_CLASS_MASK = 0xF000L;
+  public static final int CIDR_COMPONENT_CLASS_SHIFT = 12;
 
-  public static final long CIDR_ROM_TABLE_CLASS = 0x1;
-  public static final long CIDR_CORESIGHT_CLASS = 0x9;
+  public static final long CIDR_ROM_TABLE_CLASS = 0x1L;
+  public static final long CIDR_CORESIGHT_CLASS = 0x9L;
 
   public static final long PIDR_4KB_COUNT_MASK = 0xF000000000L;
-  public static final long PIDR_4KB_COUNT_SHIFT = 36;
+  public static final int PIDR_4KB_COUNT_SHIFT = 36;
 
-  public static final long ROM_TABLE_ENTRY_PRESENT_MASK = 0x1;
+  public static final long ROM_TABLE_ENTRY_PRESENT_MASK = 0x1L;
 
   // Mask for ROM table entry size. 1 if 32-bit, 0 if 8-bit.
-  public static final long ROM_TABLE_32BIT_MASK = 0x2;
+  public static final long ROM_TABLE_32BIT_MASK = 0x2L;
 
   // 2's complement offset to debug component from ROM table base address.
-  public static final long ROM_TABLE_ADDR_OFFSET_NEG_MASK = 0x80000000;
-  public static final long ROM_TABLE_ADDR_OFFSET_MASK = 0xFFFFF000;
-  public static final long ROM_TABLE_ADDR_OFFSET_SHIFT = 12;
+  public static final long ROM_TABLE_ADDR_OFFSET_NEG_MASK = 0x80000000L;
+  public static final long ROM_TABLE_ADDR_OFFSET_MASK = 0xFFFFF000L;
+  public static final int ROM_TABLE_ADDR_OFFSET_SHIFT = 12;
 
   // 9 entries is enough entries to cover the standard Cortex-M4 ROM table for devices with ETM.
   public static final int ROM_TABLE_ENTRY_READ_COUNT = 9;
