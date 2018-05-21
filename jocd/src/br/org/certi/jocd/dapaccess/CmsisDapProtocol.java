@@ -349,7 +349,7 @@ public class CmsisDapProtocol {
   }
 
   public byte setSWJClock() throws DeviceError, TimeoutException, Error {
-    return setSWJClock(DapAccessCmsisDap.FREQUENCY);
+    return setSWJClock(DapAccessCmsisDap.DEFAULT_FREQUENCY);
   }
 
   public byte setSWJClock(int clock) throws DeviceError, TimeoutException, Error {

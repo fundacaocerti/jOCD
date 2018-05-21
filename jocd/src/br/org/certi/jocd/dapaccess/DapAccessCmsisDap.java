@@ -27,7 +27,6 @@ import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import br.org.certi.jocd.util.Util;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -46,7 +45,7 @@ public class DapAccessCmsisDap {
   public static final byte READ = 1 << 1;
   public static final byte WRITE = 0 << 1;
 
-  public static final int FREQUENCY = 1000000; // 1MHz default clock
+  public static final int DEFAULT_FREQUENCY = 1000000; // 1MHz default clock
 
   private ConnectionInterface connectionInterface = null;
   private boolean deferredTransfer = false;
@@ -67,7 +66,7 @@ public class DapAccessCmsisDap {
   public DapAccessCmsisDap(String uniqueId) {
     super();
     this.uniqueId = uniqueId;
-    this.frequency = FREQUENCY;
+    this.frequency = DEFAULT_FREQUENCY;
   }
 
   public ArrayDeque getCommandsToRead() {
@@ -379,8 +378,8 @@ public class DapAccessCmsisDap {
   }
 
   public void setAttributes() {
-    // TODO
     // Not implemented. We don't support WS.
+    throw new InternalError("Not implemented");
   }
 
   public void setClock(int frequency) throws TimeoutException, Error {

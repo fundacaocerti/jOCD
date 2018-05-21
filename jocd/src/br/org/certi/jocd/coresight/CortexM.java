@@ -248,6 +248,8 @@ public class CortexM extends Target {
     this.dwt = new Dwt(this.ap);
     this.swBp = new SoftwareBreakpointProvider(this);
     this.bpManager = new BreakpointManager(this);
+    this.bpManager.addProvider(this.fpb, BreakpointTypes.HW);
+    this.bpManager.addProvider(this.swBp, BreakpointTypes.SW);
   }
 
   /*
