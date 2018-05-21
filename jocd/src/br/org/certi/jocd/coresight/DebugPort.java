@@ -70,9 +70,9 @@ public class DebugPort {
   }
 
   // DP Control / Status Register bit definitions
-  private static final long CTRLSTAT_STICKYORUN = 0x00000002;
-  private static final long CTRLSTAT_STICKYCMP = 0x00000010;
-  private static final long CTRLSTAT_STICKYERR = 0x00000020;
+  private static final long CTRLSTAT_STICKYORUN = 0x00000002L;
+  private static final long CTRLSTAT_STICKYCMP = 0x00000010L;
+  private static final long CTRLSTAT_STICKYERR = 0x00000020L;
 
   public static final byte IDCODE = 0 << 2;
   public static final byte AP_ACC = 1 << 0;
@@ -84,21 +84,21 @@ public class DebugPort {
 
   public static final byte A32 = (byte) 0x0C;
   public static final int APSEL_SHIFT = 24;
-  public static final long APSEL = 0xFF000000;
-  public static final long APBANKSEL = 0x000000F0;
-  public static final long APREG_MASK = 0x000000FC;
+  public static final long APSEL = 0xFF000000L;
+  public static final long APBANKSEL = 0x000000F0L;
+  public static final long APREG_MASK = 0x000000FCL;
 
-  private static final long DPIDR_MIN_MASK = 0x10000;
-  private static final long DPIDR_VERSION_MASK = 0xF000;
+  private static final long DPIDR_MIN_MASK = 0x10000L;
+  private static final long DPIDR_VERSION_MASK = 0xF000L;
   private static final int DPIDR_VERSION_SHIFT = 12;
 
-  private static final long CSYSPWRUPACK = 0x80000000;
-  private static final long CDBGPWRUPACK = 0x20000000;
-  private static final long CSYSPWRUPREQ = 0x40000000;
-  private static final long CDBGPWRUPREQ = 0x10000000;
+  private static final long CSYSPWRUPACK = 0x80000000L;
+  private static final long CDBGPWRUPACK = 0x20000000L;
+  private static final long CSYSPWRUPREQ = 0x40000000L;
+  private static final long CDBGPWRUPREQ = 0x10000000L;
 
-  private static final long TRNNORMAL = 0x00000000;
-  private static final long MASKLANE = 0x00000F00;
+  private static final long TRNNORMAL = 0x00000000L;
+  private static final long MASKLANE = 0x00000F00L;
 
   private DapAccessCmsisDap link;
   private HashMap<Long, Long> csw = new HashMap<>();

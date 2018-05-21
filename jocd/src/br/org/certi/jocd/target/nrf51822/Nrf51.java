@@ -36,7 +36,7 @@ public class Nrf51 extends CoreSightTarget {
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   // nRF51 specific registers
-  int reset;
+  long reset;
   int resetEnable;
 
   /*
@@ -68,7 +68,7 @@ public class Nrf51 extends CoreSightTarget {
 
     memoryMap = new MemoryMap(memoryRegions);
 
-    this.reset = 0x40000544;
+    this.reset = 0x40000544L;
     this.resetEnable = (1 << 0);
 
     super.setup(link, memoryMap);
