@@ -372,6 +372,8 @@ public class DebugPort {
   public void clearStickyErr() throws TimeoutException, Error {
     Port mode = this.link.getSwjMode();
     if (mode.getValue() == Port.SWD.getValue()) {
+      this.link.writeReg(Reg.DP_0x0.getValue(), (1 << 2));
+    } else if (mode.getValue() == Port.JTAG.getValue()) {
       this.link.writeReg(DP_REG.CTRL_STAT.getValue(), CTRLSTAT_STICKYERR);
     } else {
       assert false;
