@@ -202,7 +202,7 @@ public class DapAccessCmsisDap {
     // Send current packet
     this.sendPacket();
     // Read all backlogged
-    for (Iterator itr = this.commandsToRead.iterator(); itr.hasNext(); ) {
+    for (int i = 0; i < this.commandsToRead.size(); i++) {
       this.readPacket();
     }
   }
