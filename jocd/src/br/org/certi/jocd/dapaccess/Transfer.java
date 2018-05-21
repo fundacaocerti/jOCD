@@ -68,8 +68,9 @@ public class Transfer {
     long[] result = new long[resultSize];
     int count = 0;
     for (int i = 0; i < this.sizeBytes; i += 4) {
-      int word = (((data[0 + i] << 0) | (data[1 + i] << 8) | (data[2 + i] << 16) | (
-          data[3 + i] << 24)));
+      long word = 0;
+      word = (((0xff & data[0 + i]) << 0) | ((0xff & data[1 + i]) << 8) | ((0xff & data[2 + i])
+          << 16) | ((0xff & data[3 + i]) << 24));
       result[count] = word;
       count++;
     }
