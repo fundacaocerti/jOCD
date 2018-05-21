@@ -214,13 +214,13 @@ public class Command {
         buf[pos] = (byte) request;
         pos += 1;
         if ((request & DapAccessCmsisDap.READ) == 0) {
-          buf[pos] = (byte) ((writeList[writePos] >> (8 * 0)) & 0xff);
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 0)) & 0xFF);
           pos += 1;
-          buf[pos] = (byte) ((writeList[writePos] >> (8 * 1)) & 0xff);
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 1)) & 0xFF);
           pos += 1;
-          buf[pos] = (byte) ((writeList[writePos] >> (8 * 2)) & 0xff);
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 2)) & 0xFF);
           pos += 1;
-          buf[pos] = (byte) ((writeList[writePos] >> (8 * 3)) & 0xff);
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 3)) & 0xFF);
           pos += 1;
           writePos += 1;
         }
@@ -275,9 +275,9 @@ public class Command {
     pos += 1;
     buf[pos] = this.dapIndex;
     pos += 1;
-    buf[pos] = (byte) (transferCount & 0xff);
+    buf[pos] = (byte) (transferCount & 0xFF);
     pos += 1;
-    buf[pos] = (byte) ((transferCount >> 8) & 0xff);
+    buf[pos] = (byte) ((transferCount >> 8) & 0xFF);
     pos += 1;
     buf[pos] = this.blockRequest;
     pos += 1;
@@ -290,13 +290,13 @@ public class Command {
       int writePos = 0;
       if ((request & DapAccessCmsisDap.READ) == 0) {
         for (int i = 0; i < count; i++) {
-          buf[pos] = (byte) ((writeList[writePos] >> (8 * 0)) & 0xff);
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 0)) & 0xFF);
           pos += 1;
-          buf[pos] = (byte) ((writeList[writePos] >> (8 * 1)) & 0xff);
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 1)) & 0xFF);
           pos += 1;
-          buf[pos] = (byte) ((writeList[writePos] >> (8 * 2)) & 0xff);
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 2)) & 0xFF);
           pos += 1;
-          buf[pos] = (byte) ((writeList[writePos] >> (8 * 3)) & 0xff);
+          buf[pos] = (byte) ((writeList[writePos] >> (8 * 3)) & 0xFF);
           pos += 1;
           writePos += 1;
         }

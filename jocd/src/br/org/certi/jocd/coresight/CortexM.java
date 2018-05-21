@@ -47,7 +47,7 @@ public class CortexM extends Target {
   // same DCRSR register index and are returned as a single value. In this dict, these registers
   // have negative values to signal to the register read/write functions that special handling
   // is necessary. The values are the byte number containing the register value, plus 1 and then
-  // negated. So -1 means a mask of 0xff, -2 is 0xff00, and so on. The actual DCRSR register index
+  // negated. So -1 means a mask of 0xFF, -2 is 0xFF00, and so on. The actual DCRSR register index
   // for these combined registers has the key of 'cfbp'.
   public enum CortexMRegister implements CoreRegister {
     R0(0),
@@ -88,12 +88,12 @@ public class CortexM extends Target {
     S7(0x47),
     S8(0x48),
     S9(0x49),
-    S10(0x4a),
-    S11(0x4b),
-    S12(0x4c),
-    S13(0x4d),
-    S14(0x4e),
-    S15(0x4f),
+    S10(0x4A),
+    S11(0x4B),
+    S12(0x4C),
+    S13(0x4D),
+    S14(0x4E),
+    S15(0x4F),
     S16(0x50),
     S17(0x51),
     S18(0x52),
@@ -104,12 +104,12 @@ public class CortexM extends Target {
     S23(0x57),
     S24(0x58),
     S25(0x59),
-    S26(0x5a),
-    S27(0x5b),
-    S28(0x5c),
-    S29(0x5d),
-    S30(0x5e),
-    S31(0x5f);
+    S26(0x5A),
+    S27(0x5B),
+    S28(0x5C),
+    S29(0x5D),
+    S30(0x5E),
+    S31(0x5F);
 
     public final int value;
 
