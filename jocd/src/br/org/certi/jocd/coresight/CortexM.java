@@ -151,7 +151,7 @@ public class CortexM extends Target {
   }
 
   // Debug Fault Status Register
-  public static final long DFSR = 0xE000ED30;
+  public static final long DFSR = 0xE000ED30L;
   public static final int DFSR_EXTERNAL = (1 << 4);
   public static final int DFSR_VCATCH = (1 << 3);
   public static final int DFSR_DWTTRAP = (1 << 2);
@@ -159,7 +159,7 @@ public class CortexM extends Target {
   public static final int DFSR_HALTED = (1 << 0);
 
   // Debug Exception and Monitor Control Register
-  public static final long DEMCR = 0xE000EDFC;
+  public static final long DEMCR = 0xE000EDFCL;
   // DWTENA in armv6 architecture reference manual
   public static final int DEMCR_TRCENA = (1 << 24);
   public static final int DEMCR_VC_HARDERR = (1 << 10);
@@ -172,18 +172,18 @@ public class CortexM extends Target {
   public static final int DEMCR_VC_CORERESET = (1 << 0);
 
   // CPUID Register
-  public static final long CPUID = 0xE000ED00;
+  public static final long CPUID = 0xE000ED00L;
 
   // CPUID masks
-  public static final long CPUID_IMPLEMENTER_MASK = 0xff000000;
+  public static final long CPUID_IMPLEMENTER_MASK = 0xFF000000L;
   public static final int CPUID_IMPLEMENTER_POS = 24;
-  public static final long CPUID_VARIANT_MASK = 0x00f00000;
+  public static final long CPUID_VARIANT_MASK = 0x00F00000L;
   public static final int CPUID_VARIANT_POS = 20;
-  public static final long CPUID_ARCHITECTURE_MASK = 0x000f0000;
+  public static final long CPUID_ARCHITECTURE_MASK = 0x000F0000L;
   public static final int CPUID_ARCHITECTURE_POS = 16;
-  public static final long CPUID_PARTNO_MASK = 0x0000fff0;
+  public static final long CPUID_PARTNO_MASK = 0x0000FFF0L;
   public static final int CPUID_PARTNO_POS = 4;
-  public static final long CPUID_REVISION_MASK = 0x0000000f;
+  public static final long CPUID_REVISION_MASK = 0x0000000FL;
   public static final int CPUID_REVISION_POS = 0;
 
   public static final int CPUID_IMPLEMENTER_ARM = 0x41;
@@ -191,12 +191,12 @@ public class CortexM extends Target {
   public static final int ARMv7M = 0xF;
 
   // Debug Core Register Selector Register
-  public static final long DCRSR = 0xE000EDF4;
+  public static final long DCRSR = 0xE000EDF4L;
   public static final long DCRSR_REGWnR = (1 << 16);
-  public static final long DCRSR_REGSEL = 0x1F;
+  public static final long DCRSR_REGSEL = 0x1FL;
 
   // Debug Halting Control and Status Register
-  public static final long DHCSR = 0xE000EDF0;
+  public static final long DHCSR = 0xE000EDF0L;
   public static final int C_DEBUGEN = (1 << 0);
   public static final int C_HALT = (1 << 1);
   public static final int C_STEP = (1 << 2);
@@ -210,18 +210,18 @@ public class CortexM extends Target {
   public static final int S_RESET_ST = (1 << 25);
 
   // Debug Core Register Data Register
-  public static final long DCRDR = 0xE000EDF8;
+  public static final long DCRDR = 0xE000EDF8L;
 
   // Coprocessor Access Control Register
-  public static final long CPACR = 0xE000ED88;
+  public static final long CPACR = 0xE000ED88L;
   public static final int CPACR_CP10_CP11_MASK = (3 << 20) | (3 << 22);
 
-  public static final long NVIC_AIRCR = 0xE000ED0C;
-  public static final int NVIC_AIRCR_VECTKEY = (0x5FA << 16);
+  public static final long NVIC_AIRCR = 0xE000ED0CL;
+  public static final long NVIC_AIRCR_VECTKEY = (0x5FAL << 16);
   public static final int NVIC_AIRCR_VECTRESET = (1 << 0);
   public static final int NVIC_AIRCR_SYSRESETREQ = (1 << 2);
 
-  public static final int DBGKEY = (0xA05F << 16);
+  public static final long DBGKEY = (0xA05FL << 16);
 
   private int runToken = 0;
 
@@ -712,8 +712,8 @@ public class CortexM extends Target {
         // Mask in the new special register value so we don't modify the other register values that
         // share the same DCRSR number.
         int shift = (-(reg.getValue()) - 1) * 8;
-        long mask = 0xffffffff ^ (0xff << shift);
-        word = (specialRegValue & mask) | ((word & 0xff) << shift);
+        long mask = 0xFFFFFFFFL ^ (0xFFL << shift);
+        word = (specialRegValue & mask) | ((word & 0xFFL) << shift);
         // Update special register for other writes that might be in the list.
         specialRegValue = word;
         reg = CortexMRegister.CFBP;

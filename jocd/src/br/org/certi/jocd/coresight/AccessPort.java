@@ -48,21 +48,21 @@ public class AccessPort {
   }
 
   // AP Control and Status Word definitions
-  public static final long CSW_SIZE = 0x00000007;
-  public static final long CSW_SIZE8 = 0x00000000;
-  public static final long CSW_SIZE16 = 0x00000001;
-  public static final long CSW_SIZE32 = 0x00000002;
-  public static final long CSW_ADDRINC = 0x00000030;
-  public static final long CSW_NADDRINC = 0x00000000;
-  public static final long CSW_SADDRINC = 0x00000010;
-  public static final long CSW_PADDRINC = 0x00000020;
-  public static final long CSW_DBGSTAT = 0x00000040;
-  public static final long CSW_TINPROG = 0x00000080;
-  public static final long CSW_HPROT = 0x02000000;
-  public static final long CSW_MSTRTYPE = 0x20000000;
-  public static final long CSW_MSTRCORE = 0x00000000;
-  public static final long CSW_MSTRDBG = 0x20000000;
-  public static final long CSW_RESERVED = 0x01000000;
+  public static final long CSW_SIZE = 0x00000007L;
+  public static final long CSW_SIZE8 = 0x00000000L;
+  public static final long CSW_SIZE16 = 0x00000001L;
+  public static final long CSW_SIZE32 = 0x00000002L;
+  public static final long CSW_ADDRINC = 0x00000030L;
+  public static final long CSW_NADDRINC = 0x00000000L;
+  public static final long CSW_SADDRINC = 0x00000010L;
+  public static final long CSW_PADDRINC = 0x00000020L;
+  public static final long CSW_DBGSTAT = 0x00000040L;
+  public static final long CSW_TINPROG = 0x00000080L;
+  public static final long CSW_HPROT = 0x02000000L;
+  public static final long CSW_MSTRTYPE = 0x20000000L;
+  public static final long CSW_MSTRCORE = 0x00000000L;
+  public static final long CSW_MSTRDBG = 0x20000000L;
+  public static final long CSW_RESERVED = 0x01000000L;
 
   public static final long CSW_VALUE = (CSW_RESERVED | CSW_MSTRDBG | CSW_HPROT | CSW_DBGSTAT
       | CSW_SADDRINC);
@@ -77,9 +77,9 @@ public class AccessPort {
   }
 
   // Debug Exception and Monitor Control Register
-  public static final long DEMCR = 0xE000EDFC;
+  public static final long DEMCR = 0xE000EDFCL;
   // DWTENA in armv6 architecture reference manual
-  public static final long DEMCR_TRCENA = (1 << 24);
+  public static final long DEMCR_TRCENA = (0x1L << 24);
 
   public DebugPort dp;
   public int apNum;
@@ -108,9 +108,9 @@ public class AccessPort {
       // Init ROM table
       this.romAddr = this.readRegNow(AP_ROM_TABLE_ADDR_REG);
       this.hasRomTable =
-          (this.romAddr != 0xFFFFFFFF) && ((this.romAddr & AP_ROM_TABLE_ENTRY_PRESENT_MASK) != 0);
+          (this.romAddr != 0xFFFFFFFFL) && ((this.romAddr & AP_ROM_TABLE_ENTRY_PRESENT_MASK) != 0);
       // Clear format and present bits
-      this.romAddr &= 0xFFFFFFFC;
+      this.romAddr &= 0xFFFFFFFCL;
       this.initedPrimary = true;
     }
 

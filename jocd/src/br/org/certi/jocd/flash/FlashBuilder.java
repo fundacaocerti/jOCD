@@ -393,7 +393,7 @@ public class FlashBuilder {
         data = Util.fillArray(data, (int) page.size, (byte) 0xFF);
         CRC32 crc = new CRC32();
         crc.update(data);
-        page.crc = (int) (crc.getValue() & 0xFFFFFFFF);
+        page.crc = (int) (crc.getValue() & 0xFFFFFFFFL);
       }
     }
 
