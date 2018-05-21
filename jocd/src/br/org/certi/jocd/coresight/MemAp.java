@@ -155,9 +155,9 @@ public class MemAp extends AccessPort {
     try {
       this.dp.readAPAsync(transfer, numDp);
       if (transferSize == 8) {
-        res = (res >> ((addr & 0x03) << 3) & 0xFF);
+        res = (res >> ((addr & 0x03L) << 3) & 0xFFL);
       } else if (transferSize == 16) {
-        res = (res >> ((addr & 0x02) << 3) & 0xFFFF);
+        res = (res >> ((addr & 0x02L) << 3) & 0xFFFFL);
       }
     } catch (TransferFaultError error) {
       // Annotate error with target address.
@@ -386,7 +386,7 @@ public class MemAp extends AccessPort {
     while (size > 0) {
       long n = this.autoIncrementPageSize - (addr & (this.autoIncrementPageSize - 1));
       if (size * 4 < n) {
-        n = (size * 4) & 0xFFFFFFFC;
+        n = (size * 4) & 0xFFFFFFFCL;
       }
       this.writeBlock32(addr, Util.getSubArray(data, 0, (int) (n / 4)));
       Util.getSubArray(data, (int) (n / 4), null);
@@ -405,7 +405,7 @@ public class MemAp extends AccessPort {
     while (size > 0) {
       long n = this.autoIncrementPageSize - (addr & (this.autoIncrementPageSize - 1));
       if (size * 4 < n) {
-        n = (size * 4) & 0xFFFFFFFC;
+        n = (size * 4) & 0xFFFFFFFCL;
       }
       resp = Util.appendDataInArray(resp, this.readBlock32(addr, (int) n / 4));
       size -= n / 4;

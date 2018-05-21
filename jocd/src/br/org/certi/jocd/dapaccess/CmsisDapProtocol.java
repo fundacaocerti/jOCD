@@ -355,10 +355,10 @@ public class CmsisDapProtocol {
   public byte setSWJClock(int clock) throws DeviceError, TimeoutException, Error {
     byte[] cmd = new byte[5];
     cmd[0] = CommandId.DAP_SWJ_CLOCK.getValue();
-    cmd[1] = (byte) (clock & 0xff);
-    cmd[2] = (byte) ((clock >> 8) & 0xff);
-    cmd[3] = (byte) ((clock >> 16) & 0xff);
-    cmd[4] = (byte) ((clock >> 24) & 0xff);
+    cmd[1] = (byte) (clock & 0xFF);
+    cmd[2] = (byte) ((clock >> 8) & 0xFF);
+    cmd[3] = (byte) ((clock >> 16) & 0xFF);
+    cmd[4] = (byte) ((clock >> 24) & 0xFF);
     this.connectionInterface.write(cmd);
 
     byte[] response = this.connectionInterface.read();
@@ -389,12 +389,12 @@ public class CmsisDapProtocol {
       LOGGER.log(Level.SEVERE, String.format("Cannot find %s pin", pin));
       return null;
     }
-    cmd[1] = (byte) (output & 0xff);
+    cmd[1] = (byte) (output & 0xFF);
     cmd[2] = p;
-    cmd[3] = (byte) (wait & 0xff);
-    cmd[4] = (byte) ((wait >> 8) & 0xff);
-    cmd[5] = (byte) ((wait >> 16) & 0xff);
-    cmd[6] = (byte) ((wait >> 24) & 0xff);
+    cmd[3] = (byte) (wait & 0xFF);
+    cmd[4] = (byte) ((wait >> 8) & 0xFF);
+    cmd[5] = (byte) ((wait >> 16) & 0xFF);
+    cmd[6] = (byte) ((wait >> 24) & 0xFF);
     this.connectionInterface.write(cmd);
 
     byte[] resp = this.connectionInterface.read();
