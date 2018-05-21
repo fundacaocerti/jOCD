@@ -47,8 +47,6 @@ public class CoreSightTarget extends Target {
   @Override
   public void setup(DapAccessCmsisDap link) {
     this.setup(link, null);
-
-    this.dp = new DebugPort(link);
   }
 
   /*
@@ -57,6 +55,8 @@ public class CoreSightTarget extends Target {
   @Override
   protected void setup(DapAccessCmsisDap link, MemoryMap memoryMap) {
     super.setup(link, memoryMap);
+
+    this.dp = new DebugPort(link);
   }
 
   @Override
