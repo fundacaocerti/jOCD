@@ -37,25 +37,19 @@ public class Board {
   public Target target;
   public Flash flash;
   boolean closed;
-
-  // Default frequency value.
-  // TODO this might be redundant. DapAccessCmsisDap already have a default frequency.
-  public int frequency = 1000000;
+  public Integer frequency;
 
   /*
    * Must be called right after constructor.
    */
-  public void setup(DapAccessCmsisDap link, targetEnum target, int frequency) {
+  public void setup(DapAccessCmsisDap link, targetEnum target, Integer frequency) {
     this.dapAccessLink = link;
     this.target = TargetFactory.getTarget(target, link);
     this.flash = this.target.getFlash();
-    if (frequency > 0) {
-      this.frequency = frequency;
-    }
+    this.frequency = frequency;
     this.closed = false;
 
-    // TODO
-    // target.setFlash
+    this.target.setFlash(this.flash);
   }
 
   /*
@@ -63,7 +57,9 @@ public class Board {
    */
   public void init() throws TimeoutException, Error {
     LOGGER.log(Level.FINE, "init board");
-    this.dapAccessLink.setClock(this.frequency);
+    if (frequency != null) {
+      this.dapAccessLink.setClock(this.frequency);
+    }
     this.dapAccessLink.setDeferredTransfer(true);
     this.target.init();
   }

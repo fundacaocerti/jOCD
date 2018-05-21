@@ -39,7 +39,8 @@ public class MbedBoard extends Board {
   /*
    * Constructor.
    */
-  public MbedBoard(DapAccessCmsisDap link, TargetFactory.targetEnum targetOverride, int frequency)
+  public MbedBoard(DapAccessCmsisDap link, TargetFactory.targetEnum targetOverride,
+      Integer frequency)
       throws UnsupportedBoardException {
     super();
 
@@ -66,10 +67,8 @@ public class MbedBoard extends Board {
 
     // Check if we have a valid target.
     if (target == null) {
-      throw new UnsupportedBoardException(boardId);
-      // TODO
-      // pyOCD uses cotex_m here. Check if it makes sense.
-      // (mved_board.py line 130)
+      LOGGER.log(Level.WARNING, "Unsupported board found " + boardId);
+      target = targetEnum.cortex_m;
     }
 
     super.setup(link, target, frequency);
@@ -80,14 +79,14 @@ public class MbedBoard extends Board {
    */
   public static List<MbedBoard> getAllConnectedBoards()
       throws TimeoutException, Error {
-    return getAllConnectedBoards(false, true, null, 0);
+    return getAllConnectedBoards(false, true, null, null);
   }
 
   /*
    * Return an array of all mbed boards connected.
    */
   public static List<MbedBoard> getAllConnectedBoards(boolean close, boolean blocking,
-      targetEnum targetOverride, int frequency)
+      targetEnum targetOverride, Integer frequency)
       throws TimeoutException, Error {
     List<MbedBoard> mbedList = new ArrayList<MbedBoard>();
 
@@ -139,14 +138,14 @@ public class MbedBoard extends Board {
   public static MbedBoard chooseBoard()
       throws NoBoardConnectedException, UniqueIDNotFoundException, UnspecifiedBoardIDException,
       TimeoutException, Error {
-    return chooseBoard(true, false, null, null, 0, true);
+    return chooseBoard(true, false, null, null, null, true);
   }
 
   /*
    * Return an array of all mbed boards connected.
    */
   public static MbedBoard chooseBoard(boolean blocking, boolean returnFirst,
-      String boardId, String targetOverride, int frequency, boolean initBoard)
+      String boardId, String targetOverride, Integer frequency, boolean initBoard)
       throws NoBoardConnectedException, UniqueIDNotFoundException, UnspecifiedBoardIDException,
       TimeoutException, Error {
 

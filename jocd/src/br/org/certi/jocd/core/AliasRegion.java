@@ -27,6 +27,4 @@ public class AliasRegion extends MemoryRegion {
     super(MemoryMap.RegionType.Alias, start, end, length, blockSize, name, isBootMemory,
         isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
   }
-
-  // TODO
 }

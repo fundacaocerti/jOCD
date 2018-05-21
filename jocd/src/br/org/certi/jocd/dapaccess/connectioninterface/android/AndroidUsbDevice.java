@@ -127,10 +127,6 @@ public class AndroidUsbDevice implements ConnectionInterface {
     return deviceList;
   }
 
-  public void rxHandler() {
-    // TODO
-  }
-
   /*
    * Overload to read(timeout).
    * Use 20ms as the default timeout.

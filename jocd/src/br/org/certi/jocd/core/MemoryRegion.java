@@ -44,5 +44,4 @@ public class MemoryRegion extends MemoryRangeBase {
     this.isCacheable = isCacheable;
     this.invalidateCacheOnRun = invalidateCacheOnRun;
   }
-  // TODO
 }

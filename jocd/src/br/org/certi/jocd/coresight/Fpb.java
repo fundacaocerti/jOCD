@@ -29,13 +29,13 @@ public class Fpb extends BreakpointProvider {
   private final static String CLASS_NAME = Fpb.class.getName();
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
-  public static final long FP_CTRL = 0xE0002000;
+  public static final long FP_CTRL = 0xE0002000L;
   public static final int FP_CTRL_KEY = (1 << 1);
-  public static final long FP_COMP0 = 0xE0002008;
+  public static final long FP_COMP0 = 0xE0002008L;
 
   public AccessPort ap;
-  public int nbCode;
-  public int nbLit;
+  public long nbCode;
+  public long nbLit;
   public List<HardwareBreakpoint> hwBreakpoints = new ArrayList<HardwareBreakpoint>();
   public boolean enabled = false;
 
@@ -53,8 +53,8 @@ public class Fpb extends BreakpointProvider {
   @Override
   public void init() throws TimeoutException, Error {
     long fpcr = this.ap.readMemory(Fpb.FP_CTRL, null);
-    this.nbCode = (int) (((fpcr >> 8) & 0x70) | ((fpcr >> 4) & 0x0F));
-    this.nbLit = (int) ((fpcr >> 7) & 0x0F);
+    this.nbCode = (int) (((fpcr >> 8) & 0x70L) | ((fpcr >> 4) & 0x0FL));
+    this.nbLit = (int) ((fpcr >> 7) & 0x0FL);
     LOGGER.log(Level.FINE,
         this.nbCode + "hardware breakpoints, " + this.nbLit + " literal comparators");
 
@@ -81,6 +81,4 @@ public class Fpb extends BreakpointProvider {
     this.enabled = false;
     LOGGER.log(Level.FINE, "fpb has been disabled");
   }
-
-  // TODO
 }

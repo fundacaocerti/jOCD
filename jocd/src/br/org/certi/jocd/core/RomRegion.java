@@ -26,6 +26,4 @@ public class RomRegion extends MemoryRegion {
     super(MemoryMap.RegionType.Rom, start, end, length, blockSize, name, isBootMemory,
         isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
   }
-
-  // TODO
 }

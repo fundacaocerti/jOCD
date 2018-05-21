@@ -31,7 +31,7 @@ public class Dwt extends BreakpointProvider {
 
   // Need a local copy to prevent circular import.
   // Debug Exception and Monitor Control Register
-  public static final long DEMCR = 0xE000EDFC;
+  public static final long DEMCR = 0xE000EDFCL;
 
   // DWTENA in armv6 architecture reference manual
   public static final long DEMCR_TRCENA = (1 << 24);
@@ -40,8 +40,8 @@ public class Dwt extends BreakpointProvider {
   public static final long DEMCR_VC_CORERESET = (1 << 0);
 
   // DWT (data watchpoint & trace)
-  public static final long DWT_CTRL = 0xE0001000;
-  public static final long DWT_COMP_BASE = 0xE0001020;
+  public static final long DWT_CTRL = 0xE0001000L;
+  public static final long DWT_COMP_BASE = 0xE0001020L;
   public static final int DWT_MASK_OFFSET = 4;
   public static final int DWT_FUNCTION_OFFSET = 8;
   public static final int DWT_COMP_BLOCK_SIZE = 0x10;
@@ -67,7 +67,7 @@ public class Dwt extends BreakpointProvider {
     demcr = demcr | DEMCR_TRCENA;
     this.ap.writeMemory(DEMCR, demcr, null);
     long dwtCtrl = this.ap.readMemory(Dwt.DWT_CTRL, null);
-    int watchpointCount = (int) ((dwtCtrl >> 28) & 0x0F);
+    long watchpointCount = ((dwtCtrl >> 28) & 0x0FL);
     LOGGER.log(Level.FINE, watchpointCount + "hardware watchpoints.");
 
     for (int i = 0; i < watchpointCount; i++) {
@@ -78,6 +78,4 @@ public class Dwt extends BreakpointProvider {
     }
     this.dwtConfigured = true;
   }
-
-  // TODO
 }
