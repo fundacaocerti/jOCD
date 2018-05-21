@@ -16,33 +16,65 @@
 package br.org.certi.jocd.debug;
 
 import br.org.certi.jocd.core.Target;
+import br.org.certi.jocd.core.Target.BreakpointTypes;
+import br.org.certi.jocd.debug.breakpoints.BreakpointProvider;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BreakpointManager {
 
+  // Logging
+  private final static String CLASS_NAME = BreakpointManager.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
+
   private final Target core;
+  private BreakpointProvider[] providers = new BreakpointProvider[BreakpointTypes.values().length];
 
   public BreakpointManager(Target core) {
     this.core = core;
   }
 
-  public void addProvider(Target.BreakpointTypes type) {
-    if (type == null) {
+  public void addProvider(BreakpointProvider provider, Target.BreakpointTypes type) {
+    if (provider == null) {
+      LOGGER.log(Level.SEVERE, "Unexpected provider (null).");
       return;
     }
+    if (type == null) {
+      LOGGER.log(Level.SEVERE, "Unexpected type (null).");
+      return;
+    }
+
+    providers[type.getValue()] = provider;
   }
 
   public long filterMemory(long address, int size, long word) {
-    // TODO
-    return 0;
+    for (BreakpointProvider provider : this.providers) {
+      if (provider != null && provider.doFilterMemory()) {
+        word = provider.filterMemory(address, size, word);
+      }
+    }
+    return word;
   }
 
   public byte[] filterMemoryUnaligned8(long address, int size, byte[] data) {
-    // TODO
-    return null;
+    for (BreakpointProvider provider : this.providers) {
+      if (provider != null && provider.doFilterMemory()) {
+        for (int i = 0; i < data.length; i++) {
+          data[i] = provider.filterMemory(address + i, data[i]);
+        }
+      }
+    }
+    return data;
   }
 
   public long[] filterMemoryAligned32(long address, int size, long[] words) {
-    // TODO
-    return null;
+    for (BreakpointProvider provider : this.providers) {
+      if (provider != null && provider.doFilterMemory()) {
+        for (int i = 0; i < words.length; i++) {
+          words[i] = provider.filterMemory(address, size, words[i]);
+        }
+      }
+    }
+    return words;
   }
 }

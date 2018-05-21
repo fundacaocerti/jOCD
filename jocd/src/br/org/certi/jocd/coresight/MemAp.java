@@ -153,7 +153,7 @@ public class MemAp extends AccessPort {
       int num) throws TimeoutException, Error {
     long res = 0;
     try {
-      this.dp.readAPAsync(transfer, numDp);
+      res = this.dp.readAPAsync(transfer, numDp);
       if (transferSize == 8) {
         res = (res >> ((addr & 0x03L) << 3) & 0xFFL);
       } else if (transferSize == 16) {

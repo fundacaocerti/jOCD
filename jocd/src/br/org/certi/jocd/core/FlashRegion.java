@@ -45,6 +45,4 @@ public class FlashRegion extends MemoryRegion {
         isBootMemory, MemoryRegion.DEFAULT_IS_POWERED_ON_BOOT, MemoryRegion.DEFAULT_IS_CACHEABLE,
         MemoryRegion.DEFAULT_INVALIDATE_CACHE_ON_RUN);
   }
-
-  // TODO
 }

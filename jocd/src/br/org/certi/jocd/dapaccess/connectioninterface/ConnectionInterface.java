@@ -36,8 +36,6 @@ public interface ConnectionInterface {
 
   public String getSerialNumber();
 
-  public void rxHandler();
-
   public byte[] read() throws TimeoutException;
 
   public void write(byte[] data) throws Error;

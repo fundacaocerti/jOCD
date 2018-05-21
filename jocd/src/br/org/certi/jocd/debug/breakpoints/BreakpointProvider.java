@@ -32,7 +32,7 @@ public class BreakpointProvider {
     throw new InternalError("Not implemented");
   }
 
-  public Breakpoint find_breakpoint(long address) {
+  public Breakpoint findBreakpoint(long address) {
     throw new InternalError("Not implemented");
   }
 
@@ -44,8 +44,12 @@ public class BreakpointProvider {
     throw new InternalError("Not implemented");
   }
 
-  public long[] filterMemory(long address, int size, long[] words) {
-    return words;
+  public long filterMemory(long address, int size, long word) {
+    return word;
+  }
+
+  public byte filterMemory(long address, byte data) {
+    return data;
   }
 
   public void flush() {
