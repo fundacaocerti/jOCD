@@ -15,7 +15,6 @@
  */
 package br.org.certi.jocd.tools;
 
-import android.os.Environment;
 import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
@@ -25,7 +24,6 @@ import br.org.certi.jocd.flash.PageInfo;
 import br.org.certi.jocd.target.TargetFactory.targetEnum;
 import cz.jaybee.intelhex.IntelHexException;
 import cz.jaybee.intelhex.Parser;
-import cz.jaybee.intelhex.listeners.BinWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -85,13 +83,11 @@ public class FlashTool {
   /*
    * Overload to call flashBoard with default values.
    */
-  public boolean flashBoard(ProgressUpdateInterface progressUpdate)
+  public boolean flashBoard(String file, ProgressUpdateInterface progressUpdate)
       throws MbedBoard.NoBoardConnectedException, MbedBoard.UniqueIDNotFoundException,
       MbedBoard.UnspecifiedBoardIDException, InternalError, DeviceError, TimeoutException,
       InsufficientPermissions, InterruptedException, Error {
 
-    // TODO - change this a to path with the correct file.
-    String file = Environment.getExternalStorageDirectory() + "/Download/microbit.hex";
     return flashBoard(
         progressUpdate,
         file,
@@ -255,16 +251,21 @@ public class FlashTool {
         flashBuilder.program(chipErase, progressUpdate, true, fastProgram);
       } catch (FileNotFoundException e) {
         LOGGER.log(Level.SEVERE, "File not found: " + file);
+        return false;
       } catch (IOException e) {
         LOGGER.log(Level.SEVERE, "IOException while trying program using IntelHex.");
+        return false;
       } catch (IntelHexException e) {
         LOGGER.log(Level.SEVERE, "IntelHexException while trying to parse IntelHex.");
+        return false;
       } catch (InterruptedException e) {
         LOGGER.log(Level.WARNING,
             "InterruptedException while trying to parse IntelHex. Exception: " + e.getMessage());
+        return false;
       } catch (Error e) {
         LOGGER.log(Level.SEVERE,
             "Error exception while trying to parse IntelHex. Exception: " + e.getMessage());
+        return false;
       }
 
     }
