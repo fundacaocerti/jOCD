@@ -26,16 +26,20 @@ import android.content.pm.PackageManager;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.connectioninterface.android.AndroidApplicationContext;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
 import br.org.certi.jocd.tools.AsyncResponse;
+import java.io.File;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements
@@ -46,12 +50,18 @@ public class MainActivity extends AppCompatActivity implements
 
   TextView textViewConnectedBoards;
   TextView textViewResult;
+  EditText editTextSelectedFile;
 
   private String ACTION_USB_PERMISSION;
   private static final String ACTION_USB_ATTACHED = "android.hardware.usb.action.USB_DEVICE_ATTACHED";
   private static final String ACTION_USB_DETACHED = "android.hardware.usb.action.USB_DEVICE_DETACHED";
   private PendingIntent permissionIntent;
   IntentFilter filter;
+  private String flashFilePath = "Download/microbit.hex";
+
+  private static final int REQUEST_CODE_READ_EXTERNAL_STORAGE = 1;
+  private static final int REQUEST_CODE_SELECT_FILE = 2;
+
 
   private static enum Fsm {
     INIT,
@@ -72,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements
     textViewConnectedBoards = (TextView) findViewById(R.id.textViewConnectedBoards);
     textViewResult = (TextView) findViewById(R.id.textViewResult);
     textViewConnectedBoards.setText("Devices....");
+    editTextSelectedFile = (EditText) findViewById(R.id.editTextSelectedFile);
 
     AndroidApplicationContext.getInstance().init(getApplicationContext());
 
@@ -105,6 +116,7 @@ public class MainActivity extends AppCompatActivity implements
   }
 
   public void onClickFlashDevice(View view) {
+    this.fsm = Fsm.CLICKED_FLASH_DEVICE;
     Log.d("CLICK", "Button flash device clicked.");
 
     // We will need to access the file system. Check if we have permission.
@@ -113,14 +125,41 @@ public class MainActivity extends AppCompatActivity implements
       return;
     }
 
-    this.fsm = Fsm.CLICKED_FLASH_DEVICE;
     flashDevice();
+  }
+
+  public void onClickSelectFile(View view) {
+    Log.d("CLICK", "Button select file clicked.");
+
+    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+    intent.setType("*/*");
+    startActivityForResult(intent, REQUEST_CODE_SELECT_FILE);
   }
 
   private void flashDevice() {
     this.fsm = Fsm.STARTED_FLASHING_DEVICE;
+
+    String fullPath = Environment.getExternalStorageDirectory() + "/" + this.flashFilePath;
+
+    if (fullPath == null) {
+      Toast.makeText(this, "Can't flash without a file. Please select one.", Toast.LENGTH_LONG)
+          .show();
+      this.fsm = Fsm.INIT;
+      return;
+    } else {
+      // Check if the file exists.
+      File file = new File(fullPath);
+      if (!file.exists()) {
+        Toast.makeText(this, "Can't find the file " + editTextSelectedFile.getText(),
+            Toast.LENGTH_LONG).show();
+        this.fsm = Fsm.INIT;
+        return;
+      }
+    }
+
     // Create a new async task to flash the first devices.
-    AsyncFlashToolFlashBoard asyncFlashDevice = new AsyncFlashToolFlashBoard(this, this);
+    AsyncFlashToolFlashBoard asyncFlashDevice = new AsyncFlashToolFlashBoard(this, this,
+        fullPath);
     asyncFlashDevice.execute();
   }
 
@@ -188,30 +227,6 @@ public class MainActivity extends AppCompatActivity implements
     }
   }
 
-  private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-    public void onReceive(Context context, Intent intent) {
-      String action = intent.getAction();
-      if (ACTION_USB_PERMISSION.equals(action)) {
-        synchronized (this) {
-          UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-
-          if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-            if (device != null) {
-              resumeOperation();
-            }
-          } else {
-            Log.d(TAG, "Permission denied for device.");
-            textViewConnectedBoards.setText("Permission denied for device.");
-          }
-        }
-      }
-
-      if (ACTION_USB_ATTACHED.equals(action) || ACTION_USB_DETACHED.equals(action)) {
-        listDevices();
-      }
-    }
-  };
-
   private void resumeOperation() {
 
     if (fsm == Fsm.CLICKED_LIST_DEVICES || fsm == Fsm.STARTED_LISTING_DEVICES) {
@@ -220,13 +235,22 @@ public class MainActivity extends AppCompatActivity implements
       listDevices();
     }
 
-    if (fsm == Fsm.CLICKED_LIST_DEVICES || fsm == Fsm.STARTED_FLASHING_DEVICE) {
+    if (fsm == Fsm.CLICKED_FLASH_DEVICE || fsm == Fsm.STARTED_FLASHING_DEVICE) {
       // Restart.
-      // Create a new async task to list all connected devices.
+      // Create a new async task to flash the first connected device.
       flashDevice();
     }
   }
 
+  private void setFileFlashPath(String path) {
+    // The Intent will return a path will result in a string with the following pattern:
+    // "/document/primary:/Download/microbit.hex"
+    // As we don't want this information, we need to get only the string after the colon.
+    String[] parts = path.split(":");
+    path = parts.length >= 2 ? parts[1] : "";
+    this.flashFilePath = path;
+    editTextSelectedFile.setText(path);
+  }
 
   /*
    * Check if we have the necessary permissions to access the file system.
@@ -250,12 +274,69 @@ public class MainActivity extends AppCompatActivity implements
 
     // No, We do not have permission. Ask for...
     // If the user give permission, next time we won't get here again.
-    requestPermission();
+    ActivityCompat
+        .requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+            REQUEST_CODE_READ_EXTERNAL_STORAGE);
     return false;
   }
 
-  private void requestPermission() {
-    ActivityCompat
-        .requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+  private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+    public void onReceive(Context context, Intent intent) {
+      String action = intent.getAction();
+      if (ACTION_USB_PERMISSION.equals(action)) {
+        synchronized (this) {
+          UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+
+          if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+            if (device != null) {
+              resumeOperation();
+            }
+          } else {
+            Log.d(TAG, "Permission denied for device.");
+            textViewConnectedBoards.setText("Permission denied for device.");
+            fsm = Fsm.INIT;
+          }
+        }
+      }
+
+      if (ACTION_USB_ATTACHED.equals(action) || ACTION_USB_DETACHED.equals(action)) {
+        listDevices();
+      }
+    }
+  };
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    // Check which request we're responding to.
+    if (requestCode == REQUEST_CODE_SELECT_FILE) {
+      // Make sure the request was successful.
+      if (resultCode == RESULT_OK) {
+        // The user picked a file.
+        setFileFlashPath(data.getData().getPath());
+      }
+    }
   }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String[] permissions,
+      int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+    if (requestCode == REQUEST_CODE_READ_EXTERNAL_STORAGE) {
+      for (int i = 0; i < permissions.length; i++) {
+        String permission = permissions[i];
+        int grantResult = grantResults[i];
+
+        if (permission.equals(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+          if (grantResult == PackageManager.PERMISSION_GRANTED) {
+            resumeOperation();
+          } else {
+            Log.w(TAG, "Permission denied to access the external storage.");
+            fsm = Fsm.INIT;
+          }
+        }
+      }
+    }
+  }
+
 }

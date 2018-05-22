@@ -33,6 +33,9 @@ public class AsyncFlashToolFlashBoard extends AsyncTask<String, Integer, String>
   // Callback to the UI activity.
   private AsyncResponse.FlashBoard delegate = null;
 
+  // Path to file.
+  private String flashFilePath;
+
   // Context (for USB Manager).
   private Context context = null;
   private boolean exceptionOccurred = false;
@@ -40,20 +43,28 @@ public class AsyncFlashToolFlashBoard extends AsyncTask<String, Integer, String>
   /*
    * Constructor.
    */
-  public AsyncFlashToolFlashBoard(Context context, AsyncResponse.FlashBoard delegate) {
+  public AsyncFlashToolFlashBoard(Context context, AsyncResponse.FlashBoard delegate,
+      String flashFilePath) {
     this.context = context;
     this.delegate = delegate;
+    this.flashFilePath = flashFilePath;
   }
 
   @Override
   protected String doInBackground(String... params) {
     String resp = "Devices: ";
 
+    if (this.flashFilePath == null) {
+      this.exceptionOccurred = true;
+      onException(new Exception("Can't flash without a file."));
+      return null;
+    }
+
     FlashTool tool = new FlashTool();
     this.exceptionOccurred = false;
 
     try {
-      resp = tool.flashBoard(this) ? "true" : "false";
+      resp = tool.flashBoard(this.flashFilePath, this) ? "true" : "false";
     } catch (Exception exception) {
       this.exceptionOccurred = true;
       onException(exception);
@@ -86,14 +97,14 @@ public class AsyncFlashToolFlashBoard extends AsyncTask<String, Integer, String>
   protected void onException(Exception exception) {
     Log.d(TAG, "Exception " + exception.getMessage());
 
-    if (exception instanceof  MbedBoard.NoBoardConnectedException) {
-      Log.e(TAG,"No board connected");
-    } else if (exception instanceof  MbedBoard.UniqueIDNotFoundException) {
-      Log.e(TAG,"Unique ID not found");
-    } else if (exception instanceof  MbedBoard.UnspecifiedBoardIDException) {
-      Log.e(TAG,"Unspecified board ID");
+    if (exception instanceof MbedBoard.NoBoardConnectedException) {
+      Log.e(TAG, "No board connected");
+    } else if (exception instanceof MbedBoard.UniqueIDNotFoundException) {
+      Log.e(TAG, "Unique ID not found");
+    } else if (exception instanceof MbedBoard.UnspecifiedBoardIDException) {
+      Log.e(TAG, "Unspecified board ID");
     } else if (exception instanceof InsufficientPermissions) {
-      Log.e(TAG,"Insufficient permissions to access USB device");
+      Log.e(TAG, "Insufficient permissions to access USB device");
     } else {
       Log.e(TAG, "Exception caught: " + exception.getMessage());
     }
