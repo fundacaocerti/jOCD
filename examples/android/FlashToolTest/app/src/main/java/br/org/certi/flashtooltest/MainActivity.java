@@ -102,6 +102,12 @@ public class MainActivity extends AppCompatActivity implements
     checkFileReadPermission();
   }
 
+  @Override
+  public void onPause() {
+    super.onPause();
+    unregisterReceiver(broadcastReceiver);
+  }
+
   public void onClickListDevices(View view) {
     Log.d("CLICK", "Button list devices clicked.");
     this.fsm = Fsm.CLICKED_LIST_DEVICES;
