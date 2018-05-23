@@ -50,97 +50,97 @@ public class CortexM extends Target {
   // negated. So -1 means a mask of 0xFF, -2 is 0xFF00, and so on. The actual DCRSR register index
   // for these combined registers has the key of 'cfbp'.
   public enum CortexMRegister implements CoreRegister {
-    R0(0),
-    R1(1),
-    R2(2),
-    R3(3),
-    R4(4),
-    R5(5),
-    R6(6),
-    R7(7),
-    R8(8),
-    R9(9),
-    R10(10),
-    R11(11),
-    R12(12),
-    SP(13),
-    R13(13),
-    LR(14),
-    R14(14),
-    PC(15),
-    R15(15),
-    XPSR(16),
-    MSP(17),
-    PSP(18),
-    CFBP(20),
-    CONTROL(4),
-    FAULTMASK(3),
-    BASEPRI(2),
-    PRIMASK(1),
-    FPSCR(33),
-    S0(0x40),
-    S1(0x41),
-    S2(0x42),
-    S3(0x43),
-    S4(0x44),
-    S5(0x45),
-    S6(0x46),
-    S7(0x47),
-    S8(0x48),
-    S9(0x49),
-    S10(0x4A),
-    S11(0x4B),
-    S12(0x4C),
-    S13(0x4D),
-    S14(0x4E),
-    S15(0x4F),
-    S16(0x50),
-    S17(0x51),
-    S18(0x52),
-    S19(0x53),
-    S20(0x54),
-    S21(0x55),
-    S22(0x56),
-    S23(0x57),
-    S24(0x58),
-    S25(0x59),
-    S26(0x5A),
-    S27(0x5B),
-    S28(0x5C),
-    S29(0x5D),
-    S30(0x5E),
-    S31(0x5F);
+    R0(0L),
+    R1(1L),
+    R2(2L),
+    R3(3L),
+    R4(4L),
+    R5(5L),
+    R6(6L),
+    R7(7L),
+    R8(8L),
+    R9(9L),
+    R10(10L),
+    R11(11L),
+    R12(12L),
+    SP(13L),
+    R13(13L),
+    LR(14L),
+    R14(14L),
+    PC(15L),
+    R15(15L),
+    XPSR(16L),
+    MSP(17L),
+    PSP(18L),
+    CFBP(20L),
+    CONTROL(4L),
+    FAULTMASK(3L),
+    BASEPRI(2L),
+    PRIMASK(1L),
+    FPSCR(33L),
+    S0(0x40L),
+    S1(0x41L),
+    S2(0x42L),
+    S3(0x43L),
+    S4(0x44L),
+    S5(0x45L),
+    S6(0x46L),
+    S7(0x47L),
+    S8(0x48L),
+    S9(0x49L),
+    S10(0x4AL),
+    S11(0x4BL),
+    S12(0x4CL),
+    S13(0x4DL),
+    S14(0x4EL),
+    S15(0x4FL),
+    S16(0x50L),
+    S17(0x51L),
+    S18(0x52L),
+    S19(0x53L),
+    S20(0x54L),
+    S21(0x55L),
+    S22(0x56L),
+    S23(0x57L),
+    S24(0x58L),
+    S25(0x59L),
+    S26(0x5AL),
+    S27(0x5BL),
+    S28(0x5CL),
+    S29(0x5DL),
+    S30(0x5EL),
+    S31(0x5FL);
 
-    public final int value;
+    public final long value;
 
-    CortexMRegister(int id) {
+    CortexMRegister(long id) {
       this.value = id;
     }
 
-    public int getValue() {
+    public long getValue() {
       return value;
     }
   }
 
   // CPUID PARTNO values
   public enum CpuId {
-    ARM_CortexM0(0xC20),
-    ARM_CortexM1(0xC21),
-    ARM_CortexM3(0xC23),
-    ARM_CortexM4(0xC24),
-    ARM_CortexM0plus(0xC60);
+    ARM_CortexM0(0xC20L),
+    ARM_CortexM1(0xC21L),
+    ARM_CortexM3(0xC23L),
+    ARM_CortexM4(0xC24L),
+    ARM_CortexM0plus(0xC60L);
 
-    public final int value;
+    public final long value;
 
-    CpuId(int id) {
+    CpuId(long id) {
       this.value = id;
     }
 
-    public int getValue() {
+    public long getValue() {
       return value;
     }
 
-    public static CpuId getCpuId(int value) {
+    public static CpuId getCpuId(long value) {
       for (CpuId cpuId : CpuId.values()) {
         if (cpuId.getValue() == value) {
           return cpuId;
@@ -713,7 +713,7 @@ public class CortexM extends Target {
 
         // Mask in the new special register value so we don't modify the other register values that
         // share the same DCRSR number.
-        int shift = (-(reg.getValue()) - 1) * 8;
+        long shift = (-(reg.getValue()) - 1) * 8;
         long mask = 0xFFFFFFFFL ^ (0xFFL << shift);
         word = (specialRegValue & mask) | ((word & 0xFFL) << shift);
         // Update special register for other writes that might be in the list.
