@@ -333,6 +333,11 @@ public class CortexM extends Target {
     }
   }
 
+  @Override
+  public void writeMemory(long address, long value) throws TimeoutException, Error {
+    this.writeMemory(address, value, 32);
+  }
+
   /*
    * Write a memory location.
      By default the transfer size is a word
@@ -422,6 +427,10 @@ public class CortexM extends Target {
   @Override
   public void writeBlockMemoryAligned32(long address, long[] words) throws TimeoutException, Error {
     this.ap.writeBlockMemoryAligned32(address, words);
+  }
+
+  public void clearDebugCauseBits() throws TimeoutException, Error {
+    this.writeMemory(CortexM.DFSR, CortexM.DFSR_DWTTRAP | CortexM.DFSR_BKPT | CortexM.DFSR_HALTED);
   }
 
   /*
@@ -622,6 +631,22 @@ public class CortexM extends Target {
   public long getVectorCatch() throws TimeoutException, Error {
     long demcr = this.readMemory(CortexM.DEMCR, null);
     return this.mapFromVectorCatchMask(demcr);
+  }
+
+  /*
+   * Resume the execution.
+   */
+  @Override
+  public void resume() throws TimeoutException, Error {
+    if (this.getState() != State.TARGET_HALTED) {
+      LOGGER.log(Level.FINE, "Cannot resume: target not halted");
+      return;
+    }
+
+    this.runToken++;
+    this.clearDebugCauseBits();
+    this.writeMemory(CortexM.DHCSR, CortexM.DBGKEY | CortexM.C_DEBUGEN);
+    this.dp.flush();
   }
 
   /*

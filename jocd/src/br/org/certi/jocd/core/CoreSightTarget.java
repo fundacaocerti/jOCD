@@ -122,6 +122,21 @@ public class CoreSightTarget extends Target {
   }
 
   @Override
+  public void flush() throws TimeoutException, Error {
+    this.getSelectedCore().flush();
+  }
+
+  @Override
+  public void halt() throws TimeoutException, Error {
+    this.getSelectedCore().halt();
+  }
+
+  @Override
+  public void resume() throws TimeoutException, Error {
+    this.getSelectedCore().resume();
+  }
+
+  @Override
   public void writeMemory(long address, long value) throws TimeoutException, Error {
     // 32 is the default transfer size.
     writeMemory(address, value, 32);
@@ -154,6 +169,32 @@ public class CoreSightTarget extends Target {
   }
 
   @Override
+  public void writeCoreRegister(CoreRegister reg, long word) throws TimeoutException, Error {
+    this.getSelectedCore().writeCoreRegister(reg, word);
+  }
+
+  @Override
+  public long readCoreRegisterRaw(CoreRegister reg) {
+    return this.getSelectedCore().readCoreRegisterRaw(reg);
+  }
+
+  @Override
+  public long[] readCoreRegisterRaw(List<CoreRegister> regList) {
+    return this.getSelectedCore().readCoreRegisterRaw(regList);
+  }
+
+  @Override
+  public void writeCoreRegisterRaw(CoreRegister reg, long word) throws TimeoutException, Error {
+    this.getSelectedCore().writeCoreRegisterRaw(reg, word);
+  }
+
+  @Override
+  public void writeCoreRegisterRaw(List<CoreRegister> regList, long[] words)
+      throws TimeoutException, Error {
+    this.getSelectedCore().writeCoreRegisterRaw(regList, words);
+  }
+
+  @Override
   public void reset(Boolean softwareReset) throws InterruptedException, TimeoutException, Error {
     this.getSelectedCore().reset(softwareReset);
   }
@@ -162,6 +203,16 @@ public class CoreSightTarget extends Target {
   public void resetStopOnReset(Boolean softwareReset)
       throws InterruptedException, TimeoutException, Error {
     this.getSelectedCore().resetStopOnReset(softwareReset);
+  }
+
+  @Override
+  public void setTargetState(State state) throws InterruptedException, TimeoutException, Error {
+    this.getSelectedCore().setTargetState(state);
+  }
+
+  @Override
+  public State getState() throws TimeoutException, Error {
+    return this.getSelectedCore().getState();
   }
 
   @Override
