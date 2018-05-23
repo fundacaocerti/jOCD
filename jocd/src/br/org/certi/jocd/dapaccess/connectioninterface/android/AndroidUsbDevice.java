@@ -432,7 +432,6 @@ public class AndroidUsbDevice implements ConnectionInterface {
           // We might receive less bytes than packetSize, so we need to add only the
           // received data to a new array and pass it to our queue.
           if (received >= 0) {
-            byte[] receivedData = new byte[received];
             rxQueue.add(Util.getSubArray(packet, 0, received));
           }
         }
