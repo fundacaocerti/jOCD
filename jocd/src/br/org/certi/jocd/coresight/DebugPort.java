@@ -41,30 +41,30 @@ public class DebugPort {
     CTRL_STAT(Reg.DP_0x4.getValue()),
     SELECT(Reg.DP_0x8.getValue());
 
-    public final byte value;
+    public final long value;
 
-    DP_REG(byte id) {
+    DP_REG(long id) {
       this.value = id;
     }
 
-    public byte getValue() {
+    public long getValue() {
       return value;
     }
   }
 
   public static enum AP_REG {
-    CSW((byte) 0x00),
-    TAR((byte) 0x04),
-    DRW((byte) 0x0C),
-    IDR((byte) 0xFC);
+    CSW(0x00L),
+    TAR(0x04L),
+    DRW(0x0CL),
+    IDR(0xFCL);
 
-    public final byte value;
+    public final long value;
 
-    AP_REG(byte id) {
+    AP_REG(long id) {
       this.value = id;
     }
 
-    public byte getValue() {
+    public long getValue() {
       return value;
     }
   }
