@@ -186,9 +186,13 @@ public class FlashBuilder {
         // Copy data to page and increment pos
         int spaceLeftInPage = pageInfo.size - currentPage.data.length;
         int spaceLeftInData = op.data.length - pos;
-        int amount = (spaceLeftInPage < spaceLeftInData) ? spaceLeftInPage : spaceLeftInData;
-        currentPage.data = Util.appendDataInArray(currentPage.data, op.data, pos, amount);
+        int amount = min(spaceLeftInPage, spaceLeftInData);
+        currentPage.data = Util
+            .appendDataInArray(currentPage.data, Util.getSubArray(op.data, pos, pos + amount));
         programByteCount += amount;
+
+        // Increment position.
+        pos += amount;
       }
     }
 
