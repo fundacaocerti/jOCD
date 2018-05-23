@@ -27,7 +27,12 @@ public class MemoryRangeBase {
 
   public MemoryRangeBase(long start, long end, long length) {
     this.start = start;
-    this.end = end;
+    if (length != 0) {
+      this.end = this.start + length - 1;
+    }
+    else {
+      this.end = end;
+    }
     this.length = length;
   }
 
