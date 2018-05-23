@@ -27,7 +27,7 @@ public class Target {
 
   public interface CoreRegister {
 
-    public int getValue();
+    public long getValue();
   }
 
   public enum State {

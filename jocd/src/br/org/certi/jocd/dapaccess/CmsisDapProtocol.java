@@ -151,22 +151,22 @@ public class CmsisDapProtocol {
 
   // Register for DAP access functions
   public static enum Reg {
-    DP_0x0((byte) 0),
-    DP_0x4((byte) 1),
-    DP_0x8((byte) 2),
-    DP_0xC((byte) 3),
-    AP_0x0((byte) 4),
-    AP_0x4((byte) 5),
-    AP_0x8((byte) 6),
-    AP_0xC((byte) 7);
+    DP_0x0(0L),
+    DP_0x4(1L),
+    DP_0x8(2L),
+    DP_0xC(3L),
+    AP_0x0(4L),
+    AP_0x4(5L),
+    AP_0x8(6L),
+    AP_0xC(7L);
 
-    public final byte value;
+    public final long value;
 
-    Reg(byte id) {
+    Reg(long id) {
       this.value = id;
     }
 
-    public byte getValue() {
+    public long getValue() {
       return value;
     }
 
