@@ -241,6 +241,9 @@ public class Flash {
 
     // Get the region that this address belongs to.
     MemoryRegion region = this.target.getMemoryMap().getRegionForAddress(address);
+    if (region == null) {
+      return null;
+    }
 
     PageInfo info = new PageInfo();
     info.eraseWeight = PageInfo.DEFAULT_PAGE_ERASE_WEIGHT;
