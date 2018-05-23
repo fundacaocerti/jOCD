@@ -24,6 +24,7 @@ import br.org.certi.jocd.flash.PageInfo;
 import br.org.certi.jocd.target.TargetFactory.targetEnum;
 import cz.jaybee.intelhex.IntelHexException;
 import cz.jaybee.intelhex.Parser;
+import cz.jaybee.intelhex.listeners.RangeDetector;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -231,20 +232,23 @@ public class FlashTool {
     else if (format.equals(".hex")) {
       try {
         // Create input stream of some IntelHex data.
-        InputStream is = new FileInputStream(new File(file));
+        FileInputStream is = new FileInputStream(new File(file));
 
         // Create IntelHexParserObject.
         Parser intelhexParser = new Parser(is);
 
         // Create a listener to IntelHex.
-        IntelHexToFlash listener = new IntelHexToFlash(selectedBoard.flash);
+        // 1st iteration - detect all ranges.
+        RangeDetector rangeDetector = new RangeDetector();
+        intelhexParser.setDataListener(rangeDetector);
+        intelhexParser.parse();
+        is.getChannel().position(0);
 
-        // Register parser listener.
+        // Create another listener to IntelHex.
+        // 2nd iteration - write the data into each range.
+        IntelHexToFlash listener = new IntelHexToFlash(rangeDetector.getMemoryRegions(),
+            selectedBoard.flash);
         intelhexParser.setDataListener(listener);
-
-        // IntelHexToFlash have a callback for each region data, and will
-        // create Flash Builder after parsing...
-        // TODO verify how it works on Python...
         intelhexParser.parse();
 
         FlashBuilder flashBuilder = listener.getFlashBuilder();

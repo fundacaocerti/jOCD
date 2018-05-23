@@ -20,40 +20,66 @@ import br.org.certi.jocd.flash.FlashBuilder;
 import cz.jaybee.intelhex.DataListener;
 import cz.jaybee.intelhex.MemoryRegions;
 import cz.jaybee.intelhex.Region;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class IntelHexToFlash implements DataListener {
 
-  private final MemoryRegions regions = new MemoryRegions();
+  // Logging
+  private final static String CLASS_NAME = IntelHexToFlash.class.getName();
+  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
+  private final MemoryRegions detectedRegions;
   private final FlashBuilder flashBuilder;
 
-  public IntelHexToFlash(Flash flash) {
+  // List to hold each region, and inside each, store respective the data.
+  private byte[][] buffer;
+
+  public IntelHexToFlash(MemoryRegions detectedRegions, Flash flash) {
     this.flashBuilder = flash.getFlashBuilder();
+    this.detectedRegions = detectedRegions;
+
+    buffer = new byte[detectedRegions.size()][];
+    // Initialize the buffer for each memory region.
+    for (int i = 0; i < detectedRegions.size(); i++) {
+      buffer[i] = new byte[(int) detectedRegions.get(i).getLength()];
+    }
   }
 
   @Override
   public void data(long address, byte[] data) {
-    regions.add(address, data.length);
+    // Add data in each detected region.
+    for (int i = 0; i < detectedRegions.size(); i++) {
+      Region region = detectedRegions.get(i);
 
-    // Add this data range to Flash Builder.
-    flashBuilder.addData(address, data);
+      // Check if these data belongs to this region.
+      if ((address >= region.getAddressStart()) && (address <= region.getAddressEnd())) {
+        int length = data.length;
+
+        // Make sure it doesn't overlap the region.
+        if ((address + length) > region.getAddressEnd()) {
+          length = (int) (region.getAddressEnd() - address + 1);
+        }
+
+        // Copy the data to the respective buffer.
+        int offset = (int) (address - region.getAddressStart());
+        System.arraycopy(data, 0, buffer[i], offset, length);
+        return;
+      }
+    }
+
+    // We should never get here since each data will have it own region to be included and will
+    // return after be copied.
+    LOGGER.log(Level.SEVERE, "Unexpected out of range data.");
+    throw new InternalError("Unexpected out of range data.");
   }
 
   @Override
   public void eof() {
-    regions.compact();
-  }
-
-  public void reset() {
-    regions.clear();
-  }
-
-  public Region getFullRangeRegion() {
-    return regions.getFullRangeRegion();
-  }
-
-  public MemoryRegions getMemoryRegions() {
-    return regions;
+    // Add this data range to Flash Builder.
+    for (int i = 0; i < detectedRegions.size(); i++) {
+      flashBuilder.addData(detectedRegions.get(i).getAddressStart(), buffer[i]);
+    }
   }
 
   /*
