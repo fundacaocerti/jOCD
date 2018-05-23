@@ -129,7 +129,7 @@ public class Target {
     throw new InternalError("Not implemented");
   }
 
-  public void resume() {
+  public void resume() throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
