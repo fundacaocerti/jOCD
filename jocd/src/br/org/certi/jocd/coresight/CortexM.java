@@ -654,11 +654,11 @@ public class CortexM extends Target {
    * Unpack floating point register values.
    */
   @Override
-  public long readCoreRegister(CoreRegister reg) {
+  public long readCoreRegister(CoreRegister reg) throws TimeoutException, Error {
 
     long regValue = this.readCoreRegisterRaw(reg);
     // Convert int to float.
-    if (regValue >= 0x40) {
+    if (regValue >= 0x40L) {
       regValue = Conversion.u32BEToFloat32BE(regValue);
     }
 
@@ -669,13 +669,90 @@ public class CortexM extends Target {
    * Read a core register (r0 .. r16).
    */
   @Override
-  public long readCoreRegisterRaw(CoreRegister reg) {
-    throw new InternalError("Not implemented");
+  public long readCoreRegisterRaw(CoreRegister reg) throws TimeoutException, Error{
+    List<CoreRegister> regList = new ArrayList<CoreRegister>();
+    regList.add(reg);
+    long[] result = this.readCoreRegisterRaw(regList);
+    if (result.length < 1) {
+      throw new Error("readCoreRegisterRaw: Unexpected length of result (0).");
+    }
+    return result[0];
   }
 
+  /*
+   * Read one or more core registers.
+   */
   @Override
-  public long[] readCoreRegisterRaw(List<CoreRegister> regList) {
-    throw new InternalError("Not implemented");
+  public long[] readCoreRegisterRaw(List<CoreRegister> regList) throws TimeoutException, Error {
+    // Sanity check register values.
+    for (CoreRegister reg : regList) {
+      if ((reg.getValue() >= 0x40 || reg.getValue() == 33) && (this.hasFpu == false)) {
+        throw new InternalError("attempt to read FPU register without FPU");
+      }
+    }
+
+    // Each result will return a list of 3 objects.
+    // Then, we need a list to store each result: a list of lists.
+    List<List<Object>> dhcsrCbList = new ArrayList<List<Object>>();
+    List<List<Object>> regCbList = new ArrayList<List<Object>>();
+
+    // Begin all reads and writes.
+    for (int i = 0; i < regList.size(); i++) {
+      CoreRegister reg = regList.get(i);
+
+      // Special register.
+      if ((reg.getValue() < 0) && (reg.getValue() >= -4)) {
+        reg = CortexMRegister.CFBP;
+      }
+
+      // Write id in DCRSR.
+      this.writeMemory(CortexM.DCRSR, reg.getValue());
+
+      // Technically, we need to poll S_REGRDY in DHCSR here before reading DCRDR. But we're running
+      // so slow compared to the target that it's not necessary.
+      // TODO Check if this is true in our case.
+
+      // Read it and assert that S_REGRDY is set
+      dhcsrCbList.add(this.readMemoryLater(CortexM.DHCSR, null));
+      regCbList.add(this.readMemoryLater(CortexM.DCRDR, null));
+    }
+
+    // Read all results.
+    long[] regValues = new long[regList.size()];
+    for (int i = 0; i < regList.size(); i++) {
+      CoreRegister reg = regList.get(i);
+
+      List<Object> result;
+      Transfer transfer;
+      int numDp;
+      int num;
+
+      result = dhcsrCbList.get(i);
+      transfer = (Transfer) result.get(0);
+      numDp = (int) result.get(1);
+      num = (int) result.get(2);
+      long dhcsrVal = this.readMemoryAsync(transfer, numDp, CortexM.DHCSR, null, num);
+
+      // assert dhcsr_val & CortexM.S_REGRDY
+      if ((dhcsrVal & CortexM.S_REGRDY) == 0) {
+        throw new Error("readCoreRegisterRaw: Unexpected value of dhcsrVal = " + dhcsrVal);
+      }
+
+      result = regCbList.get(i);
+      transfer = (Transfer) result.get(0);
+      numDp = (int) result.get(1);
+      num = (int) result.get(2);
+      long value = this.readMemoryAsync(transfer, numDp, CortexM.DCRDR, null, num);
+
+      // Special handling for registers that are combined into a single DCRSR number.
+      if ((reg.getValue() < 0) && (reg.getValue() >= -4)) {
+        value = (value >> ((-reg.getValue() - 1) * 8)) & 0xFFL;
+      }
+
+      regValues[i] = value;
+    }
+
+    return regValues;
   }
 
   /*
@@ -754,6 +831,7 @@ public class CortexM extends Target {
 
       // Technically, we need to poll S_REGRDY in DHCSR here to ensure the register write has
       // completed.
+      // TODO Check if this is true in our case.
       // Read it and assert that S_REGRDY is set.
       results.add(this.readMemoryLater(CortexM.DHCSR, null));
     }
@@ -763,7 +841,12 @@ public class CortexM extends Target {
       Transfer transfer = (Transfer) result.get(0);
       int numDp = (int) result.get(1);
       int num = (int) result.get(2);
-      long read = this.readMemoryAsync(transfer, numDp, CortexM.DHCSR, null, num);
+      long dhcsrVal = this.readMemoryAsync(transfer, numDp, CortexM.DHCSR, null, num);
+
+      // assert dhcsr_val & CortexM.S_REGRDY
+      if ((dhcsrVal & CortexM.S_REGRDY) == 0) {
+        throw new Error("writeCoreRegisterRaw: Unexpected value of dhcsrVal = " + dhcsrVal);
+      }
     }
   }
 }
