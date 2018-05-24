@@ -174,12 +174,17 @@ public class CoreSightTarget extends Target {
   }
 
   @Override
-  public long readCoreRegisterRaw(CoreRegister reg) throws Error {
+  public long readCoreRegister(CoreRegister reg) throws TimeoutException, Error {
+    return this.getSelectedCore().readCoreRegister(reg);
+  }
+
+  @Override
+  public long readCoreRegisterRaw(CoreRegister reg) throws TimeoutException, Error {
     return this.getSelectedCore().readCoreRegisterRaw(reg);
   }
 
   @Override
-  public long[] readCoreRegisterRaw(List<CoreRegister> regList) throws Error {
+  public long[] readCoreRegisterRaw(List<CoreRegister> regList) throws TimeoutException, Error {
     return this.getSelectedCore().readCoreRegisterRaw(regList);
   }
 
