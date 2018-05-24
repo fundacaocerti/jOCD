@@ -20,11 +20,11 @@ public class FlashRegion extends MemoryRegion {
   /*
    * Constructor.
    */
-  public FlashRegion(long start, long end, long length, int blockSize,
+  public FlashRegion(long start, long length, int blockSize,
       String name, boolean isBootMemory,
       boolean isPoweredOnBoot, boolean isCacheable,
       boolean invalidateCacheOnRun) {
-    super(MemoryMap.RegionType.Flash, start, end, length, blockSize, name, isBootMemory,
+    super(MemoryMap.RegionType.Flash, start, length, blockSize, name, isBootMemory,
         isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
   }
 
@@ -32,7 +32,7 @@ public class FlashRegion extends MemoryRegion {
    * Constructor.
    */
   public FlashRegion(long start, long length, int blockSize) {
-    super(MemoryMap.RegionType.Flash, start, MemoryRangeBase.DEFAULT_END, length, blockSize, null,
+    super(MemoryMap.RegionType.Flash, start, length, blockSize, null,
         MemoryRegion.DEFAULT_IS_BOOT_MEMORY, MemoryRegion.DEFAULT_IS_POWERED_ON_BOOT,
         MemoryRegion.DEFAULT_IS_CACHEABLE, MemoryRegion.DEFAULT_INVALIDATE_CACHE_ON_RUN);
   }
@@ -41,7 +41,7 @@ public class FlashRegion extends MemoryRegion {
    * Constructor.
    */
   public FlashRegion(long start, long length, int blockSize, boolean isBootMemory) {
-    super(MemoryMap.RegionType.Flash, start, MemoryRangeBase.DEFAULT_END, length, blockSize, null,
+    super(MemoryMap.RegionType.Flash, start, length, blockSize, null,
         isBootMemory, MemoryRegion.DEFAULT_IS_POWERED_ON_BOOT, MemoryRegion.DEFAULT_IS_CACHEABLE,
         MemoryRegion.DEFAULT_INVALIDATE_CACHE_ON_RUN);
   }
