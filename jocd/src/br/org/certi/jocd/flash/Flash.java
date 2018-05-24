@@ -110,6 +110,14 @@ public class Flash {
   public void init() throws InterruptedException, TimeoutException, Error {
     this.target.halt();
     this.target.setTargetState(State.PROGRAM);
+
+    // Update core register to execute the init subroutine.
+    long result = this.callFunctionAndWait(this.flashAlgo.pcInit, null, null, null, null, true);
+
+    // Check the return code.
+    if (result != 0) {
+      LOGGER.log(Level.SEVERE, "Init error: " + result);
+    }
   }
 
   public long[] computeCrcs(List<Sectors> sectors)
@@ -287,6 +295,10 @@ public class Flash {
 
   public void callFunction(long pc, Long r0, Long r1, Long r2, Long r3, Boolean init)
       throws TimeoutException, Error {
+    // Use default value if null.
+    if (init == null) {
+      init = false;
+    }
 
     List<CoreRegister> regList = new ArrayList<CoreRegister>();
     List<Long> dataList = new ArrayList<Long>();
