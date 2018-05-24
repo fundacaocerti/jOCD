@@ -25,7 +25,7 @@ public class FlashPage {
   Boolean erased = null;
   Boolean same = null;
 
-  public int crc;
+  public long crc;
 
   // Number of bytes in a page to read to quickly determine if the page has the same data
   public static final int PAGE_ESTIMATE_SIZE = 32;
