@@ -20,11 +20,11 @@ public class AliasRegion extends MemoryRegion {
   /*
    * Constructor.
    */
-  public AliasRegion(long start, long end, long length, int blockSize,
+  public AliasRegion(long start, long length, int blockSize,
       String name, boolean isBootMemory,
       boolean isPoweredOnBoot, boolean isCacheable,
       boolean invalidateCacheOnRun) {
-    super(MemoryMap.RegionType.Alias, start, end, length, blockSize, name, isBootMemory,
+    super(MemoryMap.RegionType.Alias, start, length, blockSize, name, isBootMemory,
         isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
   }
 }
