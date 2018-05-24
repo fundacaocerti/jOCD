@@ -318,7 +318,7 @@ public class FlashTool {
         return ErrorCode.CORRUPT_HEX_FILE;
       } catch (Error e) {
         LOGGER.log(Level.SEVERE,
-            "Error exception while trying to parse IntelHex. Exception: " + e.toString());
+          "Error. Exception caught: " + e.getMessage());
         return ErrorCode.COMMUNICATION_FAILURE;
       } catch (TimeoutException e) {
         LOGGER.log(Level.SEVERE, "Timeout exception on program. Exception: " + e.toString());
