@@ -254,15 +254,15 @@ public class Target {
     return getState() == Target.State.TARGET_HALTED;
   }
 
-  public long readCoreRegister(CoreRegister reg) {
+  public long readCoreRegister(CoreRegister reg) throws TimeoutException, Error  {
     throw new InternalError("Not implemented");
   }
 
-  public long readCoreRegisterRaw(CoreRegister reg) throws Error {
+  public long readCoreRegisterRaw(CoreRegister reg) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
-  public long[] readCoreRegisterRaw(List<CoreRegister> regList) throws Error {
+  public long[] readCoreRegisterRaw(List<CoreRegister> regList) throws TimeoutException, Error {
     throw new InternalError("Not implemented");
   }
 
