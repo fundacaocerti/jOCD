@@ -20,10 +20,10 @@ public class RamRegion extends MemoryRegion {
   /*
    * Constructor.
    */
-  public RamRegion(long start, long end, long length, int blockSize, String name,
+  public RamRegion(long start, long length, int blockSize, String name,
       boolean isBootMemory, boolean isPoweredOnBoot, boolean isCacheable,
       boolean invalidateCacheOnRun) {
-    super(MemoryMap.RegionType.Ram, start, end, length, blockSize, name, isBootMemory,
+    super(MemoryMap.RegionType.Ram, start, length, blockSize, name, isBootMemory,
         isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
   }
 
@@ -31,7 +31,7 @@ public class RamRegion extends MemoryRegion {
    * Constructor.
    */
   public RamRegion(int start, long length) {
-    super(MemoryMap.RegionType.Ram, start, MemoryRangeBase.DEFAULT_END, length,
+    super(MemoryMap.RegionType.Ram, start, length,
         MemoryRegion.DEFAULT_BLOCK_SIZE, null, MemoryRegion.DEFAULT_IS_BOOT_MEMORY,
         MemoryRegion.DEFAULT_IS_POWERED_ON_BOOT, MemoryRegion.DEFAULT_IS_CACHEABLE,
         MemoryRegion.DEFAULT_INVALIDATE_CACHE_ON_RUN);

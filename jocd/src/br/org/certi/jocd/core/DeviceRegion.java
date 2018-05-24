@@ -20,9 +20,9 @@ public class DeviceRegion extends MemoryRegion {
   /*
    * Constructor.
    */
-  public DeviceRegion(long start, long end, long length, int blockSize, String name,
+  public DeviceRegion(long start, long length, int blockSize, String name,
       boolean isPoweredOnBoot) {
-    super(MemoryMap.RegionType.Device, start, end, length, blockSize, name, false,
+    super(MemoryMap.RegionType.Device, start, length, blockSize, name, false,
         isPoweredOnBoot, false, true);
   }
 }

@@ -20,10 +20,10 @@ public class RomRegion extends MemoryRegion {
   /*
    * Constructor.
    */
-  public RomRegion(long start, long end, long length, int blockSize, String name,
+  public RomRegion(long start, long length, int blockSize, String name,
       boolean isBootMemory, boolean isPoweredOnBoot, boolean isCacheable,
       boolean invalidateCacheOnRun) {
-    super(MemoryMap.RegionType.Rom, start, end, length, blockSize, name, isBootMemory,
+    super(MemoryMap.RegionType.Rom, start, length, blockSize, name, isBootMemory,
         isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
   }
 }
