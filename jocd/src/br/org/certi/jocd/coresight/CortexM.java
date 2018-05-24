@@ -73,10 +73,10 @@ public class CortexM extends Target {
     MSP(17L),
     PSP(18L),
     CFBP(20L),
-    CONTROL(4L),
-    FAULTMASK(3L),
-    BASEPRI(2L),
-    PRIMASK(1L),
+    CONTROL(-4L),
+    FAULTMASK(-3L),
+    BASEPRI(-2L),
+    PRIMASK(-1L),
     FPSCR(33L),
     S0(0x40L),
     S1(0x41L),
@@ -152,24 +152,24 @@ public class CortexM extends Target {
 
   // Debug Fault Status Register
   public static final long DFSR = 0xE000ED30L;
-  public static final int DFSR_EXTERNAL = (1 << 4);
-  public static final int DFSR_VCATCH = (1 << 3);
-  public static final int DFSR_DWTTRAP = (1 << 2);
-  public static final int DFSR_BKPT = (1 << 1);
-  public static final int DFSR_HALTED = (1 << 0);
+  public static final long DFSR_EXTERNAL = (1L << 4);
+  public static final long DFSR_VCATCH = (1L << 3);
+  public static final long DFSR_DWTTRAP = (1L << 2);
+  public static final long DFSR_BKPT = (1L << 1);
+  public static final long DFSR_HALTED = (1L << 0);
 
   // Debug Exception and Monitor Control Register
   public static final long DEMCR = 0xE000EDFCL;
   // DWTENA in armv6 architecture reference manual
-  public static final int DEMCR_TRCENA = (1 << 24);
-  public static final int DEMCR_VC_HARDERR = (1 << 10);
-  public static final int DEMCR_VC_INTERR = (1 << 9);
-  public static final int DEMCR_VC_BUSERR = (1 << 8);
-  public static final int DEMCR_VC_STATERR = (1 << 7);
-  public static final int DEMCR_VC_CHKERR = (1 << 6);
-  public static final int DEMCR_VC_NOCPERR = (1 << 5);
-  public static final int DEMCR_VC_MMERR = (1 << 4);
-  public static final int DEMCR_VC_CORERESET = (1 << 0);
+  public static final long DEMCR_TRCENA = (1L << 24);
+  public static final long DEMCR_VC_HARDERR = (1L << 10);
+  public static final long DEMCR_VC_INTERR = (1L << 9);
+  public static final long DEMCR_VC_BUSERR = (1L << 8);
+  public static final long DEMCR_VC_STATERR = (1L << 7);
+  public static final long DEMCR_VC_CHKERR = (1L << 6);
+  public static final long DEMCR_VC_NOCPERR = (1L << 5);
+  public static final long DEMCR_VC_MMERR = (1L << 4);
+  public static final long DEMCR_VC_CORERESET = (1L << 0);
 
   // CPUID Register
   public static final long CPUID = 0xE000ED00L;
@@ -197,29 +197,29 @@ public class CortexM extends Target {
 
   // Debug Halting Control and Status Register
   public static final long DHCSR = 0xE000EDF0L;
-  public static final int C_DEBUGEN = (1 << 0);
-  public static final int C_HALT = (1 << 1);
-  public static final int C_STEP = (1 << 2);
-  public static final int C_MASKINTS = (1 << 3);
-  public static final int C_SNAPSTALL = (1 << 5);
-  public static final int S_REGRDY = (1 << 16);
-  public static final int S_HALT = (1 << 17);
-  public static final int S_SLEEP = (1 << 18);
-  public static final int S_LOCKUP = (1 << 19);
-  public static final int S_RETIRE_ST = (1 << 24);
-  public static final int S_RESET_ST = (1 << 25);
+  public static final long C_DEBUGEN = (1L << 0);
+  public static final long C_HALT = (1L << 1);
+  public static final long C_STEP = (1L << 2);
+  public static final long C_MASKINTS = (1L << 3);
+  public static final long C_SNAPSTALL = (1L << 5);
+  public static final long S_REGRDY = (1L << 16);
+  public static final long S_HALT = (1L << 17);
+  public static final long S_SLEEP = (1L << 18);
+  public static final long S_LOCKUP = (1L << 19);
+  public static final long S_RETIRE_ST = (1L << 24);
+  public static final long S_RESET_ST = (1L << 25);
 
   // Debug Core Register Data Register
   public static final long DCRDR = 0xE000EDF8L;
 
   // Coprocessor Access Control Register
   public static final long CPACR = 0xE000ED88L;
-  public static final int CPACR_CP10_CP11_MASK = (3 << 20) | (3 << 22);
+  public static final long CPACR_CP10_CP11_MASK = (3L << 20) | (3L << 22);
 
   public static final long NVIC_AIRCR = 0xE000ED0CL;
   public static final long NVIC_AIRCR_VECTKEY = (0x5FAL << 16);
-  public static final int NVIC_AIRCR_VECTRESET = (1 << 0);
-  public static final int NVIC_AIRCR_SYSRESETREQ = (1 << 2);
+  public static final long NVIC_AIRCR_VECTRESET = (1L << 0);
+  public static final long NVIC_AIRCR_SYSRESETREQ = (1L << 2);
 
   public static final long DBGKEY = (0xA05FL << 16);
 
@@ -303,7 +303,7 @@ public class CortexM extends Target {
     }
 
     this.arch = (cpuid & CortexM.CPUID_ARCHITECTURE_MASK) >> CortexM.CPUID_ARCHITECTURE_POS;
-    int coreType = (int) ((cpuid & CortexM.CPUID_PARTNO_MASK) >> CortexM.CPUID_PARTNO_POS);
+    long coreType = (cpuid & CortexM.CPUID_PARTNO_MASK) >> CortexM.CPUID_PARTNO_POS;
     this.coreType = CpuId.getCpuId(coreType);
     LOGGER.log(Level.FINE, "CPU core is " + this.coreType.toString());
   }
@@ -460,7 +460,7 @@ public class CortexM extends Target {
     long timeoutMs = 2000;
     while ((System.currentTimeMillis() - startTime) < timeoutMs) {
       try {
-        int dhcsr = (int) read32(CortexM.DHCSR);
+        long dhcsr = read32(CortexM.DHCSR);
         if ((dhcsr & CortexM.S_RESET_ST) == 0) {
           break;
         }
@@ -478,6 +478,7 @@ public class CortexM extends Target {
   public void halt() throws TimeoutException, Error {
     this.writeMemory(CortexM.DHCSR, CortexM.DBGKEY | CortexM.C_DEBUGEN | CortexM.C_HALT, null);
     this.dp.flush();
+    State state = this.getState();
   }
 
   /*
@@ -497,7 +498,7 @@ public class CortexM extends Target {
     halt();
 
     // Save CortexM.DEMCR.
-    int demcr = (int) readMemoryNow(CortexM.DEMCR, null);
+    long demcr = readMemoryNow(CortexM.DEMCR, null);
 
     // Enable the vector catch.
     writeMemory(CortexM.DEMCR, demcr | CortexM.DEMCR_VC_CORERESET, null);
@@ -527,13 +528,13 @@ public class CortexM extends Target {
 
   @Override
   public State getState() throws TimeoutException, Error {
-    int dhcsr = (int) readMemoryNow(CortexM.DHCSR, null);
+    long dhcsr = readMemoryNow(CortexM.DHCSR, null);
 
     if ((dhcsr & CortexM.S_RESET_ST) != 0) {
       // Reset is a special case because the bit is sticky and really means "core was reset since
       // last read of DHCSR".We have to re - read the DHCSR, check if S_RESET_ST is still set and
       // make sure no instructions were executed by checking S_RETIRE_ST.
-      int newDhcsr = (int) readMemoryNow(CortexM.DHCSR, null);
+      long newDhcsr = readMemoryNow(CortexM.DHCSR, null);
       if ((newDhcsr & CortexM.S_RESET_ST) != 0 && (newDhcsr & CortexM.S_RETIRE_ST) == 0) {
         return Target.State.TARGET_RESET;
       }

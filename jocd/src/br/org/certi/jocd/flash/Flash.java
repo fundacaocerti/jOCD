@@ -128,7 +128,7 @@ public class Flash {
       // Address must be a multiple of size.
       assert (sector.address % sector.size) == 0;
 
-      int val = (int) ((sizeVal << 0) | (addressVal << 16));
+      long val = ((sizeVal << 0) | (addressVal << 16));
       words[i] = val;
       i++;
     }
@@ -179,7 +179,8 @@ public class Flash {
   /*
    * Flash one page.
    */
-  public void programPage(long flashPtr, byte[] data) throws InterruptedException, TimeoutException, Error {
+  public void programPage(long flashPtr, byte[] data)
+      throws InterruptedException, TimeoutException, Error {
     // Prevent security settings from locking the device.
     data = overrideSecurityBits(flashPtr, data);
 
