@@ -53,8 +53,8 @@ public class Fpb extends BreakpointProvider {
   @Override
   public void init() throws TimeoutException, Error {
     long fpcr = this.ap.readMemory(Fpb.FP_CTRL, null);
-    this.nbCode = (int) (((fpcr >> 8) & 0x70L) | ((fpcr >> 4) & 0x0FL));
-    this.nbLit = (int) ((fpcr >> 7) & 0x0FL);
+    this.nbCode = ((fpcr >> 8) & 0x70L) | ((fpcr >> 4) & 0x0FL);
+    this.nbLit = (fpcr >> 7) & 0x0FL;
     LOGGER.log(Level.FINE,
         this.nbCode + "hardware breakpoints, " + this.nbLit + " literal comparators");
 

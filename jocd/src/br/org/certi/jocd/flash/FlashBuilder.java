@@ -280,7 +280,7 @@ public class FlashBuilder {
 
     LOGGER.log(Level.FINE, String
         .format("Programmed %d bytes (%d pages) at %.02f kB/s", programByteCount, pageList.size(),
-            ((programByteCount / 1024) / this.perf.programTime)));
+            (float)((float)(programByteCount / 1024) / this.perf.programTime)));
 
     return this.perf;
   }
@@ -397,7 +397,7 @@ public class FlashBuilder {
         data = Util.fillArray(data, (int) page.size, (byte) 0xFF);
         CRC32 crc = new CRC32();
         crc.update(data);
-        page.crc = (int) (crc.getValue() & 0xFFFFFFFFL);
+        page.crc = (crc.getValue() & 0xFFFFFFFFL);
       }
     }
 
@@ -513,7 +513,7 @@ public class FlashBuilder {
       this.flash.startProgramPageWithBuffer(currentBuffer, currentAddress);
 
       // Get next page and load it.
-      pageIndex = nextUnerasedPage(pageIndex);
+      pageIndex = nextUnerasedPage(pageIndex + 1);
       if (pageIndex >= 0) {
         page = this.pageList.get(pageIndex);
         this.flash.loadPageBuffer(nextBuffer, page.address, page.data);
@@ -605,6 +605,7 @@ public class FlashBuilder {
       // Read page data if unknown - after this page.same will be True or False.
       if (page.same == null) {
         byte[] data = this.flash.target.readBlockMemoryUnaligned8(page.address, page.data.length);
+
         page.same = same(page.data, data, data.length);
         progress += page.getVerifyWeight();
         count++;
@@ -675,7 +676,7 @@ public class FlashBuilder {
         actualPageEraseWeight += page.getEraseProgramWeight();
 
         // Get next page and load it.
-        pageIndex = nextNonsamePage(pageIndex);
+        pageIndex = nextNonsamePage(pageIndex + 1);
         if (pageIndex >= 0) {
           page = pageList.get(pageIndex);
           this.flash.loadPageBuffer(nextBuffer, page.address, page.data);
