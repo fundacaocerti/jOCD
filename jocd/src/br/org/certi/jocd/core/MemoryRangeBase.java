@@ -25,13 +25,13 @@ public class MemoryRangeBase {
   public static final long DEFAULT_END = 0;
   public static final int DEFAULT_LENGTH = 0;
 
-  public MemoryRangeBase(long start, long end, long length) {
+  public MemoryRangeBase(long start, long length) {
     this.start = start;
     if (length != 0) {
       this.end = this.start + length - 1;
     }
     else {
-      this.end = end;
+      this.end = DEFAULT_END;
     }
     this.length = length;
   }
