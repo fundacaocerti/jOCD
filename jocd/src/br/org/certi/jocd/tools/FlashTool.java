@@ -167,7 +167,7 @@ public class FlashTool {
       }
     } catch (UnspecifiedBoardIDException e) {
       LOGGER.log(Level.SEVERE, "Unspecified board ID. Exception: " + e.toString());
-      return ErrorCode.UNSPECIFIED_BOARD;
+      return ErrorCode.INVALID_BOARD;
     } catch (TimeoutException e) {
       LOGGER.log(Level.SEVERE, e.toString());
       return ErrorCode.TIMEOUT_EXCEPTION;
@@ -176,20 +176,20 @@ public class FlashTool {
       return ErrorCode.NO_BOARD_CONNECTED;
     } catch (UniqueIDNotFoundException e) {
       LOGGER.log(Level.SEVERE, "Board unique ID not found. Exception: " + e.toString());
-      return ErrorCode.BOARD_UNIQUE_ID_NOT_FOUND;
+      return ErrorCode.INVALID_BOARD;
     } catch (Error error) {
       LOGGER.log(Level.SEVERE, "DAP Access error. Exception: " + error.toString());
       return ErrorCode.DAP_ACCESS_ERROR;
     } catch (UnsupportedBoardException e) {
       LOGGER.log(Level.SEVERE, "Unsupported Board. Exception: " + e.toString());
-      return ErrorCode.UNSUPPORTED_BOARD_EXCEPTION;
+      return ErrorCode.INVALID_BOARD;
     }
     // As we throw exceptions when MbedBoard.chooseBoard
     // can't find the board, we should never get here with
     // selectedBoard == null.
     if (selectedBoard == null) {
       LOGGER.log(Level.SEVERE, "Unexpected null pointer on flashBoard(). selectedBoard is null");
-      return ErrorCode.NO_BOARD_SELECTED;
+      return ErrorCode.INVALID_BOARD;
     }
 
     if (chipErase) {
