@@ -18,9 +18,9 @@ package br.org.certi.flashtooltest;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import br.org.certi.jocd.Jocd.ErrorCode;
 import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
-import br.org.certi.jocd.tools.AsyncResponse;
 import br.org.certi.jocd.tools.FlashTool;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
 
@@ -52,7 +52,7 @@ public class AsyncFlashToolFlashBoard extends AsyncTask<String, Integer, String>
 
   @Override
   protected String doInBackground(String... params) {
-    String resp = "Devices: ";
+    ErrorCode errorCode;
 
     if (this.flashFilePath == null) {
       this.exceptionOccurred = true;
@@ -64,14 +64,14 @@ public class AsyncFlashToolFlashBoard extends AsyncTask<String, Integer, String>
     this.exceptionOccurred = false;
 
     try {
-      resp = tool.flashBoard(this.flashFilePath, this) ? "true" : "false";
+      errorCode = tool.flashBoard(this.flashFilePath, this);
     } catch (Exception exception) {
       this.exceptionOccurred = true;
       onException(exception);
       return null;
     }
 
-    return resp;
+    return errorCode.toString();
   }
 
   @Override

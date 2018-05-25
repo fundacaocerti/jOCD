@@ -27,9 +27,9 @@ public class AndroidApplicationContext {
     return applicationContext;
   }
 
-  public void init(Context context) {
+  public void init(Object context) {
     if (applicationContext == null) {
-      applicationContext = context;
+      applicationContext = (Context) context;
     }
   }
 

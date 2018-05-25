@@ -19,13 +19,8 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 import br.org.certi.jocd.board.MbedBoard;
-import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
-import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
-import br.org.certi.jocd.tools.AsyncResponse;
-import br.org.certi.jocd.tools.FlashTool;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 public class AsyncFlashToolListDevices extends AsyncTask<String, String, List<MbedBoard>> implements
     ProgressUpdateInterface {
