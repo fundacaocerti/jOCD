@@ -25,22 +25,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * jOCD is a Java library for programming and debugging ARM Cortex-M microcontrollers using
+ * jOCD is a Java library for programming ARM Cortex-M microcontrollers using
  * CMSIS-DAP.
  */
 public class Jocd {
 
   // Logging
-  private final static String CLASS_NAME = FlashTool.class.getName();
+  private final static String CLASS_NAME = Jocd.class.getName();
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
+  /**
+   *
+   */
   public enum ErrorCode {
     SUCCESS,
-    BOARD_UNIQUE_ID_NOT_FOUND,
     NO_BOARD_CONNECTED,
-    UNSPECIFIED_BOARD,
-    UNSUPPORTED_BOARD_EXCEPTION,
-    NO_BOARD_SELECTED,
+    INVALID_BOARD,
     TIMEOUT_EXCEPTION,
     INTERRUPTED_EXCEPTION,
     DAP_ACCESS_ERROR,
@@ -61,7 +61,8 @@ public class Jocd {
   }
 
   /**
-   * Returns map with connected boards name and unique ID.   *
+   * Returns map with connected boards name and unique ID.
+   *
    * @return map with connected boards name and unique ID.
    */
   public static HashMap<String, String> getAllConnectedBoardsName() {
@@ -87,7 +88,7 @@ public class Jocd {
    * @param progressUpdate callback interface for reporting flashing progress update
    * @param uniqueId board unique ID where to flash file. If null it will search for the connected
    * devices and choose the first one.
-   * @return map with connected boards name and unique ID.
+   * @return the error code of the flash operation.
    */
   public static ErrorCode flashBoard(String file, ProgressUpdateInterface progressUpdate,
       String uniqueId) {
