@@ -37,9 +37,12 @@ public class Transfer {
    * Constructor.
    */
   public Transfer(DapAccessCmsisDap dapLink, byte dapIndex, int transferCount,
-      byte transferRequest, long[] transferData) {
+      byte transferRequest, long[] transferData) throws Error {
     // Writes should not need a transfer object since they don't have any response data
-    assert (transferRequest & DapAccessCmsisDap.READ) != 0;
+    // Assert (transferRequest & DapAccessCmsisDap.READ) != 0.
+    if ((transferRequest & DapAccessCmsisDap.READ) == 0) {
+      throw new Error("Transfer: (transferRequest & DapAccessCmsisDap.READ) == 0");
+    }
 
     this.dapLink = dapLink;
     this.dapIndex = dapIndex;
@@ -62,8 +65,12 @@ public class Transfer {
    * Add data read from the remote device to this object.
    * The size of data added must match exactly the size that get_data_size returns.
    */
-  public void addResponse(byte[] data) {
-    assert data.length == this.sizeBytes;
+  public void addResponse(byte[] data) throws Error {
+    // Assert data.length == this.sizeBytes.
+    if (data.length != this.sizeBytes) {
+      throw new Error("addResponse: data.length != this.sizeBytes");
+    }
+
     int resultSize = this.sizeBytes / 4;
     long[] result = new long[resultSize];
     int count = 0;
@@ -80,8 +87,12 @@ public class Transfer {
   /*
    * Attach an exception to this transfer rather than data.
    */
-  public void addError(Error error) {
-    assert error instanceof Error;
+  public void addError(Error error) throws Error {
+    // Assert error instanceof Error.
+    if (!(error instanceof Error)) {
+      throw new Error("getResult: !(error instanceof Error)");
+    }
+
     this.error = error;
   }
 
@@ -93,7 +104,12 @@ public class Transfer {
       if (this.dapLink.getCommandsToRead().size() > 0) {
         this.dapLink.readPacket();
       } else {
-        assert !this.dapLink.getCrntCmd().getEmpty();
+
+        // Assert !this.dapLink.getCrntCmd().getEmpty().
+        if (this.dapLink.getCrntCmd().getEmpty()) {
+          throw new Error("getResult: this.dapLink.getCrntCmd().getEmpty()");
+        }
+
         this.dapLink.flush();
       }
     }
@@ -102,7 +118,11 @@ public class Transfer {
       throw this.error;
     }
 
-    assert this.result != null;
+    // Assert this.result != null.
+    if (this.result == null) {
+      throw new Error("getResult: result == null");
+    }
+
     return this.result;
   }
 }

@@ -126,8 +126,6 @@ public class DapAccessCmsisDap {
       try {
         String uniqueId = getUniqueId(device);
         if (this.uniqueId.equals(uniqueId)) {
-          // This assert could indicate that two boards had the same ID
-          assert Jocd.connectionInterface == null;
           Jocd.connectionInterface = device;
         }
       } catch (Exception exception) {
@@ -247,7 +245,10 @@ public class DapAccessCmsisDap {
 
   public void writeReg(long regId, long value, byte dapIndex)
       throws TimeoutException, Error {
-    assert Reg.containsReg(regId);
+    // Assert Reg.containsReg(regId).
+    if (!Reg.containsReg(regId)) {
+      throw new Error("writeReg: !Reg.containsReg(regId)");
+    }
 
     byte request = WRITE;
     if (regId < 4) {
@@ -277,7 +278,10 @@ public class DapAccessCmsisDap {
 
   public Transfer readReg(long regId, byte dapIndex)
       throws TimeoutException, Error {
-    assert Reg.containsReg(regId);
+    // Assert Reg.containsReg(regId).
+    if (!Reg.containsReg(regId)) {
+      throw new Error("readReg: !Reg.containsReg(regId)");
+    }
 
     byte request = READ;
     if (regId < 4) {
@@ -287,20 +291,37 @@ public class DapAccessCmsisDap {
     }
     request |= (regId % 4) << 2;
     Transfer transfer = this.write(dapIndex, 1, request, null);
-    assert transfer != null;
+
+    // Assert transfer != null.
+    if (transfer == null) {
+      throw new Error("readReg: transfer == null");
+    }
+
     return transfer;
   }
 
   public long readRegAsync(Transfer transfer) throws TimeoutException, Error {
     long[] res = transfer.getResult();
-    assert res.length == 1;
+
+    // Assert res.length == 1.
+    if (res.length != 1) {
+      throw new Error("readRegAsync: res.length != 1");
+    }
     return res[0];
   }
 
   public void regWriteRepeat(int numRepeats, long regId, long[] dataArray, Byte dapIndex)
       throws Error, TimeoutException {
-    assert numRepeats == dataArray.length;
-    assert Reg.containsReg(regId);
+    // Assert numRepeats == dataArray.length.
+    if (numRepeats != dataArray.length) {
+      throw new Error("regWriteRepeat: numRepeats == dataArray.length");
+    }
+
+    // Assert Reg.containsReg(regId).
+    if (!Reg.containsReg(regId)) {
+      throw new Error("regWriteRepeat: !Reg.containsReg(regId)");
+    }
+
     if (dapIndex == null) {
       dapIndex = 0;
     }
@@ -329,7 +350,11 @@ public class DapAccessCmsisDap {
 
   public Transfer regReadRepeatLater(int numRepeats, long regId, Byte dapIndex)
       throws Error, TimeoutException {
-    assert Reg.containsReg(regId);
+    // Assert Reg.containsReg(regId).
+    if (!Reg.containsReg(regId)) {
+      throw new Error("regReadRepeatLater: !Reg.containsReg(regId)");
+    }
+
     if (dapIndex == null) {
       dapIndex = 0;
     }
@@ -342,7 +367,11 @@ public class DapAccessCmsisDap {
     }
     request |= (regId % 4) * 4;
     Transfer transfer = this.write(dapIndex, numRepeats, request, null);
-    assert transfer != null;
+
+    // Assert transfer != null.
+    if (transfer == null) {
+      throw new Error("regReadRepeatLater: transfer == null");
+    }
 
     return transfer;
   }
@@ -350,7 +379,12 @@ public class DapAccessCmsisDap {
   public long[] regReadRepeatAsync(Transfer transfer, int numRepeats)
       throws TimeoutException, Error {
     long[] res = transfer.getResult();
-    assert res.length == numRepeats;
+
+    // Assert res.length == numRepeats.
+    if (res.length != numRepeats) {
+      throw new Error("regReadRepeatAsync: res.length != numRepeats");
+    }
+
     return res;
   }
 
@@ -507,8 +541,15 @@ public class DapAccessCmsisDap {
   private Transfer write(byte dapIndex, int transferCount, byte transferRequest,
       long[] transferData)
       throws TimeoutException, Error {
-    assert dapIndex == 0;
-    assert transferData == null || transferData.length != 0;
+    // Assert dapIndex == 0.
+    if (dapIndex != 0) {
+      throw new Error("write: dapIndex != 0");
+    }
+
+    // Assert transferData == null || transferData.length != 0.
+    if (!(transferData == null || transferData.length != 0)) {
+      throw new Error("write: !(transferData == null || transferData.length != 0)");
+    }
 
     // Create transfer and add to transfer list
     Transfer transfer = null;
@@ -563,7 +604,7 @@ public class DapAccessCmsisDap {
   /*
    * Abort any ongoing transfers and clear all buffers
    */
-  private void abortAllTransfers(Error exception) {
+  private void abortAllTransfers(Error exception) throws Error {
     int pendingReads = this.commandsToRead.size();
     // Invalidate transferList
     for (Transfer transfer : this.transferList) {
