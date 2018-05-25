@@ -74,6 +74,14 @@ public class MbedBoard extends Board {
     super.setup(link, target, frequency);
   }
 
+  public String getUniqueId() {
+    return uniqueId;
+  }
+
+  public String getName() {
+    return name;
+  }
+
   /*
    * Overload for getAllConnectedBoards using default values.
    */
@@ -223,6 +231,18 @@ public class MbedBoard extends Board {
     }
 
     return board;
+  }
+
+  public static MbedBoard getMbedBoardByUniqueId(String uniqueId) throws UnsupportedBoardException {
+    List<DapAccessCmsisDap> connectedDaps = DapAccessCmsisDap.getConnectedDevices();
+
+    // Loop for each device.
+    for (DapAccessCmsisDap dapAccess : connectedDaps) {
+      if (dapAccess.getUniqueId().equals(uniqueId)) {
+        return new MbedBoard(dapAccess, null, null);
+      }
+    }
+    return null;
   }
 
   public static class NoBoardConnectedException extends Exception {

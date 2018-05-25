@@ -60,10 +60,10 @@ public class CoreSightTarget extends Target {
   }
 
   @Override
-  public Target getSelectedCore() {
+  public Target getSelectedCore() throws Error {
     if (selectedCore >= this.coreList.size()) {
       LOGGER.log(Level.SEVERE, "getSelectedCore: unexpected core index: " + selectedCore);
-      return null;
+      throw new Error("getSelectedCore: unexpected core index: " + selectedCore);
     }
 
     return this.coreList.get(selectedCore);
@@ -174,12 +174,12 @@ public class CoreSightTarget extends Target {
   }
 
   @Override
-  public long readCoreRegisterRaw(CoreRegister reg) {
+  public long readCoreRegisterRaw(CoreRegister reg) throws Error {
     return this.getSelectedCore().readCoreRegisterRaw(reg);
   }
 
   @Override
-  public long[] readCoreRegisterRaw(List<CoreRegister> regList) {
+  public long[] readCoreRegisterRaw(List<CoreRegister> regList) throws Error {
     return this.getSelectedCore().readCoreRegisterRaw(regList);
   }
 
