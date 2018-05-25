@@ -15,7 +15,12 @@
  */
 package br.org.certi.jocd.tools;
 
+import br.org.certi.jocd.Jocd.ErrorCode;
 import br.org.certi.jocd.board.MbedBoard;
+import br.org.certi.jocd.board.MbedBoard.NoBoardConnectedException;
+import br.org.certi.jocd.board.MbedBoard.UniqueIDNotFoundException;
+import br.org.certi.jocd.board.MbedBoard.UnspecifiedBoardIDException;
+import br.org.certi.jocd.board.MbedBoard.UnsupportedBoardException;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
@@ -84,10 +89,7 @@ public class FlashTool {
   /*
    * Overload to call flashBoard with default values.
    */
-  public boolean flashBoard(String file, ProgressUpdateInterface progressUpdate)
-      throws MbedBoard.NoBoardConnectedException, MbedBoard.UniqueIDNotFoundException,
-      MbedBoard.UnspecifiedBoardIDException, InternalError, DeviceError, TimeoutException,
-      InsufficientPermissions, InterruptedException, Error {
+  public ErrorCode flashBoard(String file, ProgressUpdateInterface progressUpdate) {
 
     return flashBoard(
         progressUpdate,
@@ -105,7 +107,29 @@ public class FlashTool {
         null);      // frequency - use the default frequency.
   }
 
-  public boolean flashBoard(
+  /*
+   * Overload to call flashBoard with default values.
+   */
+  public ErrorCode flashBoard(String file, ProgressUpdateInterface progressUpdate,
+      String uniqueId) {
+
+    return flashBoard(
+        progressUpdate,
+        file,
+        false,   // massErase
+        false,   // chipErase
+        false,  // sectorErase
+        null,      // address
+        null,       // count
+        null,       // format (use the file extension).
+        null,            // skip
+        false,  // fastProgram
+        uniqueId,      // The board unique ID to use.
+        null, // targetEnum - use the default target.
+        null);      // frequency - use the default frequency.
+  }
+
+  public ErrorCode flashBoard(
       ProgressUpdateInterface progressUpdate,
       String file,
       boolean massErase,   // Mass erase the target device.
@@ -121,13 +145,10 @@ public class FlashTool {
       // Skip programming the first N bytes.  This can only be used with binary files
       boolean fastProgram,
       // Use only the CRC of each page to determine if it already has the same data.
-      String boardId,      // The boardId to use.
+      String uniqueId,      // The board unique ID to use.
       targetEnum targetOverride, // Override the detected target (detected by serial number).
       Integer frequency    // Set the SWD clock frequency in Hz."
-  )
-      throws MbedBoard.NoBoardConnectedException, MbedBoard.UniqueIDNotFoundException,
-      MbedBoard.UnspecifiedBoardIDException, InternalError, TimeoutException, InterruptedException,
-      Error {
+  ) {
 
     // Select default values.
     if (count == null) {
@@ -139,20 +160,36 @@ public class FlashTool {
 
     MbedBoard selectedBoard = null;
     try {
-      selectedBoard = MbedBoard.chooseBoard();
-    } catch (Error e) {
-      LOGGER.log(Level.SEVERE,
-          "Error exception when trying to select board. Exception: " + e.getMessage());
-      return false;
+      if (uniqueId == null) {
+        selectedBoard = MbedBoard.chooseBoard();
+      } else {
+        selectedBoard = MbedBoard.getMbedBoardByUniqueId(uniqueId);
+      }
+    } catch (UnspecifiedBoardIDException e) {
+      LOGGER.log(Level.SEVERE, "Unspecified board ID. Exception: " + e.toString());
+      return ErrorCode.UNSPECIFIED_BOARD;
+    } catch (TimeoutException e) {
+      LOGGER.log(Level.SEVERE, e.toString());
+      return ErrorCode.TIMEOUT_EXCEPTION;
+    } catch (NoBoardConnectedException e) {
+      LOGGER.log(Level.SEVERE, "No board connected. Exception: " + e.toString());
+      return ErrorCode.NO_BOARD_CONNECTED;
+    } catch (UniqueIDNotFoundException e) {
+      LOGGER.log(Level.SEVERE, "Board unique ID not found. Exception: " + e.toString());
+      return ErrorCode.BOARD_UNIQUE_ID_NOT_FOUND;
+    } catch (Error error) {
+      LOGGER.log(Level.SEVERE, "DAP Access error. Exception: " + error.toString());
+      return ErrorCode.DAP_ACCESS_ERROR;
+    } catch (UnsupportedBoardException e) {
+      LOGGER.log(Level.SEVERE, "Unsupported Board. Exception: " + e.toString());
+      return ErrorCode.UNSUPPORTED_BOARD_EXCEPTION;
     }
-
     // As we throw exceptions when MbedBoard.chooseBoard
     // can't find the board, we should never get here with
     // selectedBoard == null.
     if (selectedBoard == null) {
-      LOGGER.log(Level.SEVERE, "Unexpected null pointer on flashBoard(). selectedBoard is " +
-          "null after chooseBoard");
-      throw new InternalError();
+      LOGGER.log(Level.SEVERE, "Unexpected null pointer on flashBoard(). selectedBoard is null");
+      return ErrorCode.NO_BOARD_SELECTED;
     }
 
     if (chipErase) {
@@ -161,48 +198,59 @@ public class FlashTool {
         LOGGER.log(Level.FINE, "Successfully erased.");
       } else {
         LOGGER.log(Level.SEVERE, "Error while mass erasing board.");
-        return false;
+        return ErrorCode.MASS_ERASING_ERROR;
       }
     }
 
     if (file == null || file.isEmpty()) {
-      if (chipErase) {
-        LOGGER.log(Level.FINE, "Erasing chip...");
-        selectedBoard.flash.init();
-        selectedBoard.flash.eraseAll();
-        LOGGER.log(Level.FINE, "Done.");
-      } else if (sectorErase) {
-        selectedBoard.flash.init();
-        Long pageAddr = address;
+      try {
+        if (chipErase) {
+          LOGGER.log(Level.FINE, "Erasing chip...");
+          selectedBoard.flash.init();
+          selectedBoard.flash.eraseAll();
+          LOGGER.log(Level.FINE, "Done.");
+        } else if (sectorErase) {
+          selectedBoard.flash.init();
+          Long pageAddr = address;
 
-        for (int i = 0; i < count; i++) {
-          PageInfo pageInfo = selectedBoard.flash.getPageInfo(pageAddr);
-          if (pageInfo == null) {
-            break;
-          }
-
-          // Align page address on first time through.
-          if (i == 0) {
-            Long delta = pageAddr % pageInfo.size;
-
-            if (delta > 0) {
-              // Address unaligned.
-              LOGGER.log(Level.WARNING, "Warning: sector address " +
-                  String.format("%08X", pageAddr) + " is unaligned");
-              // TODO implement a better way to give this feedback to user.
-              pageAddr -= delta;
+          for (int i = 0; i < count; i++) {
+            PageInfo pageInfo = selectedBoard.flash.getPageInfo(pageAddr);
+            if (pageInfo == null) {
+              break;
             }
+
+            // Align page address on first time through.
+            if (i == 0) {
+              Long delta = pageAddr % pageInfo.size;
+
+              if (delta > 0) {
+                // Address unaligned.
+                LOGGER.log(Level.WARNING, "Warning: sector address " +
+                    String.format("%08X", pageAddr) + " is unaligned");
+                // TODO implement a better way to give this feedback to user.
+                pageAddr -= delta;
+              }
+            }
+            LOGGER.log(Level.FINE, "Erasing sector " + String.format("%08X", pageAddr));
+            selectedBoard.flash.erasePage(pageAddr);
+            pageAddr += pageInfo.size;
           }
-          LOGGER.log(Level.FINE, "Erasing sector " + String.format("%08X", pageAddr));
-          selectedBoard.flash.erasePage(pageAddr);
-          pageAddr += pageInfo.size;
+        } else {
+          // TODO implement a better way to give this feedback to user.
+          LOGGER.log(Level.FINE, "No operation performed");
+          return ErrorCode.NO_OPERATION_PERFORMED;
         }
-      } else {
-        // TODO implement a better way to give this feedback to user.
-        LOGGER.log(Level.FINE, "No operation performed");
-        return false;
+      } catch (InterruptedException e) {
+        LOGGER.log(Level.SEVERE, e.toString());
+        return ErrorCode.INTERRUPTED_EXCEPTION;
+      } catch (TimeoutException e) {
+        LOGGER.log(Level.SEVERE, e.toString());
+        return ErrorCode.TIMEOUT_EXCEPTION;
+      } catch (Error error) {
+        LOGGER.log(Level.SEVERE, "DAP Access error. Exception: " + error.toString());
+        return ErrorCode.DAP_ACCESS_ERROR;
       }
-      return true;
+      return ErrorCode.SUCCESS;
     }
 
     // Check if the format was provided. If no format
@@ -226,6 +274,7 @@ public class FlashTool {
         //selectedBoard.flash.flashBlock(address);
       } catch (FileNotFoundException e) {
         LOGGER.log(Level.SEVERE, "File not found: " + file);
+        return ErrorCode.FILE_NOT_FOUND;
       }
     }
     // Intel Hex format.
@@ -255,24 +304,28 @@ public class FlashTool {
         flashBuilder.program(chipErase, progressUpdate, true, fastProgram);
       } catch (FileNotFoundException e) {
         LOGGER.log(Level.SEVERE, "File not found: " + file);
-        return false;
+        return ErrorCode.FILE_NOT_FOUND;
       } catch (IOException e) {
-        LOGGER.log(Level.SEVERE, "IOException while trying program using IntelHex.");
-        return false;
+        LOGGER.log(Level.SEVERE,
+            "IOException while trying program using IntelHex. Exception: " + e.toString());
+        return ErrorCode.CORRUPT_HEX_FILE;
       } catch (IntelHexException e) {
-        LOGGER.log(Level.SEVERE, "IntelHexException while trying to parse IntelHex.");
-        return false;
+        LOGGER.log(Level.SEVERE,
+            "IntelHexException while trying to parse IntelHex. Exception: " + e.toString());
+        return ErrorCode.CORRUPT_HEX_FILE;
       } catch (InterruptedException e) {
         LOGGER.log(Level.WARNING,
-            "InterruptedException while trying to parse IntelHex. Exception: " + e.getMessage());
-        return false;
+            "InterruptedException while trying to parse IntelHex. Exception: " + e.toString());
+        return ErrorCode.CORRUPT_HEX_FILE;
       } catch (Error e) {
         LOGGER.log(Level.SEVERE,
-            "Error exception while trying to parse IntelHex. Exception: " + e.getMessage());
-        return false;
+            "Error exception while trying to parse IntelHex. Exception: " + e.toString());
+        return ErrorCode.DAP_ACCESS_ERROR;
+      } catch (TimeoutException e) {
+        LOGGER.log(Level.SEVERE, "Timeout exception on program. Exception: " + e.toString());
+        return ErrorCode.TIMEOUT_EXCEPTION;
       }
-
     }
-    return true;
+    return ErrorCode.SUCCESS;
   }
 }

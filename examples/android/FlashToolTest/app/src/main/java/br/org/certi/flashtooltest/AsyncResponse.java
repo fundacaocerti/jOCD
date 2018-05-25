@@ -13,7 +13,7 @@
  * See the license for the specific language governing permissions and
  * limitations under the license.
  */
-package br.org.certi.jocd.tools;
+package br.org.certi.flashtooltest;
 
 import br.org.certi.jocd.board.MbedBoard;
 import java.util.List;

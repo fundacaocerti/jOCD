@@ -258,11 +258,11 @@ public class Target {
     throw new InternalError("Not implemented");
   }
 
-  public long readCoreRegisterRaw(CoreRegister reg) {
+  public long readCoreRegisterRaw(CoreRegister reg) throws Error {
     throw new InternalError("Not implemented");
   }
 
-  public long[] readCoreRegisterRaw(List<CoreRegister> regList) {
+  public long[] readCoreRegisterRaw(List<CoreRegister> regList) throws Error {
     throw new InternalError("Not implemented");
   }
 
@@ -299,7 +299,7 @@ public class Target {
     throw new InternalError("Not implemented");
   }
 
-  public Target getSelectedCore() {
+  public Target getSelectedCore() throws Error {
     throw new InternalError("Not implemented");
   }
 }

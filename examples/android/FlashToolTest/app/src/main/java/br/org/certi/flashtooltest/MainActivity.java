@@ -38,7 +38,6 @@ import android.widget.Toast;
 import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.connectioninterface.android.AndroidApplicationContext;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
-import br.org.certi.jocd.tools.AsyncResponse;
 import java.io.File;
 import java.util.List;
 
