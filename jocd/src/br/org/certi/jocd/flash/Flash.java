@@ -131,10 +131,16 @@ public class Flash {
       long addressVal = sector.address / sector.size;
 
       // Size must be a power of 2.
-      assert (1 << sizeVal) == sector.size;
+      // Assert (1 << sizeVal) == sector.size.
+      if ((1 << sizeVal) != sector.size) {
+        throw new Error("computeCrcs: (1 << sizeVal) != sector.size");
+      }
 
       // Address must be a multiple of size.
-      assert (sector.address % sector.size) == 0;
+      // Assert (sector.address % sector.size) == 0.
+      if ((sector.address % sector.size) != 0) {
+        throw new Error("computeCrcs: (sector.address % sector.size) != 0");
+      }
 
       long val = ((sizeVal << 0) | (addressVal << 16));
       words[i] = val;
