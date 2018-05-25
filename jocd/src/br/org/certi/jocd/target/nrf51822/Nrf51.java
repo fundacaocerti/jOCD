@@ -81,9 +81,7 @@ public class Nrf51 extends CoreSightTarget {
 
   @Override
   public boolean massErase() {
-    // Not implemented.
-    LOGGER.log(Level.SEVERE, "Not implemented method massErase for nRF51");
-    return false;
+    throw new InternalError("Not implemented");
   }
 
   /*
