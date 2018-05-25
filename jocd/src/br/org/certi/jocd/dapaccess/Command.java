@@ -16,6 +16,7 @@
 package br.org.certi.jocd.dapaccess;
 
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.CommandId;
+import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferFaultError;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferTimeoutError;
@@ -104,8 +105,11 @@ public class Command {
     }
   }
 
-  public int getRequestSpace(int count, byte request, Byte dapIndex) {
-    assert this.dataEncoded == false;
+  public int getRequestSpace(int count, byte request, Byte dapIndex) throws Error {
+    // Assert this.dataEncoded == false.
+    if (this.dataEncoded) {
+      throw new Error("getRequestSpace: Unexpected dataEncoded value ( " + dataEncoded + ")");
+    }
 
     // Must create another command if the dap index is different.
     if (this.dapIndex != null && dapIndex != this.dapIndex) {
@@ -160,19 +164,33 @@ public class Command {
   /*
    * Add a single or block register transfer operation to this command
    */
-  public void add(int count, byte request, long[] words, Byte dapIndex) {
-    assert this.dataEncoded == false;
+  public void add(int count, byte request, long[] words, Byte dapIndex) throws Error {
+    // Assert this.dataEncoded == false.
+    if (this.dataEncoded) {
+      throw new Error("add: Unexpected dataEncoded value ( " + dataEncoded + ")");
+    }
+
     if (this.dapIndex == null) {
       this.dapIndex = dapIndex;
     }
-    assert this.dapIndex == dapIndex;
+
+    // Assert this.dapIndex == dapIndex.
+    if (this.dapIndex != dapIndex) {
+      throw new Error("add: Unexpected dapIndex value ( " + dapIndex + ")");
+    }
 
     if (this.blockRequest == null) {
       this.blockRequest = request;
     } else if (request != this.blockRequest) {
       this.blockAllowed = false;
     }
-    assert !this.blockAllowed || this.blockRequest == request;
+
+    // Assert !this.blockAllowed || this.blockRequest == request.
+    if (this.blockAllowed && this.blockRequest != request) {
+      throw new Error(
+          "add: Unexpected blockAllowed(" + blockAllowed + ") - blockRequest(" + blockRequest
+              + "), request: (" + request + ")");
+    }
 
     if ((request & DapAccessCmsisDap.READ) != 0) {
       this.readCount += count;
@@ -193,8 +211,12 @@ public class Command {
    * The data returned by this function is a bytearray in
    * the format that of a DAP_Transfer CMSIS-DAP command.
    */
-  public byte[] encodeTransferData() {
-    assert this.getEmpty() == false;
+  public byte[] encodeTransferData() throws Error {
+    // Assert this.getEmpty() == false.
+    if (this.getEmpty()) {
+      throw new Error("encodeTransferData: Unexpected getEmpty() value ( " + getEmpty() + ")");
+    }
+
     byte[] buf = new byte[this.size];
     int transferCount = this.readCount + this.writeCount;
     int pos = 0;
@@ -208,7 +230,13 @@ public class Command {
       int count = dt.getCount();
       byte request = dt.getRequest();
       long[] writeList = dt.getData();
-      assert writeList == null || writeList.length <= count;
+
+      // Assert writeList == null || writeList.length <= count.
+      if (writeList != null && writeList.length > count) {
+        throw new Error(
+            "encodeTransferData: missing writeList. writeList isn't null and length > count.");
+      }
+
       int writePos = 0;
       for (int i = 0; i < count; i++) {
         buf[pos] = (byte) request;
@@ -234,8 +262,12 @@ public class Command {
    * Decode the response returned by a DAP_Transfer CMSIS-DAP command
    * and return it as an array of bytes.
    */
-  private byte[] decodeTransferData(byte[] data) throws TransferError {
-    assert this.getEmpty() == false;
+  private byte[] decodeTransferData(byte[] data) throws TransferError, Error {
+    // Assert this.getEmpty() == false.
+    if (this.getEmpty()) {
+      throw new Error("decodeTransferData: Unexpected getEmpty() value ( " + getEmpty() + ")");
+    }
+
     if (data[0] != CommandId.DAP_TRANSFER.getValue()) {
       throw new IllegalArgumentException("DAP_TRANSFER response error");
     }
@@ -264,12 +296,25 @@ public class Command {
    * The data returned by this function is a bytearray in
    * the format that of a DAP_TransferBlock CMSIS-DAP command.
    */
-  public byte[] encodeTransferBlockData() {
-    assert this.getEmpty() == false;
+  public byte[] encodeTransferBlockData() throws Error {
+    // Assert this.getEmpty() == false.
+    if (this.getEmpty()) {
+      throw new Error("encodeTransferBlockData: Unexpected getEmpty() value ( " + getEmpty() + ")");
+    }
+
     byte[] buf = new byte[this.size];
     int transferCount = this.readCount + this.writeCount;
-    assert !(this.readCount != 0 && this.writeCount != 0);
-    assert this.blockRequest != null;
+
+    // Assert !(this.readCount != 0 && this.writeCount != 0).
+    if (this.readCount != 0 && this.writeCount != 0) {
+      throw new Error("encodeTransferBlockData: readCount or writeCount != 0.");
+    }
+
+    // Assert this.blockRequest != null.
+    if (this.blockRequest == null) {
+      throw new Error("encodeTransferBlockData: blockRequest == null.");
+    }
+
     int pos = 0;
     buf[pos] = CommandId.DAP_TRANSFER_BLOCK.getValue();
     pos += 1;
@@ -285,8 +330,18 @@ public class Command {
       int count = dt.getCount();
       int request = dt.getRequest();
       long[] writeList = dt.getData();
-      assert writeList == null || writeList.length <= count;
-      assert request == this.blockRequest;
+
+      // Assert writeList == null || writeList.length <= count.
+      if (!(writeList == null || writeList.length <= count)) {
+        throw new Error(
+            "encodeTransferBlockData: Expected: writeList == null || writeList.length <= count");
+      }
+
+      // Assert request == this.blockRequest.
+      if (request != this.blockRequest) {
+        throw new Error("encodeTransferBlockData: request == this.blockRequest");
+      }
+
       int writePos = 0;
       if ((request & DapAccessCmsisDap.READ) == 0) {
         for (int i = 0; i < count; i++) {
@@ -310,8 +365,12 @@ public class Command {
    * Decode the response returned by a DAP_TransferBlock
    * CMSIS-DAP command and return it as an array of bytes.
    */
-  private byte[] decodeTransferBlockData(byte[] data) throws TransferError {
-    assert this.getEmpty() == false;
+  private byte[] decodeTransferBlockData(byte[] data) throws TransferError, Error {
+    // Assert this.getEmpty() == false.
+    if (this.getEmpty()) {
+      throw new Error("decodeTransferBlockData: Unexpected getEmpty() value ( " + getEmpty() + ")");
+    }
+
     if (data[0] != CommandId.DAP_TRANSFER_BLOCK.getValue()) {
       throw new IllegalArgumentException("DAP_TRANSFER_BLOCK response error");
     }
@@ -340,8 +399,12 @@ public class Command {
    * Encode this command into a byte array that can be sent
    * The actual command this is encoded into depends on the data that was added.
    */
-  public byte[] encodeData() {
-    assert this.getEmpty() == false;
+  public byte[] encodeData() throws Error {
+    // Assert this.getEmpty() == false.
+    if (this.getEmpty()) {
+      throw new Error("encodeData: Unexpected getEmpty() value ( " + getEmpty() + ")");
+    }
+
     this.dataEncoded = true;
     byte[] data;
     if (this.blockAllowed) {
@@ -355,9 +418,17 @@ public class Command {
   /*
    * Decode the response data
    */
-  public byte[] decodeData(byte[] data) throws TransferError {
-    assert this.getEmpty() == false;
-    assert this.dataEncoded == true;
+  public byte[] decodeData(byte[] data) throws TransferError, Error {
+    // Assert this.getEmpty() == false.
+    if (this.getEmpty()) {
+      throw new Error("decodeData: Unexpected getEmpty() value ( " + getEmpty() + ")");
+    }
+
+    // Assert this.dataEncoded == true.
+    if (this.dataEncoded == false) {
+      throw new Error("decodeData: Unexpected dataEncoded value ( " + this.dataEncoded + ")");
+    }
+
     if (this.blockAllowed) {
       data = this.decodeTransferBlockData(data);
     } else {

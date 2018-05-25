@@ -665,7 +665,10 @@ public class FlashBuilder {
       this.flash.loadPageBuffer(currentBuffer, page.address, page.data);
 
       while (pageIndex >= 0) {
-        assert (page.same != null);
+        // Assert (page.same != null).
+        if (page.same == null) {
+          throw new Error("pageEraseProgramDoubleBuffer: page.same == null");
+        }
 
         // Kick off this page program.
         long currentAddress = page.address;

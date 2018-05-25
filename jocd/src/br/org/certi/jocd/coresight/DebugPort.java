@@ -242,7 +242,11 @@ public class DebugPort {
   }
 
   public ArrayList<Object> readDPLater(long addr) throws TimeoutException, Error {
-    assert Reg.containsReg(addr);
+    // Assert Reg.containsReg(addr).
+    if (!Reg.containsReg(addr)) {
+      throw new Error("readDPLater: Reg.containsReg(addr)");
+    }
+
     int num = this.nextAccessNumber();
 
     Transfer transfer;
@@ -267,7 +271,11 @@ public class DebugPort {
   }
 
   public boolean writeDP(long addr, long word) throws Error, TimeoutException {
-    assert Reg.containsReg(addr);
+    // Assert Reg.containsReg(addr).
+    if (!Reg.containsReg(addr)) {
+      throw new Error("writeDP: Reg.containsReg(addr)");
+    }
+
     int num = this.nextAccessNumber();
 
     // Skip writing DP SELECT register if its value is not changing
@@ -376,7 +384,8 @@ public class DebugPort {
     } else if (mode.getValue() == Port.JTAG.getValue()) {
       this.link.writeReg(DP_REG.CTRL_STAT.getValue(), CTRLSTAT_STICKYERR);
     } else {
-      assert false;
+      throw new Error(
+          "clearStickyErr: mode.getValue() != Port.SWD.getValue() && mode.getValue() != Port.JTAG.getValue()");
     }
   }
 }
