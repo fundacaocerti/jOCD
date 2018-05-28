@@ -170,7 +170,7 @@ public class FlashTool {
       return ErrorCode.INVALID_BOARD;
     } catch (TimeoutException e) {
       LOGGER.log(Level.SEVERE, e.toString());
-      return ErrorCode.TIMEOUT_EXCEPTION;
+      return ErrorCode.COMMUNICATION_FAILURE;
     } catch (NoBoardConnectedException e) {
       LOGGER.log(Level.SEVERE, "No board connected. Exception: " + e.toString());
       return ErrorCode.NO_BOARD_CONNECTED;
@@ -179,7 +179,7 @@ public class FlashTool {
       return ErrorCode.INVALID_BOARD;
     } catch (Error error) {
       LOGGER.log(Level.SEVERE, "DAP Access error. Exception: " + error.toString());
-      return ErrorCode.DAP_ACCESS_ERROR;
+      return ErrorCode.COMMUNICATION_FAILURE;
     } catch (UnsupportedBoardException e) {
       LOGGER.log(Level.SEVERE, "Unsupported Board. Exception: " + e.toString());
       return ErrorCode.INVALID_BOARD;
@@ -227,7 +227,6 @@ public class FlashTool {
                 // Address unaligned.
                 LOGGER.log(Level.WARNING, "Warning: sector address " +
                     String.format("%08X", pageAddr) + " is unaligned");
-                // TODO implement a better way to give this feedback to user.
                 pageAddr -= delta;
               }
             }
@@ -236,19 +235,18 @@ public class FlashTool {
             pageAddr += pageInfo.size;
           }
         } else {
-          // TODO implement a better way to give this feedback to user.
           LOGGER.log(Level.FINE, "No operation performed");
           return ErrorCode.NO_OPERATION_PERFORMED;
         }
       } catch (InterruptedException e) {
         LOGGER.log(Level.SEVERE, e.toString());
-        return ErrorCode.INTERRUPTED_EXCEPTION;
+        return ErrorCode.COMMUNICATION_FAILURE;
       } catch (TimeoutException e) {
         LOGGER.log(Level.SEVERE, e.toString());
-        return ErrorCode.TIMEOUT_EXCEPTION;
+        return ErrorCode.COMMUNICATION_FAILURE;
       } catch (Error error) {
         LOGGER.log(Level.SEVERE, "DAP Access error. Exception: " + error.toString());
-        return ErrorCode.DAP_ACCESS_ERROR;
+        return ErrorCode.COMMUNICATION_FAILURE;
       }
       return ErrorCode.SUCCESS;
     }
@@ -272,6 +270,7 @@ public class FlashTool {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // TODO flashBlock (....???????...)
         //selectedBoard.flash.flashBlock(address);
+        return ErrorCode.NO_OPERATION_PERFORMED;
       } catch (FileNotFoundException e) {
         LOGGER.log(Level.SEVERE, "File not found: " + file);
         return ErrorCode.FILE_NOT_FOUND;
@@ -320,10 +319,10 @@ public class FlashTool {
       } catch (Error e) {
         LOGGER.log(Level.SEVERE,
             "Error exception while trying to parse IntelHex. Exception: " + e.toString());
-        return ErrorCode.DAP_ACCESS_ERROR;
+        return ErrorCode.COMMUNICATION_FAILURE;
       } catch (TimeoutException e) {
         LOGGER.log(Level.SEVERE, "Timeout exception on program. Exception: " + e.toString());
-        return ErrorCode.TIMEOUT_EXCEPTION;
+        return ErrorCode.COMMUNICATION_FAILURE;
       }
     }
     return ErrorCode.SUCCESS;
