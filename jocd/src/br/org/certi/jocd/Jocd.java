@@ -25,8 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * jOCD is a Java library for programming ARM Cortex-M microcontrollers using
- * CMSIS-DAP.
+ * jOCD is a Java library for programming ARM Cortex-M microcontrollers using CMSIS-DAP.
  */
 public class Jocd {
 
@@ -35,18 +34,40 @@ public class Jocd {
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   /**
-   *
+   * Error codes from jOCD
    */
   public enum ErrorCode {
+    /**
+     * Operation performed successfully
+     */
     SUCCESS,
+    /**
+     * jOCD could not find a CMSIS-DAP compatible board
+     */
     NO_BOARD_CONNECTED,
+    /**
+     * The provided board is not a CMSIS-DAP compatible board
+     */
     INVALID_BOARD,
-    TIMEOUT_EXCEPTION,
-    INTERRUPTED_EXCEPTION,
-    DAP_ACCESS_ERROR,
+    /**
+     * jOCD could not establish communication with the CMSIS-DAP board
+     */
+    COMMUNICATION_FAILURE,
+    /**
+     * jOCD could not perform any operation
+     */
     NO_OPERATION_PERFORMED,
+    /**
+     * Mass erase operation finished with failure
+     */
     MASS_ERASING_ERROR,
+    /**
+     * The provided image is not a valid hex file
+     */
     CORRUPT_HEX_FILE,
+    /**
+     * jOCD could not find the image file for the flashing operation
+     */
     FILE_NOT_FOUND
   }
 
