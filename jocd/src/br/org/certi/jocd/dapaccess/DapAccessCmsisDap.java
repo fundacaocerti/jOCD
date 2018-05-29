@@ -15,12 +15,12 @@
  */
 package br.org.certi.jocd.dapaccess;
 
+import br.org.certi.jocd.Jocd;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.IdInfo;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Pins;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Port;
 import br.org.certi.jocd.dapaccess.CmsisDapProtocol.Reg;
 import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
-import br.org.certi.jocd.dapaccess.connectioninterface.UsbFactory;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.dapaccess.dapexceptions.TransferError;
@@ -47,7 +47,6 @@ public class DapAccessCmsisDap {
 
   public static final int DEFAULT_FREQUENCY = 1000000; // 1MHz default clock
 
-  private ConnectionInterface connectionInterface = null;
   private boolean deferredTransfer = false;
   private int packetCount = 0;
   private String uniqueId;
@@ -86,7 +85,7 @@ public class DapAccessCmsisDap {
       LOGGER.log(Level.SEVERE, "Not implemented! Trying to use WS interface.");
       return null;
     }
-    return UsbFactory.getUSBInterface(null).getAllConnectedDevices();
+    return Jocd.connectionInterface.getAllConnectedDevices();
   }
 
   /*
@@ -122,27 +121,25 @@ public class DapAccessCmsisDap {
   }
 
   public void open() throws TimeoutException, Error {
-    if (connectionInterface == null) {
-      List<ConnectionInterface> allDevices = this.getDevices();
-      for (ConnectionInterface device : allDevices) {
-        try {
-          String uniqueId = getUniqueId(device);
-          if (this.uniqueId.equals(uniqueId)) {
-            // This assert could indicate that two boards had the same ID
-            assert this.connectionInterface == null;
-            this.connectionInterface = device;
-          }
-        } catch (Exception exception) {
-          LOGGER.log(Level.SEVERE, "Failed to get unique id for open", exception);
+    List<ConnectionInterface> allDevices = this.getDevices();
+    for (ConnectionInterface device : allDevices) {
+      try {
+        String uniqueId = getUniqueId(device);
+        if (this.uniqueId.equals(uniqueId)) {
+          // This assert could indicate that two boards had the same ID
+          assert Jocd.connectionInterface == null;
+          Jocd.connectionInterface = device;
         }
-      }
-      if (connectionInterface == null) {
-        throw new DeviceError("Unable to open device");
+      } catch (Exception exception) {
+        LOGGER.log(Level.SEVERE, "Failed to get unique id for open", exception);
       }
     }
+    if (Jocd.connectionInterface == null) {
+      throw new DeviceError("Unable to open device");
+    }
 
-    this.connectionInterface.open();
-    this.protocol = new CmsisDapProtocol(connectionInterface);
+    Jocd.connectionInterface.open();
+    this.protocol = new CmsisDapProtocol(Jocd.connectionInterface);
 
     if (DapSettings.limitPackets) {
       this.packetCount = 1;
@@ -152,20 +149,20 @@ public class DapAccessCmsisDap {
           .intValue();
     }
 
-    this.connectionInterface.setPacketCount(this.packetCount);
+    Jocd.connectionInterface.setPacketCount(this.packetCount);
     this.packetSize = (Integer) this.protocol.dapInfo(IdInfo.PACKET_SIZE);
-    this.connectionInterface.setPacketSize(this.packetSize);
+    Jocd.connectionInterface.setPacketSize(this.packetSize);
 
     this.initDeferredBuffers();
   }
 
   public void close() throws TimeoutException, Error {
-    if (connectionInterface == null) {
+    if (Jocd.connectionInterface == null) {
       return;
     }
 
     flush();
-    connectionInterface.close();
+    Jocd.connectionInterface.close();
   }
 
   private String getUniqueId(ConnectionInterface device) {
@@ -441,7 +438,7 @@ public class DapAccessCmsisDap {
     Command command = (Command) this.commandsToRead.poll();
     byte[] decodedData;
     try {
-      byte[] rawData = this.connectionInterface.read();
+      byte[] rawData = Jocd.connectionInterface.read();
       decodedData = command.decodeData(rawData);
     } catch (Error exception) {
       this.abortAllTransfers(exception);
@@ -488,17 +485,18 @@ public class DapAccessCmsisDap {
       return;
     }
 
-    int maxPackets = this.connectionInterface.getPacketCount();
+    int maxPackets = Jocd.connectionInterface.getPacketCount();
     if (this.commandsToRead.size() >= maxPackets) {
       this.readPacket();
     }
     byte[] data = command.encodeData();
     try {
-      this.connectionInterface.write(data);
+      Jocd.connectionInterface.write(data);
     } catch (Error exception) {
       this.abortAllTransfers(exception);
       throw exception;
     }
+
     this.commandsToRead.add(command);
     this.crntCmd = new Command(this.packetSize);
   }
@@ -580,7 +578,7 @@ public class DapAccessCmsisDap {
     if (exception instanceof TransferError) {
       for (int i = 0; i < pendingReads; i++) {
         try {
-          this.connectionInterface.read();
+          Jocd.connectionInterface.read();
         } catch (TimeoutException e) {
           // Couldn't read. Keep on loop to clean the "pendingReads".
         }
