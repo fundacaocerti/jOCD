@@ -16,7 +16,7 @@
 package br.org.certi.jocd;
 
 import br.org.certi.jocd.board.MbedBoard;
-import br.org.certi.jocd.dapaccess.connectioninterface.android.AndroidApplicationContext;
+import br.org.certi.jocd.dapaccess.connectioninterface.ConnectionInterface;
 import br.org.certi.jocd.tools.FlashTool;
 import br.org.certi.jocd.tools.ProgressUpdateInterface;
 import java.util.HashMap;
@@ -34,51 +34,46 @@ public class Jocd {
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
   /**
-   * Error codes from jOCD
+   * Connection Interface to be used by jOCD communication with CMSIS-DAP board.
+   */
+  public static ConnectionInterface connectionInterface = null;
+
+  /**
+   * Error codes from jOCD.
    */
   public enum ErrorCode {
     /**
-     * Operation performed successfully
+     * Operation performed successfully.
      */
     SUCCESS,
     /**
-     * jOCD could not find a CMSIS-DAP compatible board
+     * jOCD could not find a CMSIS-DAP compatible board.
      */
     NO_BOARD_CONNECTED,
     /**
-     * The provided board is not a CMSIS-DAP compatible board
+     * The provided board is not a CMSIS-DAP compatible board.
      */
     INVALID_BOARD,
     /**
-     * jOCD could not establish communication with the CMSIS-DAP board
+     * jOCD could not establish communication with the CMSIS-DAP board.
      */
     COMMUNICATION_FAILURE,
     /**
-     * jOCD could not perform any operation
+     * jOCD could not perform any operation.
      */
     NO_OPERATION_PERFORMED,
     /**
-     * Mass erase operation finished with failure
+     * Mass erase operation finished with failure.
      */
     MASS_ERASING_ERROR,
     /**
-     * The provided image is not a valid hex file
+     * The provided image is not a valid hex file.
      */
     CORRUPT_HEX_FILE,
     /**
-     * jOCD could not find the image file for the flashing operation
+     * jOCD could not find the image file for the flashing operation.
      */
     FILE_NOT_FOUND
-  }
-
-  /**
-   * Initializes the Android Application Context in jOCD. It must be executed before any other jOCD
-   * library call.
-   *
-   * @param context the android application context
-   */
-  public static void init(Object context) {
-    AndroidApplicationContext.getInstance().init(context);
   }
 
   /**
@@ -105,9 +100,9 @@ public class Jocd {
   /**
    * Flashes the specified file in the board specified by the provided unique ID.
    *
-   * @param file filepath of the file that should be flashed
-   * @param progressUpdate callback interface for reporting flashing progress update
-   * @param uniqueId board unique ID where to flash file. If null it will search for the connected
+   * @param file filepath of the file that should be flashed.
+   * @param progressUpdate callback interface for reporting flashing progress update.
+   * @param uniqueId board unique ID where to flash file. If null it will search for the connected.
    * devices and choose the first one.
    * @return the error code of the flash operation.
    */

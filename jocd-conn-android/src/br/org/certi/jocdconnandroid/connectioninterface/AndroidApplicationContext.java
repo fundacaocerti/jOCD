@@ -13,7 +13,7 @@
  * See the license for the specific language governing permissions and
  * limitations under the license.
  */
-package br.org.certi.jocd.dapaccess.connectioninterface.android;
+package br.org.certi.jocdconnandroid.connectioninterface;
 
 import android.content.Context;
 
