@@ -1,1 +1,1 @@
-include ':jocd-android', ':java-intelhex-parser'
+include ':java-intelhex-parser', ':jocd-conn-android', ':jocd'

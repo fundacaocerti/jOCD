@@ -1,0 +1,17 @@
+apply plugin: 'java-library'
+
+sourceSets {
+    main {
+        java {
+            srcDir '../../../../jocd/src'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation project(':java-intelhex-parser')
+}
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
