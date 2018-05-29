@@ -13,7 +13,7 @@
  * See the license for the specific language governing permissions and
  * limitations under the license.
  */
-package br.org.certi.jocd.dapaccess.connectioninterface.android;
+package br.org.certi.jocdconnandroid.connectioninterface;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -93,6 +93,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
   /*
    * Returns all connected devices.
    */
+  @Override
   public List<ConnectionInterface> getAllConnectedDevices() {
 
     HashMap<String, UsbDevice> usbDevList = usbManager.getDeviceList();
@@ -131,6 +132,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
    * Overload to read(timeout).
    * Use 20ms as the default timeout.
    */
+  @Override
   public byte[] read() throws TimeoutException {
     return this.read(20);
   }
@@ -168,6 +170,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
    * Overload to write(data, timeout).
    * Use 20ms as the default timeout.
    */
+  @Override
   public void write(byte[] data) throws Error {
     write(data, 20);
   }
@@ -177,6 +180,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
    */
   public void write(byte[] data, int timeout) throws Error {
     if (device == null || usbInterface == null) {
+      //TODO Throw an error to notify the failure to the writer
       LOGGER.log(Level.SEVERE, "Internal Error on write. The device/usbInterface is null");
       return;
     }
@@ -188,7 +192,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
     }
 
     // Fill the packet the left space, appending 0 on the end of data.
-    byte[] packet = Util.fillArray(data, reportSize, (byte)0x00);
+    byte[] packet = Util.fillArray(data, reportSize, (byte) 0x00);
 
     synchronized (locker) {
 
@@ -226,6 +230,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
   /*
    * Open the device.
    */
+  @Override
   public void open() throws InsufficientPermissions {
     // From now, no one else can open this device until we do not set it to false again.
     if (!atomicOpen.compareAndSet(false, true)) {
@@ -253,7 +258,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
                 "serial number: " + device.getSerialNumber());
 
         // Throw exception, so others will know that this operation failed.
-        throw new InsufficientPermissions(device);
+        throw new InsufficientPermissions();
       }
 
       // Attempt to open the device.
@@ -297,13 +302,14 @@ public class AndroidUsbDevice implements ConnectionInterface {
   /*
    * Close the device.
    */
+  @Override
   public void close() {
     // Stop the rx thread (if exists).
     if (rxThread != null) {
       stopRxThread();
     }
 
-    // Release and close devise connection.
+    // Release and close device connection.
     if (this.deviceConnection != null) {
       this.deviceConnection.releaseInterface(usbInterface);
       this.deviceConnection.close();
@@ -347,14 +353,17 @@ public class AndroidUsbDevice implements ConnectionInterface {
     return this.serialNumber;
   }
 
+  @Override
   public int getPacketCount() {
     return packetCount;
   }
 
+  @Override
   public void setPacketSize(int packetSize) {
     this.packetSize = packetSize;
   }
 
+  @Override
   public void setPacketCount(int packetCount) {
     this.packetCount = packetCount;
   }

@@ -23,17 +23,12 @@ public class InsufficientPermissions extends Error {
   // Logging
   private static final String TAG = "InsufficientPermissions";
 
-  // Hold the UsbDevice from android.hardware.usb.UsbDevice.
-  // To keep this library independent from Android, hold this as an object.
-  public final Object usbDevice;
-
-  public InsufficientPermissions(Object usbDevice) {
-    this("Insufficient permissions to access device", usbDevice);
+  public InsufficientPermissions() {
+    this("Insufficient permissions to access device");
   }
 
-  public InsufficientPermissions(String message, Object usbDevice) {
+  public InsufficientPermissions(String message) {
     super(message);
-    this.usbDevice = usbDevice;
   }
 
 }
