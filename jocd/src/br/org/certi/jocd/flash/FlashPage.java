@@ -57,8 +57,9 @@ public class FlashPage {
    * Get time to erase and program a page including data transfer time.
    */
   public double getEraseProgramWeight() {
-    return this.eraseWeight + this.programWeight + ((double) data.length
+    double test= this.eraseWeight + this.programWeight + ((double) data.length
         / (double) DATA_TRANSFER_RATE_B_PER_S);
+    return test;
   }
 
   /*
