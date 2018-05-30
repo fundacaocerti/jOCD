@@ -17,7 +17,10 @@ package br.org.certi.jocd.debug;
 
 import br.org.certi.jocd.core.Target;
 import br.org.certi.jocd.core.Target.BreakpointTypes;
+import br.org.certi.jocd.debug.breakpoints.Breakpoint;
 import br.org.certi.jocd.debug.breakpoints.BreakpointProvider;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,6 +32,7 @@ public class BreakpointManager {
 
   private final Target core;
   private BreakpointProvider[] providers = new BreakpointProvider[BreakpointTypes.values().length];
+  private List<Breakpoint> breakpoints = new ArrayList<Breakpoint>();
 
   public BreakpointManager(Target core) {
     this.core = core;
@@ -45,6 +49,34 @@ public class BreakpointManager {
     }
 
     providers[type.getValue()] = provider;
+  }
+
+  public void removeBreakpoint(long address) {
+    LOGGER.log(Level.FINE, String.format("Remove breakpoint at 0x%08X", address));
+
+    // Clear Thumn bit in case it is set.
+    address = address & ~0x01;
+
+    // Get bp and remove from list.
+    Breakpoint bp = null;
+    int index;
+    for (Breakpoint item : this.breakpoints) {
+      if (item.address == address) {
+        bp = item;
+      }
+    }
+
+    if (bp == null) {
+      LOGGER.log(Level.SEVERE,
+          String.format("Couldn't find breakpoint at address 0x%08X", address));
+      return;
+    }
+    this.breakpoints.remove(bp);
+
+    // Assert bp.provider is null.
+    if (bp.provider != null) {
+      throw new InternalError("removeBreakpoint: bp.provider != null.");
+    }
   }
 
   public long filterMemory(long address, int size, long word) {
@@ -76,5 +108,11 @@ public class BreakpointManager {
       }
     }
     return words;
+  }
+
+  public void removeAllBreakpoints() {
+    for (Breakpoint bp : breakpoints) {
+      bp.provider.removeBreakpoint(bp);
+    }
   }
 }

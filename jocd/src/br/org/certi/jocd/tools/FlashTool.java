@@ -325,6 +325,8 @@ public class FlashTool {
         return ErrorCode.COMMUNICATION_FAILURE;
       }
     }
+
+    selectedBoard.uninit(true);
     return ErrorCode.SUCCESS;
   }
 }

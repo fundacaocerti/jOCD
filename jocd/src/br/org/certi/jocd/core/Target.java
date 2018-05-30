@@ -113,6 +113,9 @@ public class Target {
     throw new InternalError("Not implemented");
   }
 
+  public void disconnect() throws TimeoutException, Error {
+  }
+
   public void setFlash(Flash flash) {
     this.flash = flash;
   }
