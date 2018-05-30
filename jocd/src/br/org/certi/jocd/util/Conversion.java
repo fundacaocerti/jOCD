@@ -27,8 +27,12 @@ public class Conversion {
     int newSize = data.length / 4 + remainder;
     long[] res = new long[newSize];
     for (int i = 0; i < (data.length / 4); i++) {
-      Util.appendDataInArray(res,
-          data[i * 4 + 0] | data[i * 4 + 1] << 8 | data[i * 4 + 2] << 16 | data[i * 4 + 3] << 24);
+      long word = 0;
+      word |= 0x000000FFL & (data[0 + i * 4] << 0);
+      word |= 0x0000FF00L & (data[1 + i * 4] << 8);
+      word |= 0x00FF0000L & (data[2 + i * 4] << 16);
+      word |= 0xFF000000L & (data[3 + i * 4] << 24);
+      Util.appendDataInArray(res, word);
     }
     return res;
   }
@@ -38,11 +42,12 @@ public class Conversion {
    */
   public static byte[] u32leListToByteList(long[] words) {
     byte[] res = new byte[4 * words.length];
-    for (long d : words) {
-      res[0] = (byte) ((d >> 0) & 0xFF);
-      res[1] = (byte) ((d >> 8) & 0xFF);
-      res[2] = (byte) ((d >> 16) & 0xFF);
-      res[3] = (byte) ((d >> 24) & 0xFF);
+    for (int i = 0; i < words.length; i++) {
+      long word = words[i];
+      res[i * 4 + 0] = (byte) ((word >> 0) & 0xFF);
+      res[i * 4 + 1] = (byte) ((word >> 8) & 0xFF);
+      res[i * 4 + 2] = (byte) ((word >> 16) & 0xFF);
+      res[i * 4 + 3] = (byte) ((word >> 24) & 0xFF);
     }
     return res;
   }
