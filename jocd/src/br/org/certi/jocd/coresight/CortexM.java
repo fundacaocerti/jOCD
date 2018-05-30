@@ -285,6 +285,18 @@ public class CortexM extends Target {
     this.swBp.init();
   }
 
+
+  public void disconnect() throws TimeoutException, Error {
+    // Remove breakpoints.
+    this.bpManager.removeAllBreakpoints();
+
+    // Disable other debug blocks.
+    this.write32(CortexM.DEMCR, 0);
+
+    // Disable core debug.
+    this.write32(CortexM.DHCSR, CortexM.DBGKEY | 0x0000);
+  }
+
   public void buildTargetXml() {
     // Not implemented.
     // Will throw exception if someone try to get TargetXML (by accessing target.getTargetXml()).

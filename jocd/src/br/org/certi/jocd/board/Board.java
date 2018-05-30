@@ -38,6 +38,7 @@ public class Board {
   public Flash flash;
   boolean closed;
   public Integer frequency;
+  boolean initiated = false;
 
   /*
    * Must be called right after constructor.
@@ -62,5 +63,62 @@ public class Board {
     }
     this.dapAccessLink.setDeferredTransfer(true);
     this.target.init();
+    this.initiated = true;
+  }
+
+  // Uninitialize the board: link and target.
+  // This function resumes the target.
+  public void uninit(boolean resume) {
+    LOGGER.log(Level.FINE, "uninit board");
+    if (this.closed) {
+      return;
+    }
+
+    this.closed = true;
+
+    if (resume && this.initiated) {
+      try {
+        this.target.resume();
+      } catch (TimeoutException e) {
+        LOGGER.log(Level.SEVERE,
+            ("TimeoutException. Target exception during uninit: " + e.getMessage()));
+      } catch (Error e) {
+        LOGGER.log(Level.SEVERE,
+            ("Error. Target exception during uninit: " + e.getMessage()));
+      }
+    }
+
+    if (this.initiated) {
+      try {
+        this.target.disconnect();
+        this.initiated = false;
+      } catch (TimeoutException e) {
+        LOGGER.log(Level.SEVERE,
+            ("TimeoutException. Target exception during target disconnect: " + e.getMessage()));
+      } catch (Error e) {
+        LOGGER.log(Level.SEVERE,
+            ("Error. Link exception during target disconnect: " + e.getMessage()));
+      }
+    }
+
+    try {
+      this.dapAccessLink.disconnect();
+    } catch (TimeoutException e) {
+      LOGGER.log(Level.SEVERE,
+          ("TimeoutException. Link exception during link disconnect: " + e.getMessage()));
+    } catch (Error e) {
+      LOGGER.log(Level.SEVERE,
+          ("Error. Link exception during link disconnect: " + e.getMessage()));
+    }
+
+    try {
+      this.dapAccessLink.close();
+    } catch (TimeoutException e) {
+      LOGGER.log(Level.SEVERE,
+          ("TimeoutException. Link exception during uninit: " + e.getMessage()));
+    } catch (Error e) {
+      LOGGER.log(Level.SEVERE,
+          ("Error. Link exception during uninit: " + e.getMessage()));
+    }
   }
 }
