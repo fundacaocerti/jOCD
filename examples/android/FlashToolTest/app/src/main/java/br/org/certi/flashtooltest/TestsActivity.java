@@ -32,7 +32,9 @@ import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 public class TestsActivity extends AppCompatActivity implements AsyncResponse.ListBoards {
@@ -147,8 +149,9 @@ public class TestsActivity extends AppCompatActivity implements AsyncResponse.Li
       // Request permission.
 
       UsbManager usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
-      UsbDevice usbDevice = (UsbDevice) ((InsufficientPermissions) exception).usbDevice;
-      usbManager.requestPermission(usbDevice, permissionIntent);
+      HashMap<String, UsbDevice> devicesList = usbManager.getDeviceList();
+      Map.Entry<String,UsbDevice> firstEntry = devicesList.entrySet().iterator().next();
+      usbManager.requestPermission(firstEntry.getValue(), permissionIntent);
 
       Log.w(TAG, "Insufficient permissions to access USB Device");
       return;
