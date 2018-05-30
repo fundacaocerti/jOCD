@@ -134,7 +134,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
    */
   @Override
   public byte[] read() throws TimeoutException {
-    return this.read(20);
+    return this.read(100);
   }
 
   /*
