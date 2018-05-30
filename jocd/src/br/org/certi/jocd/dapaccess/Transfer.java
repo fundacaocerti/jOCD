@@ -76,8 +76,10 @@ public class Transfer {
     int count = 0;
     for (int i = 0; i < this.sizeBytes; i += 4) {
       long word = 0;
-      word = (((0xFF & data[0 + i]) << 0) | ((0xFF & data[1 + i]) << 8) | ((0xFF & data[2 + i])
-          << 16) | ((0xFF & data[3 + i]) << 24));
+      word |= 0x000000FFL & (data[0 + i] << 0);
+      word |= 0x0000FF00L & (data[1 + i] << 8);
+      word |= 0x00FF0000L & (data[2 + i] << 16);
+      word |= 0xFF000000L & (data[3 + i] << 24);
       result[count] = word;
       count++;
     }
