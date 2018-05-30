@@ -36,10 +36,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import br.org.certi.jocd.board.MbedBoard;
-import br.org.certi.jocd.dapaccess.connectioninterface.android.AndroidApplicationContext;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
+import br.org.certi.jocdconnandroid.JocdConnAndroid;
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements
     AsyncResponse.ListBoards, AsyncResponse.FlashBoard {
@@ -83,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements
     textViewConnectedBoards.setText("Devices....");
     editTextSelectedFile = (EditText) findViewById(R.id.editTextSelectedFile);
 
-    AndroidApplicationContext.getInstance().init(getApplicationContext());
+    JocdConnAndroid.init(getApplicationContext());
 
     // Register the broadcast receiver to request permission for USB devices.
     ACTION_USB_PERMISSION = this.getPackageName() + ".USB_PERMISSION";
@@ -104,7 +106,13 @@ public class MainActivity extends AppCompatActivity implements
   @Override
   public void onPause() {
     super.onPause();
-    unregisterReceiver(broadcastReceiver);
+    try {
+      if (broadcastReceiver!=null) {
+        unregisterReceiver(broadcastReceiver);
+      }
+    } catch (IllegalArgumentException e) {
+      e.printStackTrace();
+    }
   }
 
   public void onClickListDevices(View view) {
@@ -224,8 +232,9 @@ public class MainActivity extends AppCompatActivity implements
       // Request permission.
 
       UsbManager usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
-      UsbDevice usbDevice = (UsbDevice) ((InsufficientPermissions) exception).usbDevice;
-      usbManager.requestPermission(usbDevice, permissionIntent);
+      HashMap<String, UsbDevice> devicesList = usbManager.getDeviceList();
+      Map.Entry<String,UsbDevice> firstEntry = devicesList.entrySet().iterator().next();
+      usbManager.requestPermission(firstEntry.getValue(), permissionIntent);
 
       Log.w(TAG, "Insufficient permissions to access USB Device");
       return;
