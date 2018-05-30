@@ -44,7 +44,6 @@ public class FlashBuilder {
   int chipEraseCount;
   double chipEraseWeight;
   int sectorEraseCount;
-  int pageProgramTime;
   int pageEraseCount;
   double pageEraseWeight;
 
@@ -217,7 +216,7 @@ public class FlashBuilder {
     // Update this.chipEraseCount, and this.chipEraseWeight.
     computeChipErasePagesAndWeight();
     double chipEraseProgramTime = this.chipEraseWeight;
-    int pageEraseMinProgramTime = this.computePageErasePagesWeightMin();
+    double pageEraseMinProgramTime = this.computePageErasePagesWeightMin();
 
     // If chip_erase hasn't been specified determine if chip erase is faster than page erase
     // regardless of contents.
@@ -225,19 +224,21 @@ public class FlashBuilder {
       chipErase = true;
     }
 
+    int sectorEraseCount = 0;
+    double pageProgramTime = 0;
     // If chip erase isn't true then analyze the flash.
     if (chipErase == null || chipErase == false) {
       long analyzeStartTime = System.currentTimeMillis();
 
       if (this.flash.getFlashInfo().crcSupported) {
         this.computePageErasePagesAndWeightCrc32(fastVerify);
-        int sectorEraseCount = this.sectorEraseCount;
-        int pageProgramTime = this.pageProgramTime;
+        sectorEraseCount = this.sectorEraseCount;
+        pageProgramTime = this.pageEraseWeight;
         this.perf.analyzeType = FlashBuilder.FLASH_ANALYSIS_CRC32;
       } else {
         this.computePageErasePagesAndWeightSectorRead();
-        int sectorEraseCount = this.sectorEraseCount;
-        int pageProgramTime = this.pageProgramTime;
+        sectorEraseCount = this.sectorEraseCount;
+        pageProgramTime = this.pageEraseWeight;
         this.perf.analyzeType = FlashBuilder.FLASH_ANALYSIS_PARTIAL_PAGE_READ;
       }
 
@@ -280,7 +281,7 @@ public class FlashBuilder {
 
     LOGGER.log(Level.FINE, String
         .format("Programmed %d bytes (%d pages) at %.02f kB/s", programByteCount, pageList.size(),
-            (float)((float)(programByteCount / 1024) / this.perf.programTime)));
+            (float) ((float) (programByteCount / 1024) / this.perf.programTime)));
 
     return this.perf;
   }
@@ -348,7 +349,7 @@ public class FlashBuilder {
       }
       if (!page.erased) {
         chipEraseCount += 1;
-        chipEraseWeight += page.getEraseProgramWeight();
+        chipEraseWeight += page.getProgramWeight();
       }
     }
 
@@ -356,8 +357,8 @@ public class FlashBuilder {
     this.chipEraseWeight = chipEraseWeight;
   }
 
-  private int computePageErasePagesWeightMin() {
-    int pageEraseMinWeight = 0;
+  private double computePageErasePagesWeightMin() {
+    double pageEraseMinWeight = 0;
     for (FlashPage page : this.pageList) {
       pageEraseMinWeight += page.getVerifyWeight();
     }
