@@ -372,8 +372,15 @@ public class Flash {
    * Wait until the breakpoint is hit.
    */
   public long waitForCompletion() throws InterruptedException, TimeoutException, Error {
+    int retries = 20;
     while (this.target.getState() == Target.State.TARGET_RUNNING) {
       Thread.sleep(10);
+      if (--retries == 0) {
+        LOGGER.log(Level.SEVERE,
+            "Couldn't init the flash - waiting for completation never gets to expected result. "
+                + "You might be able to fix this using openOCD.");
+        throw new TimeoutException("Timeout while expecting for target state == RUNNING");
+      }
     }
 
     if (this.flashAlgoDebug) {
