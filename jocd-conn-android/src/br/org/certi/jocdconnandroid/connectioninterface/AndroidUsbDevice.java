@@ -178,6 +178,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
     if (ret == null) {
       throw new InternalError("ret is null. Unexpected array received from rxQueue.poll().");
     }
+
     return ret;
   }
 
@@ -452,6 +453,14 @@ public class AndroidUsbDevice implements ConnectionInterface {
           byte[] packet = new byte[packetSize];
           int received = deviceConnection.bulkTransfer(inputEndpoint, packet, packetSize,
               50);
+
+          LOGGER.log(Level.FINE, String.format("AndroidUsbDevice: received %d bytes.", received));
+
+          if (received > packetSize) {
+            throw new InternalError(String.format(
+                "AndroidUsbDevice: Unexpected number of received bytes. packetSize = %d, received = %d.",
+                packetSize, received));
+          }
 
           // We might receive less bytes than packetSize, so we need to add only the
           // received data to a new array and pass it to our queue.
