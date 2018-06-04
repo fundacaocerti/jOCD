@@ -122,6 +122,14 @@ public class CoreSightTarget extends Target {
   }
 
   @Override
+  public void disconnect() throws TimeoutException, Error {
+    for (Target core : this.coreList) {
+      core.disconnect();
+    }
+    this.dp.powerDownDebug();
+  }
+
+  @Override
   public void flush() throws TimeoutException, Error {
     this.getSelectedCore().flush();
   }
