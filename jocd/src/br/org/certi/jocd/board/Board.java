@@ -37,7 +37,7 @@ public class Board {
   public Target target;
   public Flash flash;
   boolean closed;
-  public Integer frequency;
+  public Integer frequency = DapAccessCmsisDap.DEFAULT_FREQUENCY;
   boolean initiated = false;
 
   /*
@@ -47,7 +47,9 @@ public class Board {
     this.dapAccessLink = link;
     this.target = TargetFactory.getTarget(target, link);
     this.flash = this.target.getFlash();
-    this.frequency = frequency;
+    if (frequency != null) {
+      this.frequency = frequency;
+    }
     this.closed = false;
 
     this.target.setFlash(this.flash);
@@ -58,9 +60,7 @@ public class Board {
    */
   public void init() throws TimeoutException, Error {
     LOGGER.log(Level.FINE, "init board");
-    if (frequency != null) {
-      this.dapAccessLink.setClock(this.frequency);
-    }
+    this.dapAccessLink.setClock(this.frequency);
     this.dapAccessLink.setDeferredTransfer(true);
     this.target.init();
     this.initiated = true;
