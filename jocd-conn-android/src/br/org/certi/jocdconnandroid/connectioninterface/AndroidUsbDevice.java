@@ -148,7 +148,15 @@ public class AndroidUsbDevice implements ConnectionInterface {
 
     long startTime = System.currentTimeMillis();
 
-    while (rxQueue.isEmpty()) {
+    boolean empty;
+    synchronized (locker) {
+      empty = rxQueue.isEmpty();
+    }
+
+    while (empty) {
+      synchronized (locker) {
+        empty = rxQueue.isEmpty();
+      }
       if (System.currentTimeMillis() - startTime > timeout) {
         // Timeout.
         // Read operations should typically take ~1-2ms.
@@ -163,7 +171,14 @@ public class AndroidUsbDevice implements ConnectionInterface {
       }
     }
 
-    return rxQueue.poll();
+    byte[] ret;
+    synchronized (locker) {
+      ret = rxQueue.poll();
+    }
+    if (ret == null) {
+      throw new InternalError("ret is null. Unexpected array received from rxQueue.poll().");
+    }
+    return ret;
   }
 
   /*
