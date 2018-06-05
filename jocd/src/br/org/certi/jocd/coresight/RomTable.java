@@ -85,7 +85,7 @@ public class RomTable extends CoreSightComponent {
     long entryAddress = this.address;
     boolean foundEnd = false;
     int entriesRead = 0;
-    while (!foundEnd && entriesRead < ROM_TABLE_ENTRY_READ_COUNT) {
+    while (!foundEnd && entriesRead < ROM_TABLE_MAX_ENTRIES) {
       // Read several entries at a time for performance.
       int readCount = Math.min(ROM_TABLE_MAX_ENTRIES - entriesRead, ROM_TABLE_ENTRY_READ_COUNT);
       long[] entries = this.ap.readBlockMemoryAligned32(entryAddress, readCount);
