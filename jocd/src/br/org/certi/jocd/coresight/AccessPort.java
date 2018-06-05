@@ -27,9 +27,9 @@ import java.util.concurrent.TimeoutException;
 
 public class AccessPort {
 
-  public static final byte AP_ROM_TABLE_ADDR_REG = (byte) 0xF8;
-  public static final byte AP_ROM_TABLE_FORMAT_MASK = 0x2;
-  public static final byte AP_ROM_TABLE_ENTRY_PRESENT_MASK = 0x1;
+  public static final long AP_ROM_TABLE_ADDR_REG = 0xF8L;
+  public static final long AP_ROM_TABLE_FORMAT_MASK = 0x2L;
+  public static final long AP_ROM_TABLE_ENTRY_PRESENT_MASK = 0x1L;
 
 
   // Map from PIDR to component name (eventually class).
