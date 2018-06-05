@@ -308,7 +308,7 @@ public class DebugPort {
 
     // Don't need to write CSW if it's not changing value
     if (apRegaddr == AP_REG.CSW.getValue()) {
-      if (this.csw.containsKey(apSel) && word == this.csw.get(apSel)) {
+      if (this.csw.containsKey(apSel) && word.equals(this.csw.get(apSel))) {
         LOGGER.log(Level.INFO,
             String.format("writeAP:%06d cached (addr=0x%08x) = 0x%08x", num, addr, word));
         return false;
