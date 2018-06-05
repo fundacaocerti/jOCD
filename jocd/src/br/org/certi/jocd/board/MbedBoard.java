@@ -153,12 +153,13 @@ public class MbedBoard extends Board {
    * Return an array of all mbed boards connected.
    */
   public static MbedBoard chooseBoard(boolean blocking, boolean returnFirst,
-      String boardId, String targetOverride, Integer frequency, boolean initBoard)
+      String boardId, targetEnum targetOverride, Integer frequency, boolean initBoard)
       throws NoBoardConnectedException, UniqueIDNotFoundException, UnspecifiedBoardIDException,
       TimeoutException, Error {
 
     // Get all connected boards.
-    List<MbedBoard> allBoards = MbedBoard.getAllConnectedBoards();
+    List<MbedBoard> allBoards = MbedBoard
+        .getAllConnectedBoards(true, blocking, targetOverride, frequency);
 
     // If the board id (serial number) is specified, ignore all other boards.
     if (boardId != null && !boardId.isEmpty()) {
