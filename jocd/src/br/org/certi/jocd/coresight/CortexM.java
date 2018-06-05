@@ -460,8 +460,14 @@ public class CortexM extends Target {
 
     if (softwareReset) {
       // Perform the reset.
-      this.writeMemory(CortexM.NVIC_AIRCR,
-          CortexM.NVIC_AIRCR_VECTKEY | CortexM.NVIC_AIRCR_SYSRESETREQ, null);
+      try {
+        this.writeMemory(CortexM.NVIC_AIRCR,
+            CortexM.NVIC_AIRCR_VECTKEY | CortexM.NVIC_AIRCR_SYSRESETREQ, null);
+        // Without a flush a transfer error can occur.
+        this.dp.flush();
+      } catch (Exception e) {
+        this.dp.flush();
+      }
     } else {
       this.dp.reset();
     }
@@ -682,7 +688,7 @@ public class CortexM extends Target {
    * Read a core register (r0 .. r16).
    */
   @Override
-  public long readCoreRegisterRaw(CoreRegister reg) throws TimeoutException, Error{
+  public long readCoreRegisterRaw(CoreRegister reg) throws TimeoutException, Error {
     List<CoreRegister> regList = new ArrayList<CoreRegister>();
     regList.add(reg);
     long[] result = this.readCoreRegisterRaw(regList);
