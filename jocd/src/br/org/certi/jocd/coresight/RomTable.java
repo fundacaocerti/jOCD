@@ -140,7 +140,7 @@ public class RomTable extends CoreSightComponent {
 
   public void handleTableEntry(long entry) throws TimeoutException, Error {
     // Nonzero entries can still be disabled, so check the present bit before handling.
-    if ((entry & ROM_TABLE_ENTRY_PRESENT_MASK) != 0) {
+    if ((entry & ROM_TABLE_ENTRY_PRESENT_MASK) == 0) {
       return;
     }
 
