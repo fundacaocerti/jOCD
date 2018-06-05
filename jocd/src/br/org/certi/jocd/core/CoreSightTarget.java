@@ -117,8 +117,8 @@ public class CoreSightTarget extends Target {
     core0.setup(this.link, this.memoryMap);
     if (busAccessible) {
       core0.init();
-      this.addCore(core0);
     }
+    this.addCore(core0);
   }
 
   @Override
