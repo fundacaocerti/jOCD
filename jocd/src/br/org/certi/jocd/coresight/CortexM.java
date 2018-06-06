@@ -23,6 +23,7 @@ import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.debug.BreakpointManager;
 import br.org.certi.jocd.debug.breakpoints.SoftwareBreakpointProvider;
 import br.org.certi.jocd.util.Conversion;
+import br.org.certi.jocd.util.Mask;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -642,7 +643,7 @@ public class CortexM extends Target {
   public void setVectorCatch(long enableMask) throws TimeoutException, Error {
     long demcr = this.readMemory(CortexM.DEMCR, null);
     demcr |= this.mapToVectorCatchMask(enableMask);
-    demcr &= ~this.mapToVectorCatchMask(~enableMask);
+    demcr &= Mask.invert32(this.mapToVectorCatchMask(Mask.invert32(enableMask)));
     this.writeMemory(CortexM.DEMCR, demcr);
   }
 
