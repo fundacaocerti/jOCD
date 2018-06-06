@@ -149,7 +149,7 @@ public class RomTable extends CoreSightComponent {
     if ((entry & ROM_TABLE_ADDR_OFFSET_NEG_MASK) != 0) {
       offset = ~Mask.invert32(offset);
     }
-    address = this.address + offset;
+    long address = this.address + offset;
 
     // Create component instance.
     CoreSightComponent cmp = new CoreSightComponent();
