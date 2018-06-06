@@ -19,6 +19,7 @@ import br.org.certi.jocd.core.Target;
 import br.org.certi.jocd.core.Target.BreakpointTypes;
 import br.org.certi.jocd.debug.breakpoints.Breakpoint;
 import br.org.certi.jocd.debug.breakpoints.BreakpointProvider;
+import br.org.certi.jocd.util.Mask;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -55,7 +56,7 @@ public class BreakpointManager {
     LOGGER.log(Level.FINE, String.format("Remove breakpoint at 0x%08X", address));
 
     // Clear Thumn bit in case it is set.
-    address = address & ~0x01;
+    address = address & Mask.invert32(0x01);
 
     // Get bp and remove from list.
     Breakpoint bp = null;
