@@ -71,7 +71,7 @@ public class FlashBuilder {
     }
 
     for (int i = 0; i < size; i++) {
-      if (d1[i] != d2[i]) {
+      if ((d1[i] & 0xFF) != (d2[i] & 0xFF)) {
         return false;
       }
     }
@@ -80,7 +80,7 @@ public class FlashBuilder {
 
   private boolean erased(byte[] data) {
     for (int i = 0; i < data.length; i++) {
-      if (data[i] != 0xFF) {
+      if ((data[i] & 0xFF) != 0xFF) {
         return false;
       }
     }
