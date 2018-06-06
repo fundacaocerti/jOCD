@@ -60,13 +60,12 @@ public class Fpb extends BreakpointProvider {
 
     for (int i = 0; i < this.nbCode; i++) {
       this.hwBreakpoints.add(new HardwareBreakpoint(Fpb.FP_COMP0 + 4 * i, this));
+    }
+    // Disable FPB (will be enabled on first bp set).
+    this.disable();
 
-      // Disable FPB (will be enabled on first bp set).
-      this.disable();
-
-      for (HardwareBreakpoint bp : hwBreakpoints) {
-        this.ap.writeMemory(bp.compRegisterAddress, 0, null);
-      }
+    for (HardwareBreakpoint bp : hwBreakpoints) {
+      this.ap.writeMemory(bp.compRegisterAddress, 0, null);
     }
   }
 
