@@ -287,7 +287,7 @@ public class CmsisDapProtocol {
   }
 
   public byte disconnect() throws TimeoutException, Error {
-    byte[] cmd = new byte[2];
+    byte[] cmd = new byte[1];
     cmd[0] = CommandId.DAP_DISCONNECT.getValue();
     this.connectionInterface.write(cmd);
 
