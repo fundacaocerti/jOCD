@@ -326,8 +326,8 @@ public class CmsisDapProtocol {
     cmd[3] = highWaitRetry;
 
     // Split matchRetry (16 bit) in 2 bytes.
-    byte lowMatchRetry = (byte) (waitRetry & 0x00FF);
-    byte highMatchRetry = (byte) ((waitRetry >> 8) & 0x00FF);
+    byte lowMatchRetry = (byte) (matchRetry & 0x00FF);
+    byte highMatchRetry = (byte) ((matchRetry >> 8) & 0x00FF);
     cmd[4] = lowMatchRetry;
     cmd[5] = highMatchRetry;
 
