@@ -354,7 +354,8 @@ public class MemAp extends AccessPort {
     // Write aligned block of 32 bits
     if (size >= 4) {
       long[] data32 = Conversion
-          .byteListToU32leList(Util.getSubArray(data, idx, idx + (int)(size & Mask.invert32(0x03))));
+          .byteListToU32leList(
+              Util.getSubArray(data, idx, idx + (int) (size & Mask.invert32(0x03))));
       this.writeBlockMemoryAligned32(addr, data32);
       addr += size & Mask.invert32(0x03);
       idx += size & Mask.invert32(0x03);
