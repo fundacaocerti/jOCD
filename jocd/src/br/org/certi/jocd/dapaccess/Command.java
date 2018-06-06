@@ -112,13 +112,13 @@ public class Command {
     }
 
     // Must create another command if the dap index is different.
-    if (this.dapIndex != null && dapIndex != this.dapIndex) {
+    if (this.dapIndex != null && !this.dapIndex.equals(dapIndex)) {
       return 0;
     }
 
     // Block transfers must use the same request.
     boolean blockAllowed = this.blockAllowed;
-    if (this.blockRequest != null && request != this.blockRequest) {
+    if (this.blockRequest != null && request != this.blockRequest.byteValue()) {
       blockAllowed = false;
     }
 
@@ -175,18 +175,18 @@ public class Command {
     }
 
     // Assert this.dapIndex == dapIndex.
-    if (this.dapIndex != dapIndex) {
+    if (!this.dapIndex.equals(dapIndex)) {
       throw new Error("add: Unexpected dapIndex value ( " + dapIndex + ")");
     }
 
     if (this.blockRequest == null) {
       this.blockRequest = request;
-    } else if (request != this.blockRequest) {
+    } else if (request != this.blockRequest.byteValue()) {
       this.blockAllowed = false;
     }
 
     // Assert !this.blockAllowed || this.blockRequest == request.
-    if (this.blockAllowed && this.blockRequest != request) {
+    if (this.blockAllowed && this.blockRequest.byteValue() != request) {
       throw new Error(
           "add: Unexpected blockAllowed(" + blockAllowed + ") - blockRequest(" + blockRequest
               + "), request: (" + request + ")");
@@ -268,14 +268,14 @@ public class Command {
       throw new Error("decodeTransferData: Unexpected getEmpty() value ( " + getEmpty() + ")");
     }
 
-    if (data[0] != CommandId.DAP_TRANSFER.getValue()) {
+    if ((data[0] & 0xFF) != CommandId.DAP_TRANSFER.getValue()) {
       throw new IllegalArgumentException("DAP_TRANSFER response error");
     }
 
-    if (data[2] != CmsisDapProtocol.DAP_TRANSFER_OK) {
-      if (data[2] == CmsisDapProtocol.DAP_TRANSFER_FAULT) {
+    if ((data[2] & 0xFF) != CmsisDapProtocol.DAP_TRANSFER_OK) {
+      if ((data[2] & 0xFF) == CmsisDapProtocol.DAP_TRANSFER_FAULT) {
         throw new TransferFaultError();
-      } else if (data[2] == CmsisDapProtocol.DAP_TRANSFER_WAIT) {
+      } else if ((data[2] & 0xFF) == CmsisDapProtocol.DAP_TRANSFER_WAIT) {
         throw new TransferTimeoutError();
       }
       throw new TransferError();
@@ -284,7 +284,7 @@ public class Command {
     // Check for count mismatch after checking for DAP_TRANSFER_FAULT
     // This allows TransferFaultError or TransferTimeoutError to get
     // thrown instead of TransferFaultError
-    if (data[1] != this.readCount + this.writeCount) {
+    if ((data[1] & 0xFF) != this.readCount + this.writeCount) {
       throw new TransferError();
     }
 
@@ -338,7 +338,7 @@ public class Command {
       }
 
       // Assert request == this.blockRequest.
-      if (request != this.blockRequest) {
+      if (request != this.blockRequest.byteValue()) {
         throw new Error("encodeTransferBlockData: request == this.blockRequest");
       }
 
@@ -371,14 +371,14 @@ public class Command {
       throw new Error("decodeTransferBlockData: Unexpected getEmpty() value ( " + getEmpty() + ")");
     }
 
-    if (data[0] != CommandId.DAP_TRANSFER_BLOCK.getValue()) {
+    if ((data[0] & 0xFF) != CommandId.DAP_TRANSFER_BLOCK.getValue()) {
       throw new IllegalArgumentException("DAP_TRANSFER_BLOCK response error");
     }
 
-    if (data[3] != CmsisDapProtocol.DAP_TRANSFER_OK) {
-      if (data[3] == CmsisDapProtocol.DAP_TRANSFER_FAULT) {
+    if ((data[3] & 0xFF) != CmsisDapProtocol.DAP_TRANSFER_OK) {
+      if ((data[3] & 0xFF) == CmsisDapProtocol.DAP_TRANSFER_FAULT) {
         throw new TransferFaultError();
-      } else if (data[3] == CmsisDapProtocol.DAP_TRANSFER_WAIT) {
+      } else if ((data[3] & 0xFF) == CmsisDapProtocol.DAP_TRANSFER_WAIT) {
         throw new TransferTimeoutError();
       }
       throw new TransferError();
@@ -387,7 +387,7 @@ public class Command {
     // Check for count mismatch after checking for DAP_TRANSFER_FAULT
     // This allows TransferFaultError or TransferTimeoutError to get
     // thrown instead of TransferFaultError
-    int transferCount = data[1] | (data[2] << 8);
+    int transferCount = (data[1] & 0xFF) | ((data[2] & 0xFF) << 8);
     if (transferCount != this.readCount + this.writeCount) {
       throw new TransferError();
     }
