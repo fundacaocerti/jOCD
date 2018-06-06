@@ -146,9 +146,6 @@ public class RomTable extends CoreSightComponent {
 
     // Get the component's top 4k address.
     long offset = entry & ROM_TABLE_ADDR_OFFSET_MASK;
-    if ((entry & ROM_TABLE_ADDR_OFFSET_NEG_MASK) != 0) {
-      offset = ~Mask.invert32(offset);
-    }
     long address = this.address + offset;
 
     // Create component instance.
