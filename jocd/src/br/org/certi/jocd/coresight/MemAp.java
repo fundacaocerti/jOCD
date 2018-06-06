@@ -337,7 +337,7 @@ public class MemAp extends AccessPort {
 
     // Try to write 8 bits data
     if ((size > 0) && (addr & 0x01) != 0) {
-      this.writeMemory(addr, data[idx], 8);
+      this.writeMemory(addr, (data[idx] & 0xFF), 8);
       size -= 1;
       addr += 1;
       idx += 1;
@@ -345,7 +345,7 @@ public class MemAp extends AccessPort {
 
     // Try to write 16 bits data
     if ((size > 1) && (addr & 0x02) != 0) {
-      this.writeMemory(addr, data[idx] | (data[idx + 1] << 8), 16);
+      this.writeMemory(addr, (data[idx] & 0xFF) | ((data[idx + 1] & 0xFF) << 8), 16);
       size -= 2;
       addr += 2;
       idx += 2;
@@ -364,7 +364,7 @@ public class MemAp extends AccessPort {
 
     // Try to write 16 bits data
     if (size > 1) {
-      this.writeMemory(addr, data[idx] | (data[idx + 1] << 8), 16);
+      this.writeMemory(addr, (data[idx] & 0xFF) | ((data[idx + 1] & 0xFF) << 8), 16);
       size -= 2;
       addr += 2;
       idx += 2;
@@ -372,7 +372,7 @@ public class MemAp extends AccessPort {
 
     // Try to write 8 bits data
     if (size > 0) {
-      this.writeMemory(addr, data[idx], 8);
+      this.writeMemory(addr, (data[idx] & 0xFF), 8);
       size -= 1;
       addr += 1;
       idx += 1;
