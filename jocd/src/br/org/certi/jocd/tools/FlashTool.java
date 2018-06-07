@@ -20,7 +20,6 @@ import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.board.MbedBoard.NoBoardConnectedException;
 import br.org.certi.jocd.board.MbedBoard.UniqueIDNotFoundException;
 import br.org.certi.jocd.board.MbedBoard.UnspecifiedBoardIDException;
-import br.org.certi.jocd.board.MbedBoard.UnsupportedBoardException;
 import br.org.certi.jocd.dapaccess.dapexceptions.DeviceError;
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
@@ -163,7 +162,7 @@ public class FlashTool {
       if (uniqueId == null) {
         selectedBoard = MbedBoard.chooseBoard();
       } else {
-        selectedBoard = MbedBoard.getMbedBoardByUniqueId(uniqueId);
+        selectedBoard = MbedBoard.chooseBoard(uniqueId);
       }
     } catch (UnspecifiedBoardIDException e) {
       LOGGER.log(Level.SEVERE, "Unspecified board ID. Exception: " + e.toString());
@@ -180,9 +179,6 @@ public class FlashTool {
     } catch (Error error) {
       LOGGER.log(Level.SEVERE, "DAP Access error. Exception: " + error.toString());
       return ErrorCode.COMMUNICATION_FAILURE;
-    } catch (UnsupportedBoardException e) {
-      LOGGER.log(Level.SEVERE, "Unsupported Board. Exception: " + e.toString());
-      return ErrorCode.INVALID_BOARD;
     }
     // As we throw exceptions when MbedBoard.chooseBoard
     // can't find the board, we should never get here with
@@ -318,7 +314,7 @@ public class FlashTool {
         return ErrorCode.CORRUPT_HEX_FILE;
       } catch (Error e) {
         LOGGER.log(Level.SEVERE,
-          "Error. Exception caught: " + e.getMessage());
+            "Error. Exception caught: " + e.getMessage());
         return ErrorCode.COMMUNICATION_FAILURE;
       } catch (TimeoutException e) {
         LOGGER.log(Level.SEVERE, "Timeout exception on program. Exception: " + e.toString());
