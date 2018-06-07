@@ -67,10 +67,6 @@ public class AndroidUsbDevice implements ConnectionInterface {
   private UsbEndpoint inputEndpoint;
   private UsbEndpoint outputEndpoint;
 
-  // Locker object for read/write thread.
-  private Object locker = new Object();
-  private Thread rxThread = null;
-
   // A queue to hold the received data while it isn't read.
   private ArrayDeque<byte[]> rxQueue = new ArrayDeque<byte[]>();
 
@@ -134,7 +130,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
    */
   @Override
   public byte[] read() throws TimeoutException {
-    return this.read(100);
+    return this.read(200);
   }
 
   /*
@@ -148,15 +144,13 @@ public class AndroidUsbDevice implements ConnectionInterface {
 
     long startTime = System.currentTimeMillis();
 
-    boolean empty;
-    synchronized (locker) {
-      empty = rxQueue.isEmpty();
-    }
+    int received = 0;
+    packetSize = inputEndpoint.getMaxPacketSize();
+    byte[] packet = new byte[packetSize];
+    while (received == 0) {
+      received = deviceConnection.bulkTransfer(inputEndpoint, packet, packetSize,
+          50);
 
-    while (empty) {
-      synchronized (locker) {
-        empty = rxQueue.isEmpty();
-      }
       if (System.currentTimeMillis() - startTime > timeout) {
         // Timeout.
         // Read operations should typically take ~1-2ms.
@@ -170,16 +164,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
         throw new TimeoutException();
       }
     }
-
-    byte[] ret;
-    synchronized (locker) {
-      ret = rxQueue.poll();
-    }
-    if (ret == null) {
-      throw new InternalError("ret is null. Unexpected array received from rxQueue.poll().");
-    }
-
-    return ret;
+    return packet;
   }
 
   /*
@@ -210,37 +195,34 @@ public class AndroidUsbDevice implements ConnectionInterface {
     // Fill the packet the left space, appending 0 on the end of data.
     byte[] packet = Util.fillArray(data, reportSize, (byte) 0x00);
 
-    synchronized (locker) {
+    // If we don't have an output endpoint, than send it as a control transfer
+    // using endpoint 0.
+    if (outputEndpoint == null) {
+      // Host to device request of type Class of Recipient Interface.
+      // Request type bitmask:
+      //    Direction   | Type  | Recipient |
+      // Host to device | Class | Interface |
+      //       0        |  01   |   00001   |
+      // requestType = 0 01 00000 = 0010 0001 = 0x21
+      int requestType = 0x21;
 
-      // If we don't have an output endpoint, than send it as a control transfer
-      // using endpoint 0.
-      if (outputEndpoint == null) {
-        // Host to device request of type Class of Recipient Interface.
-        // Request type bitmask:
-        //    Direction   | Type  | Recipient |
-        // Host to device | Class | Interface |
-        //       0        |  01   |   00001   |
-        // requestType = 0 01 00000 = 0010 0001 = 0x21
-        int requestType = 0x21;
+      // Set_REPORT (HID class-specific request for transferring data over EP0)
+      // Request:
+      // SET_CONFIGURATION = 0x09
+      int request = 0x09;
 
-        // Set_REPORT (HID class-specific request for transferring data over EP0)
-        // Request:
-        // SET_CONFIGURATION = 0x09
-        int request = 0x09;
+      // Issuing an OUT report.
+      int value = 0x200;
 
-        // Issuing an OUT report.
-        int value = 0x200;
-
-        // mBed Board interface number for HID.
-        int index = this.interfaceNumber;
-        deviceConnection
-            .controlTransfer(requestType, request, value, index, packet, data.length, timeout);
-        return;
-      }
-
-      // If we got here, means that we have an output endpoint.
-      int written = deviceConnection.bulkTransfer(outputEndpoint, packet, packet.length, timeout);
+      // mBed Board interface number for HID.
+      int index = this.interfaceNumber;
+      deviceConnection
+          .controlTransfer(requestType, request, value, index, packet, data.length, timeout);
+      return;
     }
+
+    // If we got here, means that we have an output endpoint.
+    int written = deviceConnection.bulkTransfer(outputEndpoint, packet, packet.length, timeout);
   }
 
   /*
@@ -302,9 +284,6 @@ public class AndroidUsbDevice implements ConnectionInterface {
         break;
       }
 
-      // Start rx thread.
-      this.startRxThread();
-
       // If everything ok, leave (don't let it get to clean section below).
       return;
 
@@ -320,11 +299,6 @@ public class AndroidUsbDevice implements ConnectionInterface {
    */
   @Override
   public void close() {
-    // Stop the rx thread (if exists).
-    if (rxThread != null) {
-      stopRxThread();
-    }
-
     // Release and close device connection.
     if (this.deviceConnection != null) {
       this.deviceConnection.releaseInterface(usbInterface);
@@ -432,85 +406,5 @@ public class AndroidUsbDevice implements ConnectionInterface {
       return false;
     }
     return true;
-  }
-
-  /*
-   * Thread to read data from USB and enqueue to be read later.
-   */
-  private Runnable rxTask = new Runnable() {
-
-    public void run() {
-
-      while (atomicOpen.get()) {
-        synchronized (locker) {
-          if (device == null || usbInterface == null || inputEndpoint == null) {
-            LOGGER.log(Level.SEVERE, "Internal Error on rxTask. The device/usbInterface/" +
-                "outputEndpoint is null.");
-            return;
-          }
-
-          packetSize = inputEndpoint.getMaxPacketSize();
-          byte[] packet = new byte[packetSize];
-          int received = deviceConnection.bulkTransfer(inputEndpoint, packet, packetSize,
-              50);
-
-          LOGGER.log(Level.FINE, String.format("AndroidUsbDevice: received %d bytes.", received));
-
-          if (received > packetSize) {
-            throw new InternalError(String.format(
-                "AndroidUsbDevice: Unexpected number of received bytes. packetSize = %d, received = %d.",
-                packetSize, received));
-          }
-
-          // We might receive less bytes than packetSize, so we need to add only the
-          // received data to a new array and pass it to our queue.
-          if (received >= 0) {
-            rxQueue.add(Util.getSubArray(packet, 0, received));
-          }
-        }
-
-        // Sleep for 10 ms to pause, so other thread can write data or anything.
-        // As both read and write data methods lock each other - they cannot be run in
-        // parallel.
-        try {
-          Thread.sleep(10);
-        } catch (InterruptedException e) {
-          // This thread has been interrupted.
-          return;
-        }
-      }
-    }
-  };
-
-  /*
-   * Starts the Rx Thread.
-   */
-  public void startRxThread() {
-    if (rxThread != null) {
-      LOGGER.log(Level.SEVERE, "RX thread has already been started.");
-      return;
-    }
-
-    rxThread = new Thread(rxTask);
-    rxThread.start();
-  }
-
-  /*
-   * Starts the Rx Thread.
-   */
-  public void stopRxThread() {
-    if (rxThread == null) {
-      LOGGER.log(Level.SEVERE, "RX thread isn't running.");
-      return;
-    }
-
-    rxThread.interrupt();
-    try {
-      rxThread.join(100);
-      rxThread = null;
-    } catch (InterruptedException e) {
-      // Main thread interrupted.
-      // Just leave.
-    }
   }
 }
