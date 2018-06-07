@@ -18,6 +18,7 @@ package br.org.certi.flashtooltest;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 import br.org.certi.jocd.Jocd.ErrorCode;
 import br.org.certi.jocd.board.MbedBoard;
 import br.org.certi.jocd.dapaccess.dapexceptions.InsufficientPermissions;
@@ -39,6 +40,8 @@ public class AsyncFlashToolFlashBoard extends AsyncTask<String, Integer, String>
   // Context (for USB Manager).
   private Context context = null;
   private boolean exceptionOccurred = false;
+
+  double startTime = 0;
 
   /*
    * Constructor.
@@ -62,6 +65,8 @@ public class AsyncFlashToolFlashBoard extends AsyncTask<String, Integer, String>
 
     FlashTool tool = new FlashTool();
     this.exceptionOccurred = false;
+
+    startTime = System.currentTimeMillis();
 
     try {
       errorCode = tool.flashBoard(this.flashFilePath, this);
@@ -89,6 +94,11 @@ public class AsyncFlashToolFlashBoard extends AsyncTask<String, Integer, String>
     if (this.exceptionOccurred) {
       return;
     }
+
+    double elapsed = System.currentTimeMillis();
+    elapsed -=  startTime;
+    Toast.makeText(this.context, String.format("elapsed: %.02f", elapsed),
+        Toast.LENGTH_LONG).show();
 
     Log.d(TAG, result);
     delegate.processAsyncTaskFinish(result);
