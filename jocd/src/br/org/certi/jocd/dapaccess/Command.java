@@ -108,7 +108,7 @@ public class Command {
   public int getRequestSpace(int count, byte request, Byte dapIndex) throws Error {
     // Assert this.dataEncoded == false.
     if (this.dataEncoded) {
-      throw new Error("getRequestSpace: Unexpected dataEncoded value ( " + dataEncoded + ")");
+      throw new Error("getRequestSpace: Unexpected dataEncoded value (true)");
     }
 
     // Must create another command if the dap index is different.
@@ -167,7 +167,7 @@ public class Command {
   public void add(int count, byte request, long[] words, Byte dapIndex) throws Error {
     // Assert this.dataEncoded == false.
     if (this.dataEncoded) {
-      throw new Error("add: Unexpected dataEncoded value ( " + dataEncoded + ")");
+      throw new Error("add: Unexpected dataEncoded value (true)");
     }
 
     if (this.dapIndex == null) {
@@ -176,7 +176,7 @@ public class Command {
 
     // Assert this.dapIndex == dapIndex.
     if (!this.dapIndex.equals(dapIndex)) {
-      throw new Error("add: Unexpected dapIndex value ( " + dapIndex + ")");
+      throw new Error("add: Unexpected dapIndex = " + dapIndex + ", expecting = " + this.dapIndex);
     }
 
     if (this.blockRequest == null) {
@@ -214,7 +214,7 @@ public class Command {
   public byte[] encodeTransferData() throws Error {
     // Assert this.getEmpty() == false.
     if (this.getEmpty()) {
-      throw new Error("encodeTransferData: Unexpected getEmpty() value ( " + getEmpty() + ")");
+      throw new Error("encodeTransferData: Unexpected getEmpty() value (true)");
     }
 
     byte[] buf = new byte[this.size];
@@ -265,7 +265,7 @@ public class Command {
   private byte[] decodeTransferData(byte[] data) throws TransferError, Error {
     // Assert this.getEmpty() == false.
     if (this.getEmpty()) {
-      throw new Error("decodeTransferData: Unexpected getEmpty() value ( " + getEmpty() + ")");
+      throw new Error("decodeTransferData: Unexpected getEmpty() value (true)");
     }
 
     if ((data[0] & 0xFF) != CommandId.DAP_TRANSFER.getValue()) {
@@ -299,7 +299,7 @@ public class Command {
   public byte[] encodeTransferBlockData() throws Error {
     // Assert this.getEmpty() == false.
     if (this.getEmpty()) {
-      throw new Error("encodeTransferBlockData: Unexpected getEmpty() value ( " + getEmpty() + ")");
+      throw new Error("encodeTransferBlockData: Unexpected getEmpty() value (true)");
     }
 
     byte[] buf = new byte[this.size];
@@ -368,7 +368,7 @@ public class Command {
   private byte[] decodeTransferBlockData(byte[] data) throws TransferError, Error {
     // Assert this.getEmpty() == false.
     if (this.getEmpty()) {
-      throw new Error("decodeTransferBlockData: Unexpected getEmpty() value ( " + getEmpty() + ")");
+      throw new Error("decodeTransferBlockData: Unexpected getEmpty() value (true)");
     }
 
     if ((data[0] & 0xFF) != CommandId.DAP_TRANSFER_BLOCK.getValue()) {
@@ -402,7 +402,7 @@ public class Command {
   public byte[] encodeData() throws Error {
     // Assert this.getEmpty() == false.
     if (this.getEmpty()) {
-      throw new Error("encodeData: Unexpected getEmpty() value ( " + getEmpty() + ")");
+      throw new Error("encodeData: Unexpected getEmpty() value (true)");
     }
 
     this.dataEncoded = true;
@@ -421,12 +421,12 @@ public class Command {
   public byte[] decodeData(byte[] data) throws TransferError, Error {
     // Assert this.getEmpty() == false.
     if (this.getEmpty()) {
-      throw new Error("decodeData: Unexpected getEmpty() value ( " + getEmpty() + ")");
+      throw new Error("decodeData: Unexpected getEmpty() value (true)");
     }
 
     // Assert this.dataEncoded == true.
     if (this.dataEncoded == false) {
-      throw new Error("decodeData: Unexpected dataEncoded value ( " + this.dataEncoded + ")");
+      throw new Error("decodeData: Unexpected dataEncoded value (false)");
     }
 
     if (this.blockAllowed) {
