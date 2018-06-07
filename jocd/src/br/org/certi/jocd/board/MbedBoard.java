@@ -150,6 +150,15 @@ public class MbedBoard extends Board {
   }
 
   /*
+   * Overwrite for chooseBoard using boardId.
+   */
+  public static MbedBoard chooseBoard(String boardId)
+      throws NoBoardConnectedException, UniqueIDNotFoundException, UnspecifiedBoardIDException,
+      TimeoutException, Error {
+    return chooseBoard(true, false, boardId, null, null, true);
+  }
+
+  /*
    * Return an array of all mbed boards connected.
    */
   public static MbedBoard chooseBoard(boolean blocking, boolean returnFirst,
@@ -232,18 +241,6 @@ public class MbedBoard extends Board {
     }
 
     return board;
-  }
-
-  public static MbedBoard getMbedBoardByUniqueId(String uniqueId) throws UnsupportedBoardException {
-    List<DapAccessCmsisDap> connectedDaps = DapAccessCmsisDap.getConnectedDevices();
-
-    // Loop for each device.
-    for (DapAccessCmsisDap dapAccess : connectedDaps) {
-      if (dapAccess.getUniqueId().equals(uniqueId)) {
-        return new MbedBoard(dapAccess, null, null);
-      }
-    }
-    return null;
   }
 
   public static class NoBoardConnectedException extends Exception {
