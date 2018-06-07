@@ -63,8 +63,7 @@ public class FlashTool {
     LOGGER.log(Level.FINE, "Constructor");
   }
 
-  public String listConnectedBoards()
-      throws DeviceError, TimeoutException, InsufficientPermissions {
+  public String listConnectedBoards() throws TimeoutException {
     List<MbedBoard> boards = null;
 
     try {
@@ -156,6 +155,9 @@ public class FlashTool {
     if (skip == null) {
       skip = 1;
     }
+
+    // Update the progress information.
+    progressUpdate.progressUpdateCallback(0);
 
     MbedBoard selectedBoard = null;
     try {
