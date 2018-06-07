@@ -50,7 +50,7 @@ public class FlashTool {
 
   List<String> supportedFormats = Arrays.asList("bin", "hex");
 
-  // Since we only support nrf51, or EnumSet is just nrf51.
+  // Since we only support nrf51, our EnumSet is just nrf51.
   // In a future release, we should change this set to
   // "complementOf(TargetFactory.targetEnum.cortex_m)"
   // (All others targets except cortex_m: No generic programming)
