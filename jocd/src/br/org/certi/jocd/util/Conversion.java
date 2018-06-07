@@ -23,16 +23,14 @@ public class Conversion {
    * Convert a list of bytes to a list of 32-bit integers (little endian)
    */
   public static long[] byteListToU32leList(byte[] data) {
-    int remainder = (data.length % 4 > 0) ? 1 : 0;
-    int newSize = data.length / 4 + remainder;
-    long[] res = new long[newSize];
+    long[] res = new long[0];
     for (int i = 0; i < (data.length / 4); i++) {
       long word = 0;
       word |= 0x000000FFL & (data[0 + i * 4] << 0);
       word |= 0x0000FF00L & (data[1 + i * 4] << 8);
       word |= 0x00FF0000L & (data[2 + i * 4] << 16);
       word |= 0xFF000000L & (data[3 + i * 4] << 24);
-      Util.appendDataInArray(res, word);
+      res = Util.appendDataInArray(res, word);
     }
     return res;
   }
