@@ -79,10 +79,8 @@ public class BoardInfo {
       case "1060": return new BoardInfo("EA-LPC4088",                     TargetFactory.targetEnum.lpc4088qsb,   "l1_lpc4088qsb.bin"      );
       case "1062": return new BoardInfo("EA-LPC4088-Display-Module",      TargetFactory.targetEnum.lpc4088dm,    "l1_lpc4088dm.bin"       );
       case "1070": return new BoardInfo("nRF51822-mKIT",                  TargetFactory.targetEnum.nrf51,        "l1_nrf51.bin"           );
-      case "1080": return new BoardInfo("DT01 + MB2001",                  TargetFactory.targetEnum.stm32f103rc,  "l1_stm32f103rc.bin"     );
-      // TODO: we have to board with the same ID 1090. Check each one is right.
-      // case "1090": return new BoardInfo("DT01 + MB00xx",                  TargetFactory.targetEnum.stm32f051,    "l1_stm32f051.bin"       );
-      // case "1090": return new BoardInfo("RedBearLab-nRF51822",            TargetFactory.targetEnum.nrf51,        "l1_nrf51.bin"           );
+      case "1080": return new BoardInfo("mBuino",                         TargetFactory.targetEnum.lpc11u24,     "l1_lpc11u24.bin"        );
+      case "1090": return new BoardInfo("RedBearLab-nRF51822",            TargetFactory.targetEnum.nrf51,        "l1_nrf51.bin"           );
       case "1095": return new BoardInfo("RedBearLab-BLE-Nano",            TargetFactory.targetEnum.nrf51,        "l1_nrf51.bin"           );
       case "1100": return new BoardInfo("nRF51-DK",                       TargetFactory.targetEnum.nrf51,        "l1_nrf51-dk.bin"        );
       case "1101": return new BoardInfo("nRF52-DK",                       TargetFactory.targetEnum.nrf52,        "l1_nrf52-dk.bin"        );
