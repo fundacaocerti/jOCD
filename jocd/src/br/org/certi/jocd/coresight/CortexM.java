@@ -730,7 +730,6 @@ public class CortexM extends Target {
 
       // Technically, we need to poll S_REGRDY in DHCSR here before reading DCRDR. But we're running
       // so slow compared to the target that it's not necessary.
-      // TODO Check if this is true in our case.
 
       // Read it and assert that S_REGRDY is set
       dhcsrCbList.add(this.readMemoryLater(CortexM.DHCSR, null));
@@ -851,7 +850,7 @@ public class CortexM extends Target {
 
       // Technically, we need to poll S_REGRDY in DHCSR here to ensure the register write has
       // completed.
-      // TODO Check if this is true in our case.
+
       // Read it and assert that S_REGRDY is set.
       results.add(this.readMemoryLater(CortexM.DHCSR, null));
     }

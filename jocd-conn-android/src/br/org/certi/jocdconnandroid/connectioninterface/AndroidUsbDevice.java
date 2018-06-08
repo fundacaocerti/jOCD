@@ -181,9 +181,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
    */
   public void write(byte[] data, int timeout) throws Error {
     if (device == null || usbInterface == null) {
-      //TODO Throw an error to notify the failure to the writer
-      LOGGER.log(Level.SEVERE, "Internal Error on write. The device/usbInterface is null");
-      return;
+      throw new InternalError("write(): Internal Error on write. The device/usbInterface is null");
     }
 
     // If we have an output endpoint, get its packet size.
