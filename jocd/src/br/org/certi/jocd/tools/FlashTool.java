@@ -29,7 +29,6 @@ import br.org.certi.jocd.target.TargetFactory.targetEnum;
 import cz.jaybee.intelhex.IntelHexException;
 import cz.jaybee.intelhex.Parser;
 import cz.jaybee.intelhex.listeners.RangeDetector;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -261,22 +260,52 @@ public class FlashTool {
       }
 
       // Open the file.
+      InputStream is = null;
       try {
-        InputStream is = new FileInputStream(new File(file));
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        // TODO flashBlock (....???????...)
-        //selectedBoard.flash.flashBlock(address);
-        return ErrorCode.NO_OPERATION_PERFORMED;
+        File inputFile = new File(file);
+        is = new FileInputStream(file);
+        byte[] byteBuffer = new byte[(int) inputFile.length()];
+
+        if (is.read(byteBuffer) == -1) {
+          throw new IOException(
+              "EOF reached while trying to read the file");
+        }
+
+        selectedBoard.flash
+            .flashBlock(address, byteBuffer, true, chipErase, progressUpdate, fastProgram);
       } catch (FileNotFoundException e) {
         LOGGER.log(Level.SEVERE, "File not found: " + file);
         return ErrorCode.FILE_NOT_FOUND;
+      } catch (IOException e) {
+        LOGGER.log(Level.SEVERE, "Couldn't read the file: " + file);
+        return ErrorCode.FILE_NOT_FOUND;
+      } catch (InterruptedException e) {
+        LOGGER.log(Level.WARNING,
+            "InterruptedException while trying to parse IntelHex. Exception: " + e.toString());
+        return ErrorCode.CORRUPT_HEX_FILE;
+      } catch (Error e) {
+        LOGGER.log(Level.SEVERE, "Error. Exception caught: " + e.getMessage());
+        return ErrorCode.COMMUNICATION_FAILURE;
+      } catch (TimeoutException e) {
+        LOGGER.log(Level.SEVERE, "Timeout exception on program. Exception: " + e.toString());
+        return ErrorCode.COMMUNICATION_FAILURE;
+      } catch (OutOfMemoryError e) {
+        LOGGER.log(Level.SEVERE, "Couldn't allocate memory to program the file: " + file);
+        return ErrorCode.NO_OPERATION_PERFORMED;
+      } finally {
+        try {
+          is.close();
+        } catch (IOException e) {
+          LOGGER.log(Level.FINE, "Couldn't close the file: " + file);
+        }
       }
     }
     // Intel Hex format.
     else if (format.equals(".hex")) {
+      FileInputStream is = null;
       try {
         // Create input stream of some IntelHex data.
-        FileInputStream is = new FileInputStream(new File(file));
+        is = new FileInputStream(new File(file));
 
         // Create IntelHexParserObject.
         Parser intelhexParser = new Parser(is);
@@ -313,12 +342,17 @@ public class FlashTool {
             "InterruptedException while trying to parse IntelHex. Exception: " + e.toString());
         return ErrorCode.CORRUPT_HEX_FILE;
       } catch (Error e) {
-        LOGGER.log(Level.SEVERE,
-            "Error. Exception caught: " + e.getMessage());
+        LOGGER.log(Level.SEVERE, "Error. Exception caught: " + e.getMessage());
         return ErrorCode.COMMUNICATION_FAILURE;
       } catch (TimeoutException e) {
         LOGGER.log(Level.SEVERE, "Timeout exception on program. Exception: " + e.toString());
         return ErrorCode.COMMUNICATION_FAILURE;
+      } finally {
+        try {
+          is.close();
+        } catch (IOException e) {
+          LOGGER.log(Level.FINE, "Couldn't close the file: " + file);
+        }
       }
     }
 
