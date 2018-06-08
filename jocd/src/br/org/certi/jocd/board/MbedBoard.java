@@ -235,7 +235,6 @@ public class MbedBoard extends Board {
         board.init();
       } catch (Exception e) {
         board.dapAccessLink.close();
-        // TODO handle this exception corretly
         throw e;
       }
     }
