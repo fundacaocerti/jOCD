@@ -16,6 +16,7 @@
 package br.org.certi.jocd.dapaccess;
 
 import br.org.certi.jocd.dapaccess.dapexceptions.Error;
+import br.org.certi.jocd.util.Conversion;
 import java.util.concurrent.TimeoutException;
 
 /*
@@ -71,18 +72,7 @@ public class Transfer {
       throw new Error("addResponse: data.length != this.sizeBytes");
     }
 
-    int resultSize = this.sizeBytes / 4;
-    long[] result = new long[resultSize];
-    int count = 0;
-    for (int i = 0; i < this.sizeBytes; i += 4) {
-      long word = 0;
-      word |= 0x000000FFL & (data[0 + i] << 0);
-      word |= 0x0000FF00L & (data[1 + i] << 8);
-      word |= 0x00FF0000L & (data[2 + i] << 16);
-      word |= 0xFF000000L & (data[3 + i] << 24);
-      result[count] = word;
-      count++;
-    }
+    long[] result = Conversion.byteListToU32leList(data);
     this.result = result;
   }
 
