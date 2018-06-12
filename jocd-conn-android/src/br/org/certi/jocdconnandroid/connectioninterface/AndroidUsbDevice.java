@@ -67,12 +67,6 @@ public class AndroidUsbDevice implements ConnectionInterface {
   private UsbEndpoint inputEndpoint;
   private UsbEndpoint outputEndpoint;
 
-  // A queue to hold the received data while it isn't read.
-  private ArrayDeque<byte[]> rxQueue = new ArrayDeque<byte[]>();
-
-  public static final byte USB_CLASS_HID = (byte) 0x03;
-  public static final byte USB_INPUT_ENDPOINT_ADDRESS = (byte) 0x80;
-
   /*
    * Constructor
    */
@@ -364,7 +358,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
 
       // The interface that we are looking for, should match the class
       // 0x03 (HID). If we find it, save this interface.
-      if (iface.getInterfaceClass() == USB_CLASS_HID) {
+      if (iface.getInterfaceClass() == ConnectionInterface.USB_CLASS_HID) {
         this.usbInterface = iface;
         this.interfaceNumber = i;
         break;
@@ -393,7 +387,7 @@ public class AndroidUsbDevice implements ConnectionInterface {
 
     for (int i = 0; i < endpointCount; i++) {
       UsbEndpoint endpoint = this.usbInterface.getEndpoint(i);
-      if ((endpoint.getAddress() & USB_INPUT_ENDPOINT_ADDRESS) != 0) {
+      if ((endpoint.getAddress() & ConnectionInterface.USB_INPUT_ENDPOINT_ADDRESS) != 0) {
         inputEndpoint = endpoint;
       } else {
         outputEndpoint = endpoint;
