@@ -22,6 +22,9 @@ import java.util.concurrent.TimeoutException;
 
 public interface ConnectionInterface {
 
+  public static final byte USB_CLASS_HID = (byte) 0x03;
+  public static final byte USB_INPUT_ENDPOINT_ADDRESS = (byte) 0x80;
+
   public List<ConnectionInterface> getAllConnectedDevices();
 
   public int getVendorId();
