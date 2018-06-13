@@ -3,7 +3,7 @@ apply plugin: 'java-library'
 sourceSets {
     main {
         java {
-            srcDir '../../../../jocd/src'
+            srcDir '../../../../jocd/src/main/java'
         }
     }
 }
