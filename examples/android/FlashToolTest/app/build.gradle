@@ -32,7 +32,7 @@ android {
         }
     }
     sourceSets {
-        main.java.srcDirs += '../../../../jocd/src'
+        main.java.srcDirs += '../../../../jocd/src/main/java'
         main.java.srcDirs += '../../../../jocd-conn-android/src'
         main.java.srcDirs += '../../../../third-party/java-intelhex-parser/src'
     }
