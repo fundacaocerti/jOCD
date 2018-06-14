@@ -24,6 +24,19 @@
     <artifactId>jOCD-conn-usb4java</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <name>jOCD-conn-usb4java</name>
+        <description>jOCD Conn usb4java - Usb interface implementation for jOCD library</description>
+    <url>https://github.com/fundacaocerti/jOCD</url>
+
     <build>
         <plugins>
             <plugin>
