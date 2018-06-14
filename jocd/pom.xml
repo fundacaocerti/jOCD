@@ -55,7 +55,7 @@
                         </goals>
                         <configuration>
                             <sources>
-                              <source>../../third-party/java-intelhex-parser/src</source>
+                              <source>../third-party/java-intelhex-parser/src</source>
                             </sources>
                         </configuration>
                     </execution>
