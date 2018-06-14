@@ -19,7 +19,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>br.org.certi</groupId>
-    <artifactId>JavaFlashToolTest</artifactId>
+    <artifactId>JavaFlashToolTestCli</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
     <build>
@@ -59,7 +59,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>br.org.certi.javaflashtooltest.MainClass</mainClass>
+                            <mainClass>br.org.certi.javaflashtooltestcli.MainClass</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
