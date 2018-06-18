@@ -19,13 +19,14 @@ import br.org.certi.jocd.Jocd;
 import br.org.certi.jocdconnusb4java.connectioninterface.Usb4JavaDevice;
 
 /**
- * JocdConnUsb4Java is a companion library for jOCD to provide access to USB devices via Usb4Java library
+ * JocdConnUsb4Java is a companion library for jOCD to provide access to USB devices via Usb4Java
+ * library
  */
 public class JocdConnUsb4Java {
 
   /**
-   * Initializes the Connection Interface in jOCD. It must be executed before any other jOCD
-   * library call.
+   * Initializes the Connection Interface in jOCD. It must be executed before any other jOCD library
+   * call.
    */
   public static void init() {
     Jocd.connectionInterface = new Usb4JavaDevice();

@@ -1,0 +1,49 @@
+apply plugin:'java'
+apply plugin:'maven-publish'
+
+version ='1.0.0'
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'br.org.certi'
+            artifactId 'jocd'
+            version '1.0.0'
+
+            from components.java
+        }
+    }
+}
+
+ext.dpProjectPath = projectDir
+task buildAll() {
+    finalizedBy build
+    doLast {
+        // All dependencies.
+        def dp = [ '../third-party/java-intelhex-parser' ]
+        dp.each {
+            ext.dpProjectPath = "${it}"
+            exec {
+                workingDir dpProjectPath
+                if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+                    // On windows:
+                    commandLine 'cmd', '/c', 'gradlew.bat buildAll'
+                } else {
+                    // On linux:
+                    commandLine 'bash', '-c', './gradlew buildAll'
+                }
+            }
+        }
+        println "\n\nBuilding $project.name"
+    }
+}
+
+dependencies {
+    implementation 'cz.jaybee:intelhexparser:1.0.0'
+}
+
+build.finalizedBy(publishToMavenLocal)

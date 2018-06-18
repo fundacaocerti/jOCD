@@ -1,0 +1,35 @@
+apply plugin:'application'
+apply plugin:'java'
+
+mainClassName = 'br.org.certi.javaflashtooltestcli.MainClass'
+
+version ='1.0.0'
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+sourceSets {
+    main.java.srcDirs += '../../../jocd/src/main/java'
+    main.java.srcDirs += '../../../jocd-conn-usb4java/src/main/java'
+    main.java.srcDirs += '../../../third-party/java-intelhex-parser/src/main/java'
+}
+
+jar {
+  manifest {
+    attributes(
+      'Main-Class': mainClassName
+    )
+  }
+}
+
+dependencies {
+    implementation 'br.org.certi:jocd-conn-usb4java:1.0.0'
+}
+
+task copyDependencies(type: Copy) {
+   from configurations.compileClasspath
+   into buildDir.toString() + "/libs"
+}
+
+build.finalizedBy(copyDependencies)

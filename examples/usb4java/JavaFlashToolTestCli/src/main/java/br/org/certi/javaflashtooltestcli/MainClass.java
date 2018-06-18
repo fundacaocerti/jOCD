@@ -84,7 +84,7 @@ public class MainClass implements ProgressUpdateInterface {
           break;
 
         default:
-          // Default: flash the first board, using the hex file passed as 
+          // Default: flash the first board, using the hex file passed as
           // argument.
           mainClass.flashBoard(arg);
       }
@@ -131,8 +131,8 @@ public class MainClass implements ProgressUpdateInterface {
 
     int i = 1;
     if (boards.size() < 1) {
-        System.out.println("There are no compatible boards connected.");
-        return;
+      System.out.println("There are no compatible boards connected.");
+      return;
     }
     for (MbedBoard board : boards) {
       System.out.println("[" + i++ + "]: " + board.getName() + " (" + board.getUniqueId() + ")");
