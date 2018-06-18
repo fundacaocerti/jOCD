@@ -1,26 +1,41 @@
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
 
+version ='1.0.0'
 repositories {
     mavenLocal()
     mavenCentral()
     google()
     jcenter()
 }
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.0.1'
+    }
+}
+
 android {
     compileSdkVersion 27
+
     defaultConfig {
-        applicationId "certi.org.br.jocdandroidtestapp"
         minSdkVersion 21
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
 }
 
 ext.dpProjectPath = projectDir
@@ -28,7 +43,7 @@ task buildAll() {
     finalizedBy build
     doLast {
         // All dependencies (jOCD will be resolved by jocd-conn-usb4java).
-        def dp = [ '../../../../jocd-conn-android' ]
+        def dp = [ '../jocd' ]
         dp.each {
             ext.dpProjectPath = "${it}"
             exec {
@@ -47,10 +62,6 @@ task buildAll() {
 }
 
 dependencies {
-    implementation 'cz.jaybee:intelhexparser:1.0.0'
-    implementation 'br.org.certi:jocd:1.0.0'
-    implementation files('../../../../jocd-conn-android/build/outputs/aar/jocd-conn-android-release.aar')
     implementation 'com.android.support:appcompat-v7:27.1.1'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
-    implementation 'com.android.support:gridlayout-v7:27.1.1'
+    implementation 'br.org.certi:jocd:1.0.0'
 }

@@ -1,0 +1,81 @@
+apply plugin:'java'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+project.ext.selectedTarget = ""
+
+task checkTarget() {
+    doLast {
+        // Check if user passed as argument.
+        if (project.hasProperty("target")) {
+            if (target == "android") {
+                project.ext.selectedTarget = "android"
+            }
+            if (target == "usb4java") {
+                project.ext.selectedTarget = "usb4java"
+            }
+        }
+        // Now, check if it really has any target selected.
+        if (project.ext.selectedTarget == "android") {
+            project.ext.targetPath = "$projectDir/jocd-conn-android"
+            println "Target:  android"
+            return;
+        }
+        if (project.ext.selectedTarget == "usb4java") {
+            project.ext.targetPath = "$projectDir/jocd-conn-usb4java"
+            println "Target: usb4java"
+            return;
+        }
+        println "\n################################################\nNo target defined. Aborting.\nYou should pass the target as following: \"./gradlew build -Ptarget=[android|usb4java]\", or call the specific method instead:\n\t* \"./gradlew android\" \n\t* \"./gradlew usb4java\"\n################################################\n"
+        throw new GradleException('No target defined. Aborting.')
+    }
+}
+
+task buildAll() {
+    doLast {
+        exec {
+            workingDir targetPath
+            if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+                // On windows:
+                commandLine 'cmd', '/c', 'gradlew.bat buildAll'
+            } else {
+                // On linux:
+                commandLine 'bash', '-c', './gradlew buildAll'
+            }
+        }
+    }
+}
+
+task android() {
+    finalizedBy checkTarget, build
+    doLast {
+        project.ext.selectedTarget = "android"
+    }
+}
+
+task usb4java() {
+    finalizedBy checkTarget, build
+    doLast {
+        project.ext.selectedTarget = "usb4java"
+    }
+}
+
+dependencies {
+    if(project.ext.selectedTarget == 'android') {
+        implementation files('jocd-conn-android/build/outputs/aar/jocd-conn-android-release.aar')
+    } else {
+         implementation 'br.org.certi:jocd-conn-usb4java:1.0.0'
+    }
+}
+
+task copyDependencies(type: Copy) {
+   from configurations.compileClasspath
+   into buildDir.toString() + "/libs"
+}
+
+build.finalizedBy(copyDependencies)
+
+build.dependsOn checkTarget
+build.dependsOn buildAll

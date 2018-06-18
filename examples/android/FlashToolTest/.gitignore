@@ -88,6 +88,7 @@ obj/
 .idea/gradle.xml
 .idea/runConfigurations.xml
 .idea/codeStyles/Project.xml
+.idea
 
 # OS-specific files
 .DS_Store
@@ -149,5 +150,10 @@ fabric.properties
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
 
+# Maven
+target
+
+# Netbeans
+nbactions.xml
 
 # End of https://www.gitignore.io/api/linux,androidstudio
