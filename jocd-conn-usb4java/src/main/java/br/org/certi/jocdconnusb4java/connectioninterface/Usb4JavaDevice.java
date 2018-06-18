@@ -51,7 +51,6 @@ public class Usb4JavaDevice implements ConnectionInterface {
 
   protected int vendorId;
   protected int productId;
-  protected String deviceName;
   protected String productName;
   protected String manufacturerName;
   protected String serialNumber;
@@ -111,7 +110,6 @@ public class Usb4JavaDevice implements ConnectionInterface {
 
       board.vendorId = usbDescriptor.idVendor();
       board.productId = usbDescriptor.idProduct();
-      board.deviceName = "";
 
       try {
         try {
@@ -167,6 +165,7 @@ public class Usb4JavaDevice implements ConnectionInterface {
     // If this is not a hub then add this device to usbDeviceList.
     else {
       this.usbDeviceList.add(device);
+      System.out.println(device.toString());
     }
   }
 
@@ -386,7 +385,7 @@ public class Usb4JavaDevice implements ConnectionInterface {
   }
 
   public String getDeviceName() {
-    return this.deviceName;
+    return this.device.toString();
   }
 
   public String getProductName() {

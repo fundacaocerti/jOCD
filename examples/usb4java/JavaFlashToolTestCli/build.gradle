@@ -12,6 +12,7 @@ repositories {
 sourceSets {
     main.java.srcDirs += '../../../jocd/src/main/java'
     main.java.srcDirs += '../../../jocd-conn-usb4java/src/main/java'
+    main.resources.srcDirs += '../../../jocd-conn-usb4java/src/main/resources'
     main.java.srcDirs += '../../../third-party/java-intelhex-parser/src/main/java'
 }
 
@@ -24,7 +25,7 @@ jar {
 }
 
 dependencies {
-    implementation 'br.org.certi:jocd-conn-usb4java:1.0.0'
+    implementation 'org.usb4java:usb4java-javax:1.2.0'
 }
 
 task copyDependencies(type: Copy) {

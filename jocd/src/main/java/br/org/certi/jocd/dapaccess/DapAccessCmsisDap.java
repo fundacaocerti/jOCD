@@ -103,6 +103,10 @@ public class DapAccessCmsisDap {
     // link and add to our allDAPLinks.
     for (ConnectionInterface iface : allDevices) {
       // Get only CMSIS-DAP devices.
+      if (iface.getProductName() == null) {
+        LOGGER.log(Level.WARNING, "Null product name on interface " + iface.getDeviceName());
+        continue;
+      }
       if (!iface.getProductName().contains("CMSIS-DAP")) {
         continue;
       }
