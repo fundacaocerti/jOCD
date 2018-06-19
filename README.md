@@ -1,41 +1,78 @@
 # jOCD
 
-jOCD is multiplatform Java port of the pyOCD (https://github.com/mbedmicro/pyOCD) project. This is a JAVA library for programming micro:bit board using CMSIS-DAP. Currently, only Android is supported. Windows, Linux and OSX might become supported.
+jOCD is multiplatform Java port of the pyOCD (https://github.com/mbedmicro/pyOCD) project. This is a Java library for programming micro:bit board using CMSIS-DAP. Currently the following platforms are supported:
+
+* Android (API >= 21 - Lollipop 5.0)
+* Linux (Ubuntu 18.04 LTS)
 
 This library is licensed under Apache V 2.0.
 
 ## Instructions:
 
-For now we only support list devices through an Android application. The only device implemented is the micro:bit board.
-Make sure your device supports USB OTG (https://en.wikipedia.org/wiki/USB_On-The-Go)
+For now the only device implemented is the micro:bit board.
+If you are running in an Android device, make sure your device supports USB OTG (https://en.wikipedia.org/wiki/USB_On-The-Go).
 
 ### Compiling Instructions
 
+In order to use the jOCD library, you will need:
+
+* jocd.jar: The jOCD library;
+* jocd-conn [jocd-conn-android/jocd-conn-usb4java]: An USB interface for the desired platform (Android or Linux);
+* usb4java: a Java library to access USB devices (http://usb4java.org/ - not used on Android - dependency of jocd-conn-usb4java);
+* IntelHex Parser: a parser for IntelHex files (https://github.com/j123b567/java-intelhex-parser).
+
+You can compile each desired component by running "./gradlew build", or "./gradle buildAll" to compile itself with all dependencies.
+
 #### Compiling for Android 
 
-To compile it for Android, open the build project located on "build/android/BuildJocdAndroid/" with Android Studio and build jocd-conn-android. This should generate the following files:
-* build/android/BuildJocdAndroid/java-intelhex-parser/build/libs/java-intelhex-parser.jar
-* build/android/BuildJocdAndroid/jocd/build/libs/jocd.jar 
-* build/android/BuildJocdAndroid/jocd-conn-android/build/outputs/aar/jocd-conn-android-release.aar
-
-#### Compiling for Windows, Linux, Mac OS X
-
-To compile it for those platforms, usb4java (http://usb4java.org/) is used as dependency.
-Using Maven (https://maven.apache.org) do the following steps to install the dependencies (jOCD and jocd-conn-usb4java) into your local maven repository:
-
+To compile it for Android, on the project root, run:
 ```bash
-~/jOCD$ cd jocd
-~/jOCD$ mvn install
-~/jOCD$ cd ../jocd-conn-usb4java
-~/jOCD$ mvn install
+~/jOCD/jOCD-conn-usb4java$ ./gradlew android
+```
+This will compile "jocd-conn-android" and its dependencies, generating:
+
+* jocd-conn-android-release.aar
+* jocd.jar 
+* java-intelhex-parser.jar
+
+Now, you are ready to create your application using jocd and jocd-conn-android as dependency:
+
+build.gradle:
+```groovy
+dependencies {
+    implementation 'cz.jaybee:intelhexparser:1.0.0'
+    implementation 'br.org.certi:jocd:1.0.0'
+    implementation files('../../../../jocd-conn-android/build/outputs/aar/jocd-conn-android-release.aar')
+}
 ```
 
-Now, you are ready to create your using jocd and jocd-conn-usb4java as dependency:
+#### Compiling for Linux (usb4java)
 
-pom.xml
+To compile it for Linux, on the project root, run: 
+```bash
+~/jOCD/jOCD-conn-usb4java$ ./gradlew usb4java
+```
+This will compile "jocd-conn-usb4java" and its dependencies, generating:
+
+* jocd-conn-usb4java.jar
+* jocd.jar 
+* java-intelhex-parser.jar
+
+Now, you are ready to create your application using jocd and jocd-conn-usb4java as dependency:
+
+build.gradle:
+```groovy
+dependencies {
+    implementation 'br.org.certi:jocd-conn-usb4java:1.0.0'
+}
+```
+
+or
+
+pom.xml:
 ```xml
 <project>
-	...
+  ...
     <dependencies>
        <dependency>
           <groupId>br.org.certi</groupId>
@@ -57,6 +94,13 @@ pom.xml
 ```
 
 ## Example applications:
+
+You can compile all dependencies from any of the following examples by running:
+```bash
+~/jOCD/jOCD-conn-usb4java$ ./gradlew buildAll
+```
+If you run this, you won't need to follow the [compiling section](#compiling).
+You need to run this only once, to setup your dependencies.
 
 ### Example applications for Android
 
