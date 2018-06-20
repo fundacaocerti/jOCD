@@ -1,0 +1,50 @@
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "D/nLS1lQRid0a9gfr3VTBe60gJY+ctrYM0F8JxCClwKhJdiEcbWjcJOESZGvuePEo72UTyIuTHpjJKEB7WDdG0XdWwhJxjoNX7GdJppUsKdTpYWoZj3JdvaeiKKveHNtdHSGa1ZizI0T20pska7BRuKSJ3175n7iB3TNKkfBtaHoVga9Pdp+MH5PImvly9+LT1sMEUnUJW3atkU8fvux3RKejkZbFDYcYkKIGBvfgeapdCQWXQYFlj/tJYfRp5L95H/aI8c3VRpTyjEnl3l4XtKp00LMBvyyC+1wTqAln23PvTGoRpyTSbAt9X1TIbS8XuRAe+tSA85sfkj2v8EdaGv6pkVWnEqHJqqtjb6XOR1NZYxIczPCAKpmExws02pIi3ogCVcy7Xp8E++TRyTgHhiPnGazTknQYBE/LvEwZK9SHqlrzApqomyXx2eOWYAiQEicov1eV3AoMqx2JriOSJMqE4lqhlLawvGtnBAb+grzAEgwH7UjJdICj97GR4aPVuX2lqWjkTfb7Rf9iU1h6eb/rrGCiFGBF8x4HqhSs3Puch7nHEp7BDgj6XTVHSY+jXkQ6WkhVrZU1rVB8Wu1Vwf6kI759ehUCCYX7VtCzM3JuM9w4r6pyP+5Sittr+qyjXMIz3wYtFur5PUc4SHmbT8poF5S1nKmptOZG+C1M9o="
+
+notifications:
+  email: true
+language: java
+install: true
+#sudo: required
+os: linux
+cache: apt
+jdk: oraclejdk8
+
+addons:
+  coverity_scan:
+    # GitHub project metadata
+    # ** specific to your project **
+    project:
+      name: fundacaocerti/jOCD
+      version: 1.0.0
+      description: release
+
+    # Where email notification of build analysis results will be sent
+    notification_email: 
+      inm@certi.org.br
+      bmh@certi.org.br
+      ghn@certi.org.br
+
+    # Commands to prepare for build_command
+    # ** likely specific to your build **
+    build_command_prepend:  cov-configure --java
+
+    # The command that will be added as an argument to "cov-build" to compile your project for analysis,
+    # ** likely specific to your build **
+    build_command: --fs-capture-search . "./gradlew buildAll"
+
+    # Pattern to match selecting branches that will run analysis. We recommend leaving this set to 'coverity_scan'.
+    # Take care in resource usage, and consider the build frequency allowances per
+    #   https://scan.coverity.com/faq#frequency
+    branch_pattern: coverity_scan
+
+before_install:
+  pushd third-party/java-intelhex-parser;
+  ./gradlew build;
+  popd;
+  cd jocd;
+
+script: if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then cd $TRAVIS_BUILD_DIR; ./gradlew usb4java; fi
