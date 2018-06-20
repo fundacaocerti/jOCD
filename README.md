@@ -15,7 +15,7 @@
 -->
 # jOCD
 
-<a href="https://scan.coverity.com/projects/fundacaocerti-jocd">
+[![Build Status](https://travis-ci.org/fundacaocerti/jOCD.svg?branch=master)](https://travis-ci.org/fundacaocerti/jOCD) <a href="https://scan.coverity.com/projects/fundacaocerti-jocd">
   <img alt="Coverity Scan Build Status"
        src="https://scan.coverity.com/projects/16003/badge.svg"/>
 </a>
