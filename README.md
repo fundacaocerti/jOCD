@@ -14,7 +14,7 @@
  limitations under the license.
 -->
 # jOCD
-
+[![GitHub release](https://img.shields.io/github/release/fundacaocerti/jocd.svg)](https://github.com/fundacaocerti/jOCD)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://travis-ci.org/fundacaocerti/jOCD.svg?branch=master)](https://travis-ci.org/fundacaocerti/jOCD) <a href="https://scan.coverity.com/projects/fundacaocerti-jocd">
   <img alt="Coverity Scan Build Status"
