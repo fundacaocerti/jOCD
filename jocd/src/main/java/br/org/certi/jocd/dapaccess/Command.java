@@ -331,10 +331,10 @@ public class Command {
       int request = dt.getRequest();
       long[] writeList = dt.getData();
 
-      // Assert writeList == null || writeList.length <= count.
-      if (!(writeList == null || writeList.length <= count)) {
+      // WriteList must be <= count.
+      if (writeList != null && writeList.length > count) {
         throw new Error(
-            "encodeTransferBlockData: Expected: writeList == null || writeList.length <= count");
+            "encodeTransferBlockData: Expected: writeList.length <= count");
       }
 
       // Assert request == this.blockRequest.
@@ -344,6 +344,12 @@ public class Command {
 
       int writePos = 0;
       if ((request & DapAccessCmsisDap.READ) == 0) {
+        // If it is not a read, than writeList can not be null.
+        if (writeList == null) {
+          throw new Error(
+              "encodeTransferBlockData: writeList is null in a write request.");
+        }
+
         for (int i = 0; i < count; i++) {
           buf[pos] = (byte) ((writeList[writePos] >> (8 * 0)) & 0xFF);
           pos += 1;
