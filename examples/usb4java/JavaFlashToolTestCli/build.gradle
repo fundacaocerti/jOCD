@@ -29,6 +29,7 @@ sourceSets {
     main.java.srcDirs += '../../../jocd-conn-usb4java/src/main/java'
     main.resources.srcDirs += '../../../jocd-conn-usb4java/src/main/resources'
     main.java.srcDirs += '../../../third-party/java-intelhex-parser/src/main/java'
+    test.java.srcDirs += '../../../jocd/src/test/java'
 }
 
 jar {
@@ -41,6 +42,7 @@ jar {
 
 dependencies {
     implementation 'org.usb4java:usb4java-javax:1.2.0'
+    testImplementation 'junit:junit:4.12'
 }
 
 task copyDependencies(type: Copy) {

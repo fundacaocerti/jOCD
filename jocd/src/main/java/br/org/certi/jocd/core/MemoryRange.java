@@ -15,14 +15,9 @@
  */
 package br.org.certi.jocd.core;
 
-public class RomRegion extends MemoryRegion {
+public class MemoryRange extends MemoryRangeBase {
 
-  /*
-   * Constructor.
-   */
-  public RomRegion(long start, long length, String name, boolean isBootMemory,
-      boolean isPoweredOnBoot, boolean isCacheable, boolean invalidateCacheOnRun) {
-    super(MemoryMap.RegionType.Rom, start, length, MemoryRegion.DEFAULT_BLOCK_SIZE, name,
-        isBootMemory, isPoweredOnBoot, isCacheable, invalidateCacheOnRun);
+  public MemoryRange(long start, long length) {
+    super(start, length);
   }
 }

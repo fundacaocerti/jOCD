@@ -17,13 +17,13 @@ package br.org.certi.jocd.core;
 
 public class MemoryRegion extends MemoryRangeBase {
 
-  final MemoryMap.RegionType regionType;
+  public final MemoryMap.RegionType regionType;
   public int blockSize = 0;
-  String name;
-  boolean isBootMemory;
-  boolean isPoweredOnBoot;
-  boolean isCacheable;
-  boolean invalidateCacheOnRun;
+  public String name;
+  public boolean isBootMemory;
+  public boolean isPoweredOnBoot;
+  public boolean isCacheable;
+  public boolean invalidateCacheOnRun;
 
   public static final int DEFAULT_BLOCK_SIZE = 0;
   public static final boolean DEFAULT_IS_BOOT_MEMORY = false;

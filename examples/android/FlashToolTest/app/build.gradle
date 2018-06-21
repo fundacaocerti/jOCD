@@ -35,6 +35,7 @@ android {
         main.java.srcDirs += '../../../../jocd/src/main/java'
         main.java.srcDirs += '../../../../jocd-conn-android/src/main/java'
         main.java.srcDirs += '../../../../third-party/java-intelhex-parser/src/main/java'
+        test.java.srcDirs += '../../../../jocd/src/test/java'
     }
 }
 
