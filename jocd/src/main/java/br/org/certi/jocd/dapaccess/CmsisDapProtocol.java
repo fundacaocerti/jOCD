@@ -213,12 +213,15 @@ public class CmsisDapProtocol {
     byte[] response = this.connectionInterface.read();
 
     if (response[0] != CommandId.DAP_INFO.getValue()) {
-      // Response is to a different command
+      // Response is to a different command.
+      LOGGER.log(Level.SEVERE, "Unexpected answer. Received response from a different command");
       throw new DeviceError();
     }
 
     if (response[1] == 0) {
-      return null;
+      // Unexpected response.
+      LOGGER.log(Level.SEVERE, "Unexpected package count. Received 0.");
+      throw new DeviceError();
     }
 
     EnumSet<IdInfo> intIdInfo = EnumSet
