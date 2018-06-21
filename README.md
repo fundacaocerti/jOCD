@@ -135,7 +135,7 @@ You need to run this only once, to setup your dependencies.
 <br />Description: Simple Android app to list all connected devices and program using a selected hex file. 
 <br />Instructions: This example doesn't use the compiled library and use the sources instead (remember to keep the folder sctructure or adjust your project sourceSets at your app build.gradle).
 
-### Example applications for Windows, Linux, Mac OS X
+### Example applications for Linux
 
 1. JocdUsb4JavaTestCli
 <br />Path: examples/usb4java/JocdUsb4JavaTestCli
