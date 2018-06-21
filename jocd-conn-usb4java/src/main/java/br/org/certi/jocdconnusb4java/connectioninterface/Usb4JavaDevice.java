@@ -165,7 +165,7 @@ public class Usb4JavaDevice implements ConnectionInterface {
     // If this is not a hub then add this device to usbDeviceList.
     else {
       this.usbDeviceList.add(device);
-      System.out.println(device.toString());
+      LOGGER.log(Level.FINE, device.toString());
     }
   }
 
