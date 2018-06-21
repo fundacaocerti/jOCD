@@ -16,6 +16,7 @@
 package br.org.certi.jocd.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MemoryMap {
@@ -28,10 +29,13 @@ public class MemoryMap {
     Alias
   }
 
-  final List<MemoryRegion> memoryRegions;
+  public final List<MemoryRegion> memoryRegions;
 
   public MemoryMap(List<MemoryRegion> memoryRegions) {
     this.memoryRegions = (memoryRegions == null) ? new ArrayList<MemoryRegion>() : memoryRegions;
+
+    // Keep list of memory regions sorted.
+    Collections.sort(this.memoryRegions);
   }
 
   public MemoryRegion getBootMemory() {

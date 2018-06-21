@@ -59,6 +59,7 @@ task buildAll() {
 
 dependencies {
     implementation 'cz.jaybee:intelhexparser:1.0.0'
+    testImplementation 'junit:junit:4.12'
 }
 
 build.finalizedBy(publishToMavenLocal)

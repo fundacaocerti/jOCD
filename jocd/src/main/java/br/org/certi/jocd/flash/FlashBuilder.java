@@ -742,7 +742,6 @@ public class FlashBuilder {
       } else {
         return 0;
       }
-
     }
   }
 }
