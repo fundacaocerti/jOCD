@@ -25,85 +25,6 @@ public class Util {
   private final static String CLASS_NAME = Util.class.getName();
   private final static Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
-  public static enum OperatingSystem {
-    Android,
-    Windows,
-    Linux,
-    MacOsX,
-    SunOs,
-    FreeBsd
-  }
-
-  public static OperatingSystem getOS() {
-    // Try to identify which OS is running this library.
-    String osName = System.getProperty("os.name");
-    OperatingSystem os = null;
-
-    do {
-      if (osName.startsWith("Linux")) {
-        if (System.getProperty("java.vm.vendor").equals("The Android Project")) {
-          os = OperatingSystem.Android;
-          break;
-        }
-        os = OperatingSystem.Linux;
-        break;
-      }
-
-      if (osName.startsWith("Windows")) {
-        os = OperatingSystem.Windows;
-        break;
-      }
-
-      if (osName.startsWith("Mac OS X")) {
-        os = OperatingSystem.MacOsX;
-        break;
-      }
-
-      if (osName.startsWith("SunOS")) {
-        os = OperatingSystem.SunOs;
-        break;
-      }
-
-      if (osName.startsWith("FreeBSD")) {
-        os = OperatingSystem.SunOs;
-        break;
-      }
-    } while (false);
-
-    LOGGER.log(Level.FINE, os.toString());
-    return os;
-  }
-
-  /*
-   * Extend an existing byte array with another array and return
-   * this new concatenated array.
-   *
-   * As we can not expand the size of an array in Java, we need
-   * to create a new one, and concatenate both arrays.
-   */
-  public static byte[] appendDataInArray(byte[] src, byte[] append, int start, int end) {
-
-    // Sanity check.
-    int count = end - start;
-    if (count < 0) {
-      LOGGER.log(Level.SEVERE, "Internal error: end position is lower than start position at" +
-          "appendDataInArray.");
-      return null;
-    }
-
-    // Create a new array to extend its size.
-    byte[] newArray = new byte[src.length + end - start];
-
-    // Copy currentPage data to the new array.
-    System.arraycopy(src, 0, newArray, 0, src.length);
-
-    // Copy oldData to the new array.
-    System.arraycopy(append, start, newArray, append.length, count);
-
-    // Return the appended array.
-    return newArray;
-  }
-
   /*
    * Extend an existing byte array with another array and return
    * this new concatenated array.
@@ -292,5 +213,4 @@ public class Util {
     }
     return newArray;
   }
-
 }
