@@ -48,22 +48,22 @@ public class Nrf51 extends CoreSightTarget {
 
     memoryRegions.add(
         new FlashRegion(
-            0x00000000,
-            0x40000,
+            0x00000000L,
+            0x40000L,
             0x400)
     );
 
     // User Information Configuration Registers (UICR) as a flash region.
     memoryRegions.add(
         new FlashRegion(
-            0x10001000,
-            0x100,
+            0x10001000L,
+            0x100L,
             0x100)
     );
     memoryRegions.add(
         new RamRegion(
-            0x20000000,
-            0x4000)
+            0x20000000L,
+            0x4000L)
     );
 
     memoryMap = new MemoryMap(memoryRegions);

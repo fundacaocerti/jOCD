@@ -88,7 +88,7 @@ public class TargetFactory {
         return target;
       default:
         LOGGER.log(Level.SEVERE,
-            "Default case on switch GetTarget. " + "Unexpected interface: " + targetEnum.toString());
+            "Default case on switch getTarget. " + "Unexpected interface: " + targetEnum.toString());
     }
     return null;
   }

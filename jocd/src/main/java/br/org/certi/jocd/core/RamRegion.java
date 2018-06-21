@@ -30,7 +30,7 @@ public class RamRegion extends MemoryRegion {
   /*
    * Constructor.
    */
-  public RamRegion(int start, long length) {
+  public RamRegion(long start, long length) {
     super(MemoryMap.RegionType.Ram, start, length,
         MemoryRegion.DEFAULT_BLOCK_SIZE, null, MemoryRegion.DEFAULT_IS_BOOT_MEMORY,
         MemoryRegion.DEFAULT_IS_POWERED_ON_BOOT, MemoryRegion.DEFAULT_IS_CACHEABLE,
