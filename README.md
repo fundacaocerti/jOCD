@@ -16,10 +16,9 @@
 # jOCD
 [![GitHub release](https://img.shields.io/github/release/fundacaocerti/jocd.svg)](https://github.com/fundacaocerti/jOCD)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Build Status](https://travis-ci.org/fundacaocerti/jOCD.svg?branch=master)](https://travis-ci.org/fundacaocerti/jOCD) <a href="https://scan.coverity.com/projects/fundacaocerti-jocd">
-  <img alt="Coverity Scan Build Status"
-       src="https://scan.coverity.com/projects/16003/badge.svg"/>
-</a>
+[![Build Status](https://travis-ci.org/fundacaocerti/jOCD.svg?branch=master)](https://travis-ci.org/fundacaocerti/jOCD)
+[![Coverity Scan](https://img.shields.io/coverity/scan/16003.svg)](https://scan.coverity.com/projects/fundacaocerti-jocd)
+[![Download](https://api.bintray.com/packages/fundacaocerti/jOCD/jOCD/images/download.svg?version=v1.0) ](https://bintray.com/fundacaocerti/jOCD/jOCD/v1.0/link)
 
 jOCD is multiplatform Java port of the pyOCD (https://github.com/mbedmicro/pyOCD) project. This is a Java library for programming micro:bit board using CMSIS-DAP. Currently the following platforms are supported:
 
