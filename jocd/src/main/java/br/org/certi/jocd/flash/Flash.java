@@ -150,8 +150,12 @@ public class Flash {
     // Update core register to execute the subroutine.
     this.target.writeBlockMemoryAligned32(this.beginData, words);
 
-    callFunctionAndWait(this.flashAlgo.analyzerAddress, this.beginData, (long) words.length, null,
+    long result = callFunctionAndWait(this.flashAlgo.analyzerAddress, this.beginData, (long) words.length, null,
         null, null);
+
+    if (result != 0) {
+      LOGGER.log(Level.SEVERE, "computeCrcs error: %i" + result);
+    }
 
     // Read back the CRCs for each section.
     words = this.target.readBlockMemoryAligned32(this.beginData, words.length);
