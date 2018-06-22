@@ -378,10 +378,10 @@ public class CmsisDapProtocol {
   }
 
   public byte setSWJPins(byte output, byte pin) throws TimeoutException, Error {
-    return setSWJPins(output, pin, (byte) 0);
+    return setSWJPins(output, pin, 0);
   }
 
-  public Byte setSWJPins(byte output, byte pin, byte wait)
+  public Byte setSWJPins(byte output, byte pin, long wait)
       throws TimeoutException, Error {
     byte[] cmd = new byte[7];
     cmd[0] = CommandId.DAP_SWJ_PINS.getValue();
