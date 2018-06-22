@@ -45,7 +45,7 @@ public class MemoryRangeBase implements Comparable<MemoryRangeBase> {
   public boolean containsRange(long startAddress, Long endAddress, Integer length,
       MemoryRange range) {
     List<Object> result = checkRange(startAddress, endAddress, length, range);
-    return this.containsAddress((long) result.get(0)) & this.containsAddress((long) result.get(1));
+    return this.containsAddress((long) result.get(0)) && this.containsAddress((long) result.get(1));
   }
 
   public static List<Object> checkRange(long startAddress, Long endAddress, Integer length,
