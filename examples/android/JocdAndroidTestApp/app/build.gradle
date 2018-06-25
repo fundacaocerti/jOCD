@@ -48,7 +48,7 @@ task buildAll() {
 
 dependencies {
     implementation 'cz.jaybee:intelhexparser:1.0.0'
-    implementation 'br.org.certi:jocd:1.0.0'
+    implementation 'br.org.certi:jocd:1.1.0'
     implementation files('../../../../jocd-conn-android/build/outputs/aar/jocd-conn-android-release.aar')
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'

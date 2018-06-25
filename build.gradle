@@ -80,8 +80,9 @@ task usb4java() {
 dependencies {
     if(project.ext.selectedTarget == 'android') {
         implementation files('jocd-conn-android/build/outputs/aar/jocd-conn-android-release.aar')
-    } else {
-         implementation 'br.org.certi:jocd-conn-usb4java:1.0.0'
+    }
+    if(project.ext.selectedTarget == 'usb4java') {
+         implementation 'br.org.certi:jocd-conn-usb4java:1.1.0'
     }
 }
 
