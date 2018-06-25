@@ -16,7 +16,7 @@
 apply plugin:'java'
 apply plugin:'maven-publish'
 
-version ='1.0.0'
+version ='1.1.0'
 repositories {
     mavenLocal()
     mavenCentral()
@@ -27,7 +27,7 @@ publishing {
         maven(MavenPublication) {
             groupId 'br.org.certi'
             artifactId 'jocd-conn-usb4java'
-            version '1.0.0'
+            version '1.1.0'
 
             from components.java
         }
@@ -58,7 +58,7 @@ task buildAll() {
 }
 
 dependencies {
-    implementation 'br.org.certi:jocd:1.0.0'
+    implementation 'br.org.certi:jocd:1.1.0'
     implementation 'org.usb4java:usb4java-javax:1.2.0'
 }
 

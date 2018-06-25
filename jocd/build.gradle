@@ -16,7 +16,7 @@
 apply plugin:'java'
 apply plugin:'maven-publish'
 
-version ='1.0.0'
+version ='1.1.0'
 repositories {
     mavenLocal()
     mavenCentral()
@@ -27,7 +27,7 @@ publishing {
         maven(MavenPublication) {
             groupId 'br.org.certi'
             artifactId 'jocd'
-            version '1.0.0'
+            version '1.1.0'
 
             from components.java
         }
